@@ -1,0 +1,12 @@
+*.py[co]
+*.egg-info
+*.egg
+build
+dist
+*.mo
+.coverage
+Data.fs*
+audit.fs*
+tmp/
+blobs/
+node_modules
