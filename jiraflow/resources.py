@@ -29,18 +29,31 @@ def short_name(url):
     else:
         return None
 
+
 @colander.deferred
-def url_validator(node, kw):
+def jira_url_validator(node, kw):
+    """Validate that the URL is valid, and also that the short name doesn't
+    exist in the parent already.
+    """
     request = kw['request']
     context = request.context
+
     if request.registry.content.typeof(context) == 'JIRA Instance':
-        context = context.__parent__
+        parent = context.__parent__
+        instance = context
+    else:
+        parent = context
+        instance = None
 
     def namecheck(node, value):
         try:
-            context.check_name(short_name(value))
+            new_name = short_name(value)
+
+            # Only check if we are creating new content or actually changing the name
+            if instance is None or instance.__name__ != new_name:
+                parent.check_name(new_name)
         except FolderKeyError:
-            raise colander.Invalid(node, "A configuration for JIRA instance has already been added", value)
+            raise colander.Invalid(node, "Another configuration already exists for this JIRA instance", value)
         except Exception as e:
             raise colander.Invalid(node, e.args[0], value)
 
@@ -64,7 +77,7 @@ class JIRAInstanceSchema(Schema):
     url = colander.SchemaNode(
         colander.String(),
         title="URL of JIRA instance",
-        validator=url_validator
+        validator=jira_url_validator
     )
 
     username = colander.SchemaNode(
