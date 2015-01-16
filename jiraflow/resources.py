@@ -9,10 +9,7 @@ from substanced.folder import (
 )
 
 from substanced.property import PropertySheet
-from substanced.schema import (
-    Schema,
-    NameSchemaNode,
-)
+from substanced.schema import Schema
 
 from substanced.util import renamer
 

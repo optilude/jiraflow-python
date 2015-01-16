@@ -3,7 +3,6 @@ from pyramid.httpexceptions import HTTPFound
 from substanced.sdi import mgmt_view
 from substanced.form import FormView
 from substanced.interfaces import IFolder
-from substanced.folder import FolderKeyError
 
 from .resources import JIRAInstanceSchema
 
@@ -26,12 +25,8 @@ class AddJIRAInstanceView(FormView):
     def add_success(self, appstruct):
         registry = self.request.registry
         instance = registry.content.create('JIRA Instance', **appstruct)
-        try:
-            self.context[instance.instance_name] = instance
-        except FolderKeyError:
-            snippet = 'The JIRA instance %s has already been configured.' % instance.url
-            self.request.sdiapi.flash(snippet, 'danger', allow_duplicate=True)
-        else:
-            return HTTPFound(
-                self.request.sdiapi.mgmt_path(self.context, '@@contents')
-            )
+        self.context[instance.instance_name] = instance
+
+        return HTTPFound(
+            self.request.sdiapi.mgmt_path(self.context, '@@contents')
+        )
