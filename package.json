@@ -2,11 +2,6 @@
   "name": "jiraflow",
   "version": "0.0.1",
   "private": true,
-  "browserify": {
-    "transform": [
-      "reactify"
-    ]
-  },
   "browserify-shim": {},
   "dependencies": {
     "browserify": "~8.1.0",
@@ -28,7 +23,8 @@
     "cortexjs": "~0.6.2",
     "immutable": "~3.5.0",
     "react-forms": "git+https://github.com/prometheusresearch/react-forms.git",
-    "superagent": "~0.21.0"
-  },
-  "devDependencies": {}
+    "superagent": "~0.21.0",
+    "watchify": "~2.2.1",
+    "grunt-watchify": "~0.1.0"
+  }
 }

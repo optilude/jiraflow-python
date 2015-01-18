@@ -1,27 +1,30 @@
-from pyramid.renderers import get_renderer
+import json
+
 from pyramid.view import view_config
 
-#
-#   Default "retail" view
-#
-@view_config(
-    renderer='templates/splash.pt',
-    )
-def splash_view(request):
-    manage_prefix = request.registry.settings.get('substanced.manage_prefix',
-                                                  '/manage')
-    return {'manage_prefix': manage_prefix}
+# Helpers for building JSON state structures for React to render
 
-#
-#   "Retail" view for documents.
-#
-# @view_config(
-#     context=Document,
-#     renderer='templates/document.pt',
-#     )
-# def document_view(context, request):
-#     return {'title': context.title,
-#             'body': context.body,
-#             'master': get_renderer('templates/master.pt').implementation(),
-#            }
+def build_user_state(request):
+    return {}
+
+def build_jira_instances_state(request):
+    return []
+
+def build_state(request):
+    return {
+        "user": build_user_state(request),
+        "jiraInstances": build_jira_instances_state(request)
+    }
+
+# Render the app view with the initial state
+
+@view_config(renderer='templates/spa.pt',)
+def spa(request):
+    """Render the React Single Page App
+    """
+    state = build_state(request)
+
+    return {
+        "json_state": json.dumps(state),
+    }
 

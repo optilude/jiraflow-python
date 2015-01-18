@@ -2,12 +2,14 @@
 /* global require, module, setTimeout */
 'use strict';
 
+var reactify = require('reactify');
+
 module.exports = function (grunt) {
 
     var staticDirectory = 'jiraflow/retail/static/';
 
     // show elapsed time at the end
-    require('time-grunt')(grunt);
+    // require('time-grunt')(grunt);
 
     // load all grunt tasks
     require('load-grunt-tasks')(grunt);
@@ -19,19 +21,68 @@ module.exports = function (grunt) {
 
         // Precompile JS for use in the browser via require()
         browserify: {
+            options: {
+                transform: ['reactify'],
+                browserifyOptions: {
+                    extensions: ['.jsx']
+                }
+            },
+
             dev: {
                 options: {
-                    debug: true,
-                    alias: ['react:']  // Make React available externally for dev tools
+                    alias: ['react:'],
+                    debug: true
                 },
-                src: [staticDirectory + 'js/*.js'],
+
+                src: staticDirectory + 'js/app.jsx',
                 dest: staticDirectory + 'bundle.js'
             },
+
+            watch: {
+                options: {
+                    alias: ['react:'],
+                    debug: true,
+                    watch: true,
+                    keepAlive: true
+                },
+                src: '<%= browserify.dev.src %>',
+                dest: staticDirectory + 'bundle.js'
+            },
+
             production: {
                 options: {
                     debug: false
                 },
                 src: '<%= browserify.dev.src %>',
+                dest: staticDirectory + 'bundle.js'
+            }
+        },
+
+        // Faster version of the above for development
+        watchify: {
+            options: {
+                // defaults options used in b.bundle(opts)
+                detectGlobals: true,
+                insertGlobals: false,
+                ignoreMissing: false,
+                debug: false,
+                standalone: false,
+                keepalive: true,
+                callback: function(b) {
+                    // configure the browserify instance here
+                    // b.add();
+                    // b.require();
+                    // b.external();
+                    // b.ignore();
+                    b._extensions.push('.jsx');
+                    b.transform(reactify);
+
+                    // return it
+                    return b;
+                }
+            },
+            deafult: {
+                src: './' + staticDirectory + 'js/app.jsx',
                 dest: staticDirectory + 'bundle.js'
             }
         },
@@ -59,12 +110,9 @@ module.exports = function (grunt) {
             },
             js: {
                 files: [staticDirectory + 'js/**/*.js', staticDirectory + 'js/**/*.jsx'],
-                tasks: ['browserify:dev'],
-                options: {
-                    livereload: reloadPort
-                }
+                tasks: ['browserify:dev']
             },
-            css: {
+            less: {
                 files: [staticDirectory + 'less/**/*.less'],
                 tasks: ['less:compile'],
                 options: {
