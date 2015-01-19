@@ -1,5 +1,5 @@
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
+/*global require, module, exports, document, window */
 "use strict";
 
 var React = require('react'),
