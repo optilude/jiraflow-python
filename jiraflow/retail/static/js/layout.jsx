@@ -9,7 +9,8 @@ var React = require('react'),
     Row             = BS.Row,
     Col             = BS.Col,
 
-    Sidebar         = require('./navigation').Sidebar;
+    Sidebar         = require('./navigation').Sidebar,
+    Analysis        = require('./analysis').Analysis;
 
 var Layout = React.createClass({
     render: function() {
@@ -22,7 +23,7 @@ var Layout = React.createClass({
                         <Sidebar />
                     </Col>
                     <Col sm={9} md={10}>
-                        Main
+                        <Analysis />
                     </Col>
                 </Row>
           </Grid>

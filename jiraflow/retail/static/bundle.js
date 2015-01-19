@@ -26,7 +26,38 @@ React.render(
   document.body
 );
 
-},{"./layout":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/layout.jsx","./navigation":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/layout.jsx":[function(require,module,exports){
+},{"./layout":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/layout.jsx","./navigation":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document */
+"use strict";
+
+var React = require('react'),
+
+    BS              = require('react-bootstrap'),
+    Nav             = BS.Nav,
+    NavItem         = BS.NavItem;
+
+var Analysis = React.createClass({
+    displayName: '',
+    render: function () {
+        return (
+            React.createElement("div", null, 
+                React.createElement(Nav, {bsStyle: "tabs"}, 
+                    React.createElement(NavItem, {active: true, eventKey: "1"}, "View"), 
+                    React.createElement(NavItem, {eventKey: "2"}, "Manage")
+                ), 
+                React.createElement("h1", null, "Analysis"), 
+                React.createElement("p", null, "Lorem ipsum")
+            )
+        );
+    }
+});
+
+module.exports = {
+  Analysis: Analysis
+};
+
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/layout.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document */
 "use strict";
@@ -38,7 +69,8 @@ var React = require('react'),
     Row             = BS.Row,
     Col             = BS.Col,
 
-    Sidebar         = require('./navigation').Sidebar;
+    Sidebar         = require('./navigation').Sidebar,
+    Analysis        = require('./analysis').Analysis;
 
 var Layout = React.createClass({displayName: "Layout",
     render: function() {
@@ -51,7 +83,7 @@ var Layout = React.createClass({displayName: "Layout",
                         React.createElement(Sidebar, null)
                     ), 
                     React.createElement(Col, {sm: 9, md: 10}, 
-                        "Main"
+                        React.createElement(Analysis, null)
                     )
                 )
           )
@@ -64,7 +96,7 @@ module.exports = {
   Layout: Layout
 };
 
-},{"./navigation":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation.jsx":[function(require,module,exports){
+},{"./analysis":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis.jsx","./navigation":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document */
 "use strict";
@@ -72,6 +104,7 @@ module.exports = {
 var React = require('react'),
 
     BS              = require('react-bootstrap'),
+    Button          = BS.Button,
     Navbar          = BS.Navbar,
     Nav             = BS.Nav,
     NavItem         = BS.NavItem,
@@ -87,11 +120,12 @@ var TopNav = React.createClass({displayName: "TopNav",
           React.createElement(Navbar, {inverse: true, fixedTop: true, fluid: true, brand: "JIRA Flow"}, 
 
               React.createElement(Nav, null, 
-                React.createElement(DropdownButton, {eventKey: 1, title: "Instance"}, 
-                  React.createElement(MenuItem, {eventKey: "1"}, "New..."), 
+                React.createElement(DropdownButton, {eventKey: 1, title: "Instance one"}, 
+                  React.createElement(MenuItem, {eventKey: "1"}, "New"), 
                   React.createElement(MenuItem, {eventKey: "2"}, "Delete"), 
                   React.createElement(MenuItem, {eventKey: "3"}, "Edit"), 
                   React.createElement(MenuItem, {divider: true}), 
+                  React.createElement(NavItem, {eventKey: "4", disabled: true}, "Switch"), 
                   React.createElement(MenuItem, {eventKey: "4"}, "Instance 1"), 
                   React.createElement(MenuItem, {eventKey: "5"}, "Instance 2"), 
                   React.createElement(MenuItem, {eventKey: "6"}, "Instance 3")
@@ -115,10 +149,14 @@ var Sidebar = React.createClass({
     displayName: '',
     render: function () {
         return (
-            React.createElement(Nav, null, 
-                React.createElement(NavItem, {eventKey: "1"}, "One"), 
-                React.createElement(NavItem, {eventKey: "2"}, "Two"), 
-                React.createElement(NavItem, {eventKey: "3"}, "Four")
+            React.createElement("div", {className: "sidebar"}, 
+                React.createElement("h4", null, "Analyses"), 
+                React.createElement(Nav, {bsStyle: "pills", stacked: true}, 
+                    React.createElement(NavItem, {active: true, eventKey: "1"}, "One"), 
+                    React.createElement(NavItem, {eventKey: "2"}, "Two"), 
+                    React.createElement(NavItem, {eventKey: "3"}, "Four")
+                ), 
+                React.createElement(Button, {className: "new-analysis-button", bsStyle: "success"}, "New analysis")
             )
         );
     }

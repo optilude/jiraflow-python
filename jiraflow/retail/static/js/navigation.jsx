@@ -5,6 +5,7 @@
 var React = require('react'),
 
     BS              = require('react-bootstrap'),
+    Button          = BS.Button,
     Navbar          = BS.Navbar,
     Nav             = BS.Nav,
     NavItem         = BS.NavItem,
@@ -20,11 +21,12 @@ var TopNav = React.createClass({
           <Navbar inverse={true} fixedTop={true} fluid={true} brand="JIRA Flow">
 
               <Nav>
-                <DropdownButton eventKey={1} title="Instance">
-                  <MenuItem eventKey="1">New...</MenuItem>
+                <DropdownButton eventKey={1} title="Instance one">
+                  <MenuItem eventKey="1">New</MenuItem>
                   <MenuItem eventKey="2">Delete</MenuItem>
                   <MenuItem eventKey="3">Edit</MenuItem>
                   <MenuItem divider />
+                  <NavItem eventKey="4" disabled={true}>Switch</NavItem>
                   <MenuItem eventKey="4">Instance 1</MenuItem>
                   <MenuItem eventKey="5">Instance 2</MenuItem>
                   <MenuItem eventKey="6">Instance 3</MenuItem>
@@ -48,11 +50,15 @@ var Sidebar = React.createClass({
     displayName: '',
     render: function () {
         return (
-            <Nav>
-                <NavItem eventKey="1">One</NavItem>
-                <NavItem eventKey="2">Two</NavItem>
-                <NavItem eventKey="3">Four</NavItem>
-            </Nav>
+            <div className="sidebar">
+                <h4>Analyses</h4>
+                <Nav bsStyle="pills" stacked={true}>
+                    <NavItem active={true} eventKey="1">One</NavItem>
+                    <NavItem eventKey="2">Two</NavItem>
+                    <NavItem eventKey="3">Four</NavItem>
+                </Nav>
+                <Button className="new-analysis-button" bsStyle="success">New analysis</Button>
+            </div>
         );
     }
 });
