@@ -1,7 +1,7 @@
 JIRAFlow To-Do
 ==============
 
-[ ] Build SPA framework with React
+[x] Build SPA framework with React
 
     - Design layout
     - React Bootstrap grid and navigation
