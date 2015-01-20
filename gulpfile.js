@@ -1,5 +1,5 @@
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require */
+/*global require, module */
 
 /**
  * Build CSS and JavaScript using `gulp`.
@@ -40,11 +40,13 @@ var staticDirectory = './jiraflow/retail/static/',
 // Browserify bundler
 var bundler = browserify({
     entries: [jsMainFile],
-    transform: [reactify],
     extensions: ['.jsx'],
     debug: !argv.production,
     cache: {}, packageCache: {}, fullPaths: true // for watchify
 });
+
+// enable reactify transform with es6 magic
+bundler.transform(reactify, {es6: true});
 
 // Build JavaScript using Browserify
 gulp.task('js', function() {
@@ -93,3 +95,5 @@ gulp.task('csswatch', function () {
 
 gulp.task('watch', ['watchify', 'csswatch']);
 gulp.task('default', ['js', 'css']);
+
+module.exports = gulp; // for gulp-devtools
