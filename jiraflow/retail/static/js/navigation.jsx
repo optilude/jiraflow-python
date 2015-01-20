@@ -19,6 +19,8 @@ var TopNav = React.createClass({
             return;
         }
 
+        // TODO: Handle new, edit, delete
+
         this.props.jiraInstances.forEach((i, idx) => {
             if(i.selected.val() && idx !== selectedIndex) {
                 i.selected.set(false);
@@ -28,8 +30,11 @@ var TopNav = React.createClass({
         });
     },
 
-    render: function() {
+    handleSelectUserAction: function(action) {
+        // TODO: Handle prefs, logout
+    },
 
+    render: function() {
         return (
             <Navbar inverse={true} fixedTop={true} fluid={true} brand="JIRA Flow">
                 <Nav>
@@ -42,15 +47,13 @@ var TopNav = React.createClass({
                     </DropdownButton>
                 </Nav>
                 <Nav right={true}>
-                    <DropdownButton eventKey={1} title={this.props.user.name.val()}>
-                        <MenuItem eventKey="1">Preferences</MenuItem>
-                        <MenuItem eventKey="2">Log out</MenuItem>
+                    <DropdownButton eventKey={1} title={this.props.user.name.val()} onSelect={this.handleSelectUserAction}>
+                        <MenuItem eventKey="prefs">Preferences</MenuItem>
+                        <MenuItem eventKey="logout">Log out</MenuItem>
                     </DropdownButton>
                 </Nav>
             </Navbar>
-
         );
-
     }
 });
 
