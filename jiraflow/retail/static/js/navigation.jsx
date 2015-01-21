@@ -15,12 +15,6 @@ var React = require('react'),
 var TopNav = React.createClass({
 
     handleSelectInstance: function(selectedIndex) {
-        if(typeof(selectedIndex) !== "number" || selectedIndex < 0 || selectedIndex >= this.props.jiraInstances.count()) {
-            return;
-        }
-
-        // TODO: Handle new, edit, delete
-
         this.props.jiraInstances.forEach((i, idx) => {
             if(i.selected.val() && idx !== selectedIndex) {
                 i.selected.set(false);
@@ -30,26 +24,24 @@ var TopNav = React.createClass({
         });
     },
 
-    handleSelectUserAction: function(action) {
-        // TODO: Handle prefs, logout
-    },
+    // TODO: Handle new, edit, delete, prefs, logout
 
     render: function() {
         return (
             <Navbar inverse={true} fixedTop={true} fluid={true} brand="JIRA Flow">
                 <Nav>
-                    <DropdownButton title="JIRA Instance" onSelect={this.handleSelectInstance}>
-                        <MenuItem eventKey="new">New</MenuItem>
-                        <MenuItem eventKey="edit">Edit</MenuItem>
-                        <MenuItem eventKey="delete">Delete</MenuItem>
+                    <DropdownButton title="JIRA Instance">
+                        <MenuItem>New</MenuItem>
+                        <MenuItem>Edit</MenuItem>
+                        <MenuItem>Delete</MenuItem>
                         <MenuItem divider />
-                        {this.props.jiraInstances.map((i, idx) => <NavItem key={idx} eventKey={idx} active={i.selected.val()}>{i.title.val()}</NavItem>)}
+                        {this.props.jiraInstances.map((i, idx) => <NavItem key={idx} onSelect={this.handleSelectInstance.bind(this, idx)} active={i.selected.val()}>{i.title.val()}</NavItem>)}
                     </DropdownButton>
                 </Nav>
                 <Nav right={true}>
-                    <DropdownButton eventKey={1} title={this.props.user.name.val()} onSelect={this.handleSelectUserAction}>
-                        <MenuItem eventKey="prefs">Preferences</MenuItem>
-                        <MenuItem eventKey="logout">Log out</MenuItem>
+                    <DropdownButton eventKey={1} title={this.props.user.name.val()}>
+                        <MenuItem>Preferences</MenuItem>
+                        <MenuItem>Log out</MenuItem>
                     </DropdownButton>
                 </Nav>
             </Navbar>

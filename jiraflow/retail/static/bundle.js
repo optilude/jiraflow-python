@@ -64,6 +64,9 @@ var AnalysisPane = React.createClass({displayName: "AnalysisPane",
 
     render: function() {
 
+        // TODO: Handle case where there is no instance selected
+        var selected = this.props.analysis.find(function(a)  {return a.selected.val();});
+
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
@@ -71,7 +74,7 @@ var AnalysisPane = React.createClass({displayName: "AnalysisPane",
                         React.createElement(Sidebar, {jiraInstance: this.props.jiraInstance, analysis: this.props.analysis})
                     ), 
                     React.createElement(Col, {sm: 9, md: 10}, 
-                        React.createElement(View, null)
+                        React.createElement(View, {selectedAnalysis: selected})
                     )
                 )
           )
@@ -83,10 +86,6 @@ var AnalysisPane = React.createClass({displayName: "AnalysisPane",
 var Sidebar = React.createClass({displayName: "Sidebar",
 
     handleSelect: function(selectedIndex) {
-        if(selectedIndex < 0 || selectedIndex >= this.props.analysis.count()) {
-            return;
-        }
-
         this.props.analysis.forEach(function(a, idx)  {
             if(a.selected.val() && idx !== selectedIndex) {
                 a.selected.set(false);
@@ -100,8 +99,8 @@ var Sidebar = React.createClass({displayName: "Sidebar",
         return (
             React.createElement("div", {className: "sidebar"}, 
                 React.createElement("h4", null, this.props.jiraInstance.title.val()), 
-                React.createElement(Nav, {bsStyle: "pills", stacked: true, onSelect: this.handleSelect}, 
-                    this.props.analysis.map(function(a, idx)  {return React.createElement(NavItem, {active: a.selected.val(), key: idx, eventKey: idx}, a.title.val());})
+                React.createElement(Nav, {bsStyle: "pills", stacked: true}, 
+                    this.props.analysis.map(function(a, idx)  {return React.createElement(NavItem, {active: a.selected.val(), key: idx, onSelect: this.handleSelect.bind(this, idx)}, a.title.val());}.bind(this))
                 ), 
                 React.createElement(Button, {className: "new-analysis-button", bsStyle: "success"}, "New analysis")
             )
@@ -118,7 +117,7 @@ var View = React.createClass({displayName: "View",
                     React.createElement(NavItem, {active: true, eventKey: "view"}, "View"), 
                     React.createElement(NavItem, {eventKey: "manage"}, "Manage")
                 ), 
-                React.createElement("h1", null, "Analysis"), 
+                React.createElement("h1", null, "Analysis — ", this.props.selectedAnalysis.title.val()), 
                 React.createElement("p", null, "Lorem ipsum")
             )
         );
@@ -149,12 +148,6 @@ var React = require('react'),
 var TopNav = React.createClass({displayName: "TopNav",
 
     handleSelectInstance: function(selectedIndex) {
-        if(typeof(selectedIndex) !== "number" || selectedIndex < 0 || selectedIndex >= this.props.jiraInstances.count()) {
-            return;
-        }
-
-        // TODO: Handle new, edit, delete
-
         this.props.jiraInstances.forEach(function(i, idx)  {
             if(i.selected.val() && idx !== selectedIndex) {
                 i.selected.set(false);
@@ -164,26 +157,24 @@ var TopNav = React.createClass({displayName: "TopNav",
         });
     },
 
-    handleSelectUserAction: function(action) {
-        // TODO: Handle prefs, logout
-    },
+    // TODO: Handle new, edit, delete, prefs, logout
 
     render: function() {
         return (
             React.createElement(Navbar, {inverse: true, fixedTop: true, fluid: true, brand: "JIRA Flow"}, 
                 React.createElement(Nav, null, 
-                    React.createElement(DropdownButton, {title: "JIRA Instance", onSelect: this.handleSelectInstance}, 
-                        React.createElement(MenuItem, {eventKey: "new"}, "New"), 
-                        React.createElement(MenuItem, {eventKey: "edit"}, "Edit"), 
-                        React.createElement(MenuItem, {eventKey: "delete"}, "Delete"), 
+                    React.createElement(DropdownButton, {title: "JIRA Instance"}, 
+                        React.createElement(MenuItem, null, "New"), 
+                        React.createElement(MenuItem, null, "Edit"), 
+                        React.createElement(MenuItem, null, "Delete"), 
                         React.createElement(MenuItem, {divider: true}), 
-                        this.props.jiraInstances.map(function(i, idx)  {return React.createElement(NavItem, {key: idx, eventKey: idx, active: i.selected.val()}, i.title.val());})
+                        this.props.jiraInstances.map(function(i, idx)  {return React.createElement(NavItem, {key: idx, onSelect: this.handleSelectInstance.bind(this, idx), active: i.selected.val()}, i.title.val());}.bind(this))
                     )
                 ), 
                 React.createElement(Nav, {right: true}, 
-                    React.createElement(DropdownButton, {eventKey: 1, title: this.props.user.name.val(), onSelect: this.handleSelectUserAction}, 
-                        React.createElement(MenuItem, {eventKey: "prefs"}, "Preferences"), 
-                        React.createElement(MenuItem, {eventKey: "logout"}, "Log out")
+                    React.createElement(DropdownButton, {eventKey: 1, title: this.props.user.name.val()}, 
+                        React.createElement(MenuItem, null, "Preferences"), 
+                        React.createElement(MenuItem, null, "Log out")
                     )
                 )
             )

@@ -19,6 +19,9 @@ var AnalysisPane = React.createClass({
 
     render: function() {
 
+        // TODO: Handle case where there is no instance selected
+        var selected = this.props.analysis.find(a => a.selected.val());
+
         return (
             <Grid fluid={true}>
                 <Row>
@@ -26,7 +29,7 @@ var AnalysisPane = React.createClass({
                         <Sidebar jiraInstance={this.props.jiraInstance} analysis={this.props.analysis} />
                     </Col>
                     <Col sm={9} md={10}>
-                        <View />
+                        <View selectedAnalysis={selected} />
                     </Col>
                 </Row>
           </Grid>
@@ -38,10 +41,6 @@ var AnalysisPane = React.createClass({
 var Sidebar = React.createClass({
 
     handleSelect: function(selectedIndex) {
-        if(selectedIndex < 0 || selectedIndex >= this.props.analysis.count()) {
-            return;
-        }
-
         this.props.analysis.forEach((a, idx) => {
             if(a.selected.val() && idx !== selectedIndex) {
                 a.selected.set(false);
@@ -55,8 +54,8 @@ var Sidebar = React.createClass({
         return (
             <div className="sidebar">
                 <h4>{this.props.jiraInstance.title.val()}</h4>
-                <Nav bsStyle="pills" stacked={true} onSelect={this.handleSelect}>
-                    {this.props.analysis.map((a, idx) => <NavItem active={a.selected.val()} key={idx} eventKey={idx}>{a.title.val()}</NavItem>)}
+                <Nav bsStyle="pills" stacked={true}>
+                    {this.props.analysis.map((a, idx) => <NavItem active={a.selected.val()} key={idx} onSelect={this.handleSelect.bind(this, idx)}>{a.title.val()}</NavItem>)}
                 </Nav>
                 <Button className="new-analysis-button" bsStyle="success">New analysis</Button>
             </div>
@@ -73,7 +72,7 @@ var View = React.createClass({
                     <NavItem active={true} eventKey="view">View</NavItem>
                     <NavItem eventKey="manage">Manage</NavItem>
                 </Nav>
-                <h1>Analysis</h1>
+                <h1>Analysis &mdash; {this.props.selectedAnalysis.title.val()}</h1>
                 <p>Lorem ipsum</p>
             </div>
         );
