@@ -3,6 +3,8 @@
 "use strict";
 
 var React = require('react'),
+    Cursor = require('react-cursor').Cursor,
+    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
 
     BS              = require('react-bootstrap'),
 
@@ -13,13 +15,20 @@ var React = require('react'),
     MenuItem        = BS.MenuItem;
 
 var TopNav = React.createClass({
+    mixins: [ImmutableOptimizations(['jiraInstances', 'user'])],
+
+    propTypes: {
+        jiraInstances: React.PropTypes.instanceOf(Cursor).isRequired,
+        user: React.PropTypes.instanceOf(Cursor).isRequired
+    },
 
     handleSelectInstance: function(selectedIndex) {
-        this.props.jiraInstances.forEach((i, idx) => {
-            if(i.selected.val() && idx !== selectedIndex) {
-                i.selected.set(false);
-            } else if(!i.selected.val() && idx === selectedIndex) {
-                i.selected.set(true);
+        this.props.jiraInstances.value.forEach((i, idx) => {
+            var selection = this.props.jiraInstances.refine(idx).refine('selected');
+            if(i.selected && idx !== selectedIndex) {
+                selection.set(false);
+            } else if(!i.selected && idx === selectedIndex) {
+                selection.set(true);
             }
         });
     },
@@ -35,11 +44,11 @@ var TopNav = React.createClass({
                         <MenuItem>Edit</MenuItem>
                         <MenuItem>Delete</MenuItem>
                         <MenuItem divider />
-                        {this.props.jiraInstances.map((i, idx) => <NavItem key={idx} onSelect={this.handleSelectInstance.bind(this, idx)} active={i.selected.val()}>{i.title.val()}</NavItem>)}
+                        {this.props.jiraInstances.value.map((i, idx) => <NavItem key={idx} onSelect={this.handleSelectInstance.bind(this, idx)} active={i.selected}>{i.title}</NavItem>)}
                     </DropdownButton>
                 </Nav>
                 <Nav right={true}>
-                    <DropdownButton eventKey={1} title={this.props.user.name.val()}>
+                    <DropdownButton eventKey={1} title={this.props.user.refine('name').value}>
                         <MenuItem>Preferences</MenuItem>
                         <MenuItem>Log out</MenuItem>
                     </DropdownButton>

@@ -3,40 +3,34 @@
 "use strict";
 
 var React = require('react'),
-    Cortex = require('cortexjs'),
+    Cursor = require('react-cursor').Cursor,
+    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+
+    u = require('./utils'),
 
     TopNav = require('./navigation').TopNav,
     AnalysisPane = require('./analysis').AnalysisPane;
 
 var App = React.createClass({
 
+    getInitialState: function () {
+        return window.initialState;
+    },
+
     render: function() {
+        var cursor = Cursor.build(this);
 
         // TODO: Handle case where there is no instance selected
-        var selectedInstance = this.props.data.jiraInstances.find(i => i.selected.val());
+        var selectedInstance = u.find(cursor.refine('jiraInstances'), i => i.refine('selected').value);
 
         return (
             <div className="main">
-                <TopNav jiraInstances={this.props.data.jiraInstances} user={this.props.data.user} />
-                <AnalysisPane jiraInstance={selectedInstance} analysis={this.props.data.analysis} />
+                <TopNav jiraInstances={cursor.refine('jiraInstances')} user={cursor.refine('user')} />
+                <AnalysisPane jiraInstance={selectedInstance} analysis={cursor.refine('analysis')} />
             </div>
         );
 
     }
 });
 
-// Get the initial state from the server (pre-rendered into the template)
-// and then set up a Cortex object to track it, re-rendering the app when
-// state changes.
-
-var initialState = window.initialState,
-    cortex = new Cortex(initialState);
-
-var appComponent = React.render(
-  <App data={cortex} />,
-  document.body
-);
-
-cortex.on("update", function(updatedDate) {
-  appComponent.setProps({data: updatedDate});
-});
+React.render(<App />, document.body);
