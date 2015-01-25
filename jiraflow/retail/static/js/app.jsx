@@ -8,8 +8,9 @@ var React = require('react'),
 
     u = require('./utils'),
 
-    TopNav = require('./navigation').TopNav,
-    AnalysisPane = require('./analysis').AnalysisPane;
+    RouteHandler = require('react-router').RouteHandler,
+
+    TopNav = require('./topnav');
 
 var App = React.createClass({
 
@@ -20,17 +21,14 @@ var App = React.createClass({
     render: function() {
         var cursor = Cursor.build(this);
 
-        // TODO: Handle case where there is no instance selected
-        var selectedInstance = u.find(cursor.refine('jiraInstances'), i => i.refine('selected').value);
-
         return (
             <div className="main">
                 <TopNav jiraInstances={cursor.refine('jiraInstances')} user={cursor.refine('user')} />
-                <AnalysisPane jiraInstance={selectedInstance} analysis={cursor.refine('analysis')} />
+                <RouteHandler jiraInstances={cursor.refine('jiraInstances')} analysis={cursor.refine('analysis')} />
             </div>
         );
 
     }
 });
 
-React.render(<App />, document.body);
+module.exports = App;

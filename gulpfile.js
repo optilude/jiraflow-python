@@ -31,7 +31,7 @@ var argv = require('yargs').argv,
 // Prefix for static resources in the Pyramid app
 var staticDirectory = './jiraflow/retail/static/',
 
-    jsMainFile      = staticDirectory + 'js/app.jsx',
+    jsMainFile      = staticDirectory + 'js/index.jsx',
     jsBundleFile    = 'bundle.js',
 
     cssMainFile     = staticDirectory + 'less/styles.less',

@@ -16,17 +16,17 @@ def build_jira_instances_state(request):
     # TODO: Replace dummy data with real database lookups
     return [
         {
+            "id": "project-snowflake",
             "title": "Project Snowflake",
             "url": "https://snowflake.atlassian.net",
-            "selected": True
         }, {
+            "id": "acme-corp",
             "title": "Acme Corp",
             "url": "https://acme.atlassian.net",
-            "selected": False
         }, {
+            "id": "internal-projects",
             "title": "Internal projects",
             "url": "https://jira.acmecorp.com",
-            "selected": False
         },
     ]
 
@@ -34,17 +34,17 @@ def build_analysis_state(request):
     # TODO: Replace dummy data with real database lookups
     return [
         {
+            "id": "cfd",
             "title": "Cumulative flow",
             "type": "cfd",
-            "selected": False,
         }, {
+            "id": "control-chart",
             "title": "Control chart",
             "type": "control_chart",
-            "selected": True,
         }, {
+            "id": "delivery-forecast",
             "title": "Delivery forecast",
             "type": "delivery_forecast",
-            "selected": False,
         },
     ]
 
