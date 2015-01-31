@@ -2,17 +2,12 @@
 /*global require, module, exports, document */
 "use strict";
 
-var React = require('react'),
-    Cursor = require('react-cursor').Cursor,
-    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+var React = require('react');
+var Router = require('react-router');
+var BS = require('react-bootstrap');
 
-    Router = require('react-router'),
-
-    u = require('./utils'),
-
-    BS              = require('react-bootstrap'),
-    Nav             = BS.Nav,
-    NavItem         = BS.NavItem;
+var Nav = BS.Nav;
+var NavItem = BS.NavItem;
 
 var Analysis = React.createClass({
     mixins: [

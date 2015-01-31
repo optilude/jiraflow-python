@@ -2,25 +2,20 @@
 /*global require, module, exports, document */
 "use strict";
 
-var React = require('react'),
-    Cursor = require('react-cursor').Cursor,
-    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+var React = require('react');
+var Router = require('react-router');
+var BS = require('react-bootstrap');
 
-    Router = require('react-router'),
-    Link = Router.Link,
+var Link = Router.Link;
 
-    BS              = require('react-bootstrap'),
-    Navbar          = BS.Navbar,
-    Nav             = BS.Nav,
-    NavItem         = BS.NavItem,
-    DropdownButton  = BS.DropdownButton,
-    MenuItem        = BS.MenuItem;
+var Navbar = BS.Navbar;
+var Nav = BS.Nav;
+var NavItem = BS.NavItem;
+var DropdownButton = BS.DropdownButton;
+var MenuItem = BS.MenuItem;
 
 var TopNav = React.createClass({
-    mixins: [
-        Router.State,
-        ImmutableOptimizations(['jiraInstances', 'user'])
-    ],
+    mixins: [Router.State],
 
     propTypes: {
         jiraInstances: React.PropTypes.instanceOf(Cursor).isRequired,

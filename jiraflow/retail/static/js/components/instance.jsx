@@ -2,21 +2,16 @@
 /*global require, module, exports, document */
 "use strict";
 
-var React = require('react'),
-    Cursor = require('react-cursor').Cursor,
-    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+var React = require('react');
+var Router = require('react-router');
+var BS = require('react-bootstrap');
 
-    Router = require('react-router'),
+var Sidebar = require('./instanceSidebar');
+var RouteHandler = Router.RouteHandler;
 
-    Sidebar = require('./instance-sidebar'),
-    RouteHandler = require('react-router').RouteHandler,
-
-    u = require('./utils'),
-
-    BS              = require('react-bootstrap'),
-    Grid            = BS.Grid,
-    Row             = BS.Row,
-    Col             = BS.Col;
+var Grid = BS.Grid;
+var Row = BS.Row;
+var Col = BS.Col;
 
 var Instance = React.createClass({
     mixins: [

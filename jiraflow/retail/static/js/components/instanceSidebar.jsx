@@ -2,23 +2,18 @@
 /*global require, module, exports, document */
 "use strict";
 
-var React = require('react'),
-    Cursor = require('react-cursor').Cursor,
-    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+var React = require('react');
+var Router = require('react-router');
+var BS = require('react-bootstrap');
 
-    Router = require('react-router'),
-    Link = Router.Link,
+var Link = Router.Link;
 
-    BS              = require('react-bootstrap'),
-    Button          = BS.Button,
-    Nav             = BS.Nav,
-    NavItem         = BS.NavItem;
+var Button = BS.Button;
+var Nav = BS.Nav;
+var NavItem = BS.NavItem;
 
 var Sidebar = React.createClass({
-    mixins: [
-        Router.State,
-        ImmutableOptimizations(['jiraInstance', 'analysis'])
-    ],
+    mixins: [Router.State],
 
     propTypes: {
         jiraInstance: React.PropTypes.instanceOf(Cursor).isRequired,

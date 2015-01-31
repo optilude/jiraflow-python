@@ -2,15 +2,12 @@
 /*global require, module, exports, document, window */
 "use strict";
 
-var React = require('react'),
-    Cursor = require('react-cursor').Cursor,
-    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+var React = require('react');
+var Router = require('react-router');
 
-    u = require('./utils'),
+var TopNav = require('./topnav');
 
-    RouteHandler = require('react-router').RouteHandler,
-
-    TopNav = require('./topnav');
+var RouteHandler = Router.RouteHandler;
 
 var App = React.createClass({
 

@@ -2,16 +2,14 @@
 /*global require, module, exports, document */
 "use strict";
 
-var React = require('react'),
-    ImmutableOptimizations = require('react-cursor').ImmutableOptimizations,
+var React = require('react');
+var BS = require('react-bootstrap');
 
-    BS              = require('react-bootstrap'),
-    Grid            = BS.Grid,
-    Row             = BS.Row,
-    Col             = BS.Col;
+var Grid = BS.Grid;
+var Row = BS.Row;
+var Col = BS.Col;
 
 var NoInstanceSelected = React.createClass({
-    mixins: [ImmutableOptimizations([])],
 
     propTypes: {
     },

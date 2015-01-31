@@ -1,0 +1,62 @@
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document, window */
+"use strict";
+
+var Marty = require('marty');
+var AnalysisConstants = require('./analysisConstants');
+var AnalysisAPI = require('./analysisAPI');
+
+/**
+ * First order actions for analysis CRUD operations
+ */
+var AnalysisActionCreators = Marty.createActionCreators({
+
+    fetchAnalysiss: AnalysisConstants.FETCH_ANALYSES(function(instanceId) {
+        return AnalysisAPI.fetchAll(instanceId).then(function(result) {
+            // inform stores analyses have been received
+            this.receiveAnalyses(result);
+            return result;
+        }.bind(this));
+    }),
+
+    createAnalysis: AnalysisConstants.CREATE_ANALYSIS(function(instanceId, analysis) {
+        // optimistically dispatch
+        this.dispatch(analysis);
+
+        return AnalysisAPI.create(instanceId, analysis).then(function(result) {
+            // inform stores an analysis has been received
+            this.receiveAnalysis(result);
+            return result;
+        }.bind(this));
+    }),
+
+    updateAnalysis: AnalysisConstants.UPDATE_ANALYSIS(function(instanceId, id, analysis) {
+        // optimistically dispatch
+        this.dispatch(id, analysis);
+
+        return AnalysisAPI.update(instanceId, id, analysis).then(function(result) {
+            // inform stores an analysis has been received
+            this.receiveAnalysis(result);
+            return result;
+        }.bind(this));
+    }),
+
+    deleteAnalysis: AnalysisConstants.DELETE_ANALYSIS(function(instanceId, id) {
+        // optimistically dispatch
+        this.dispatch(id);
+
+        return AnalysisAPI.delete(instanceId, id).then(function(id) {
+            // inform stores an analysis has been deleted
+            this.receiveAnalysisDelete(id);
+            return id;
+        }.bind(this));
+    }),
+
+    selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
+    receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS(),
+    receiveAnalysiss: AnalysisConstants.RECEIVE_ANALYSES(),
+    receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE()
+
+});
+
+module.exports = AnalysisActionCreators;
