@@ -21,34 +21,52 @@ var InstanceActionCreators = Marty.createActionCreators({
 
     createInstance: InstanceConstants.CREATE_INSTANCE(function(instance) {
         // optimistically dispatch
-        this.dispatch(instance);
+        var action = this.dispatch(instance);
 
-        return InstanceAPI.create(instance).then(function(result) {
+        return InstanceAPI.create(instance)
+        .then(function(result) {
             // inform stores an instance has been received
             this.receiveInstance(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            // roll back action if AJAX opertion failed
+            action.rollback();
+            throw error;
         }.bind(this));
     }),
 
     updateInstance: InstanceConstants.UPDATE_INSTANCE(function(id, instance) {
         // optimistically dispatch
-        this.dispatch(id, instance);
+        var action = this.dispatch(id, instance);
 
-        return InstanceAPI.update(id, instance).then(function(result) {
+        return InstanceAPI.update(instance)
+        .then(function(result) {
             // inform stores an instance has been received
             this.receiveInstance(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            // roll back action if AJAX opertion failed
+            action.rollback();
+            throw error;
         }.bind(this));
     }),
 
     deleteInstance: InstanceConstants.DELETE_INSTANCE(function(id) {
         // optimistically dispatch
-        this.dispatch(id);
+        var action = this.dispatch(id);
 
-        return InstanceAPI.delete(id).then(function(id) {
-            // inform stores an instance has been deleted
-            this.receiveInstanceDelete(id);
-            return id;
+        return InstanceAPI.delete(instance)
+        .then(function(result) {
+            // inform stores an instance has been received
+            this.receiveInstanceDelete(result);
+            return result;
+        }.bind(this))
+        .catch(function(error) {
+            // roll back action if AJAX opertion failed
+            action.rollback();
+            throw error;
         }.bind(this));
     }),
 

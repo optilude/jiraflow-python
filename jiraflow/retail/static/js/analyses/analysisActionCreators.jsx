@@ -11,7 +11,7 @@ var AnalysisAPI = require('./analysisAPI');
  */
 var AnalysisActionCreators = Marty.createActionCreators({
 
-    fetchAnalysiss: AnalysisConstants.FETCH_ANALYSES(function(instanceId) {
+    fetchAnalyses: AnalysisConstants.FETCH_ANALYSES(function(instanceId) {
         return AnalysisAPI.fetchAll(instanceId).then(function(result) {
             // inform stores analyses have been received
             this.receiveAnalyses(result);
@@ -21,34 +21,51 @@ var AnalysisActionCreators = Marty.createActionCreators({
 
     createAnalysis: AnalysisConstants.CREATE_ANALYSIS(function(instanceId, analysis) {
         // optimistically dispatch
-        this.dispatch(analysis);
+        var action = this.dispatch(analysis);
 
-        return AnalysisAPI.create(instanceId, analysis).then(function(result) {
+        return AnalysisAPI.create(instanceId, analysis)
+        .then(function(result) {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            // roll back action if AJAX opertion failed
+            action.rollback();
+            throw error;
         }.bind(this));
     }),
 
     updateAnalysis: AnalysisConstants.UPDATE_ANALYSIS(function(instanceId, id, analysis) {
         // optimistically dispatch
-        this.dispatch(id, analysis);
+        var action = this.dispatch(id, analysis);
 
-        return AnalysisAPI.update(instanceId, id, analysis).then(function(result) {
+        return AnalysisAPI.update(instanceId, id, analysis)
+        .then(function(result) {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            // roll back action if AJAX opertion failed
+            action.rollback();
+            throw error;
         }.bind(this));
     }),
 
     deleteAnalysis: AnalysisConstants.DELETE_ANALYSIS(function(instanceId, id) {
         // optimistically dispatch
-        this.dispatch(id);
+        var action = this.dispatch(id);
 
         return AnalysisAPI.delete(instanceId, id).then(function(id) {
             // inform stores an analysis has been deleted
             this.receiveAnalysisDelete(id);
             return id;
+        }.bind(this))
+        .catch(function(error) {
+            // roll back action if AJAX opertion failed
+            action.rollback();
+            throw error;
         }.bind(this));
     }),
 
