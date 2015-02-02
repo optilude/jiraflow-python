@@ -3,7 +3,7 @@
 "use strict";
 
 var Immutable = require('immutable');
-var React = require('react');
+var React = require('react/addons');
 var BS = require('react-bootstrap');
 
 var Nav = BS.Nav;
@@ -13,13 +13,10 @@ var NavItem = BS.NavItem;
  * Renders a single analysis
  */
 var AnalysisView = React.createClass({
+    mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
         analysis: React.PropTypes.instanceOf(Immutable.Map).isRequired
-    },
-
-    shouldComponentUpdate: function(nextProps) {
-        return !(this.props.analysis.equals(nextProps.analysis));
     },
 
     render: function () {

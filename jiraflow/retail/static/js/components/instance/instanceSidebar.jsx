@@ -3,7 +3,7 @@
 "use strict";
 
 var Immutable = require('immutable');
-var React = require('react');
+var React = require('react/addons');
 var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
@@ -19,18 +19,11 @@ var NavItemLink = RBS.NavItemLink;
  * Sidebar listing the analyses under an instance.
  */
 var InstanceSidebar = React.createClass({
-    mixins: [Router.State],
+    mixins: [Router.State, React.addons.PureRenderMixin],
 
     propTypes: {
         instance: React.PropTypes.instanceOf(Immutable.Map).isRequired,
         analyses: React.PropTypes.instanceOf(Immutable.Iterable).isRequired
-    },
-
-    shouldComponentUpdate: function(nextProps) {
-        return (
-            !(this.props.instance.equals(nextProps.instance)) ||
-            !(this.props.analysis.equals(nextProps.analysis))
-        );
     },
 
     render: function () {
