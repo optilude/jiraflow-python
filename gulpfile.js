@@ -30,8 +30,9 @@ var argv = require('yargs').argv,
 
 // Prefix for static resources in the Pyramid app
 var staticDirectory = './jiraflow/retail/static/',
+    jsDirectory     = staticDirectory + 'js/',
 
-    jsMainFile      = staticDirectory + 'js/index.jsx',
+    jsMainFile      = jsDirectory + 'index.jsx',
     jsBundleFile    = 'bundle.js',
 
     cssMainFile     = staticDirectory + 'less/styles.less',
@@ -42,6 +43,7 @@ var bundler = browserify({
     entries: [jsMainFile],
     extensions: ['.jsx'],
     debug: !argv.production,
+    paths: ['./node_modules', jsDirectory], // XXX: Possibly deprecated approach, see http://stackoverflow.com/questions/20158401
     cache: {}, packageCache: {}, fullPaths: true // for watchify
 });
 

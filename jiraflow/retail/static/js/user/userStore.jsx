@@ -29,8 +29,7 @@ var UserStore = Marty.createStore({
         _receiveUser: UserConstants.RECEIVE_USER
     },
 
-    _receiveUser: function(user) {
-
+    _receiveUser: function(user, refresh /* default: true */) {
         if(user === null) {
             this.state = null;
             this.hasChanged();

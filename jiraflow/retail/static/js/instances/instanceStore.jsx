@@ -9,6 +9,7 @@ var UserConstants = require('user/userConstants');
 var UserStore = require('user/userStore');
 var InstanceConstants = require('./instanceConstants');
 var InstanceActionCreators = require('./instanceActionCreators');
+var InstanceAPI = require('./instanceAPI');
 
 /**
  * Stores a list of instances available to the current user, plus the currently
@@ -17,18 +18,23 @@ var InstanceActionCreators = require('./instanceActionCreators');
 var InstanceStore = Marty.createStore({
     displayName: 'instances',
 
-    getInstances: function () {
+    getInstances: function() {
         return this.state.instances.valueSeq();
     },
 
-    getSelectedInstance: function () {
+    getSelectedInstance: function() {
         return this.state.selectedInstance? this.state.instances.get(this.state.selectedInstance) : null;
+    },
+
+    updatePending: function() {
+        return this.state.updatePending;
     },
 
     // Internal state management
 
     getInitialState: function () {
         return {
+            updatePending: false,              // true during refresh
             instances: Immutable.OrderedMap(), // id -> Immutable.Map()
             selectedInstance: null             // id
         };
@@ -37,19 +43,31 @@ var InstanceStore = Marty.createStore({
     // Action handlers
 
     handlers: {
-        _receiveUser: UserConstants.RECEIVE_USER,
+        _changeUser: UserConstants.RECEIVE_USER,
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
         _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE
     },
 
-    _receiveUser: function(user) {
+    _changeUser: function(user, refresh /* default: true */) {
         this.waitFor(UserStore);
 
-        // force a re-fetch of everything
-        // TODO: Is this right? see http://stackoverflow.com/questions/28257724/ajax-in-flux-refreshing-stores-when-dependent-state-changes
-        InstanceActionCreators.fetchInstances();
+        this.state.updatePending = true;
+        this.instances = Immutable.OrderedMap();
+        this.hasChanged();
+
+        if(refresh !== false) { // true or undefined
+            // force a re-fetch of everything
+            InstanceAPI.fetchAll()
+            .then(function(result) {
+                InstanceActionCreators.receiveInstances(result);
+                return result;
+            })
+            .catch(function(error) {
+                console.error(error);
+            });
+        }
     },
 
     _selectInstance: function(id) {
@@ -64,7 +82,6 @@ var InstanceStore = Marty.createStore({
     },
 
     _receiveInstances: function(instances) {
-
         var instanceData = instances.map(function(instance) {
             if(!(instance instanceof Immutable.Map)) {
                 throw "Each instance must be an Immutable.Map";
@@ -73,6 +90,7 @@ var InstanceStore = Marty.createStore({
             return [instance.get('id'), instance];
         });
 
+        this.state.updatePending = false;
         this.state.instances = Immutable.OrderedMap(instanceData);
         this.state.selectedInstance = null;
         this.hasChanged();
@@ -91,7 +109,6 @@ var InstanceStore = Marty.createStore({
     },
 
     _receiveInstanceDelete: function(id) {
-
         if(!this.state.instances.has(id)) {
             throw "Instance not found";
         }

@@ -5,23 +5,20 @@
 var React = require('react');
 var Router = require('react-router');
 
-var TopNav = require('./topnav');
+var TopNav = require('./navigation/topNav');
 
 var RouteHandler = Router.RouteHandler;
 
+/**
+ * Document body handler, rendering nav and main body area
+ */
 var App = React.createClass({
 
-    getInitialState: function () {
-        return window.initialState;
-    },
-
     render: function() {
-        var cursor = Cursor.build(this);
-
         return (
             <div className="main">
-                <TopNav jiraInstances={cursor.refine('jiraInstances')} user={cursor.refine('user')} />
-                <RouteHandler jiraInstances={cursor.refine('jiraInstances')} analysis={cursor.refine('analysis')} />
+                <TopNav />
+                <RouteHandler />
             </div>
         );
 

@@ -71,7 +71,7 @@ var AnalysisActionCreators = Marty.createActionCreators({
 
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
     receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS(),
-    receiveAnalysiss: AnalysisConstants.RECEIVE_ANALYSES(),
+    receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES(),
     receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE()
 
 });

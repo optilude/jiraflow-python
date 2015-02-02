@@ -9,18 +9,14 @@ var Grid = BS.Grid;
 var Row = BS.Row;
 var Col = BS.Col;
 
-var NoAnalysisSelected = React.createClass({
-
-    propTypes: {
-    },
+var AnalysisNoneSelected = React.createClass({
 
     render: function() {
-
         return (
             <h1>No analysis selected</h1>
         );
-
     }
+
 });
 
-module.exports = NoAnalysisSelected;
+module.exports = AnalysisNoneSelected;

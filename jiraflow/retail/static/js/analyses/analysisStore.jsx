@@ -5,10 +5,11 @@
 var Immutable = require('immutable');
 
 var Marty = require('marty');
-var InstanceConstants = require('instance/instanceConstants');
-var InstanceStore = require('instance/instanceStore');
+var InstanceConstants = require('instances/instanceConstants');
+var InstanceStore = require('instances/instanceStore');
 var AnalysisConstants = require('./analysisConstants');
 var AnalysisActionCreators = require('./analysisActionCreators');
+var AnalysisAPI = require('./analysisAPI');
 
 /**
  * Stores a list of analyses available to the current user, plus the currently
@@ -25,11 +26,16 @@ var AnalysisStore = Marty.createStore({
         return this.state.selectedAnalysis? this.state.analyses.get(this.state.selectedAnalysis) : null;
     },
 
+    updatePending: function() {
+        return this.state.updatePending;
+    },
+
     // Internal state management
 
     getInitialState: function () {
         return {
-            analyses: Immutable.OrderedMap(), // id -> Immutable.Map()
+            updatePending: false,              // true during refresh
+            analyses: Immutable.OrderedMap(),  // id -> Immutable.Map()
             selectedAnalysis: null             // id
         };
     },
@@ -38,6 +44,7 @@ var AnalysisStore = Marty.createStore({
 
     handlers: {
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
+        _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _selectAnalysis: AnalysisConstants.SELECT_ANALYSIS,
         _receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES,
         _receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS,
@@ -47,9 +54,39 @@ var AnalysisStore = Marty.createStore({
     _selectInstance: function(id) {
         this.waitFor(InstanceStore);
 
+        this.state.updatePending = true;
+        this.instances = Immutable.OrderedMap();
+        this.hasChanged();
+
         // force a re-fetch of everything
-        // TODO: Is this right? see http://stackoverflow.com/questions/28257724/ajax-in-flux-refreshing-stores-when-dependent-state-changes
-        AnalysisActionCreators.fetchAnalyses(id);
+        AnalysisAPI.fetchAll()
+        .then(function(result) {
+            AnalysisActionCreators.receiveInstances(result);
+            return result;
+        })
+        .catch(function(error) {
+            console.error(error);
+        });
+    },
+
+    _receiveInstances: function(instances, refresh /* default: true */) {
+        this.waitFor(InstanceStore);
+
+        this.state.updatePending = true;
+        this.instances = Immutable.OrderedMap();
+        this.hasChanged();
+
+        if(refresh !== false) { // true or undefined
+            // force a re-fetch of everything
+            AnalysisAPI.fetchAll()
+            .then(function(result) {
+                AnalysisActionCreators.receiveInstances(result);
+                return result;
+            })
+            .catch(function(error) {
+                console.error(error);
+            });
+        }
     },
 
     _selectAnalysis: function(id) {
@@ -64,7 +101,6 @@ var AnalysisStore = Marty.createStore({
     },
 
     _receiveAnalyses: function(analyses) {
-
         var analysisData = analyses.map(function(analysis) {
             if(!(analysis instanceof Immutable.Map)) {
                 throw "Each analysis must be an Immutable.Map";
@@ -73,6 +109,7 @@ var AnalysisStore = Marty.createStore({
             return [analysis.get('id'), analysis];
         });
 
+        this.state.updatePending = false;
         this.state.analyses = Immutable.OrderedMap(analysisData);
         this.state.selectedAnalysis = null;
         this.hasChanged();
@@ -90,7 +127,6 @@ var AnalysisStore = Marty.createStore({
     },
 
     _receiveAnalysisDelete: function(id) {
-
         if(!this.state.analyses.has(id)) {
             throw "Instance not found";
         }

@@ -9,10 +9,7 @@ var Grid = BS.Grid;
 var Row = BS.Row;
 var Col = BS.Col;
 
-var NoInstanceSelected = React.createClass({
-
-    propTypes: {
-    },
+var InstanceNoneSelected = React.createClass({
 
     render: function() {
 
@@ -31,4 +28,4 @@ var NoInstanceSelected = React.createClass({
     }
 });
 
-module.exports = NoInstanceSelected;
+module.exports = InstanceNoneSelected;

@@ -10,30 +10,31 @@ var Marty = require('marty');
 var Router = require('./router');
 
 var UserActionCreators = require('user/userActionCreators');
-var InstanceActionCreators = require('instance/instanceActionCreators');
-var AnalysisActionCreators = require('analysis/analysisActionCreators');
+var InstanceActionCreators = require('instances/instanceActionCreators');
+var AnalysisActionCreators = require('analyses/analysisActionCreators');
 
 window.React = React; // For React Developer Tools
 window.Marty = Marty; // For Marty Developer Tools
 
+var initialState = window.initialState;
+
 Router.run(function (Handler, state) {
 
     // Populate stores with initial state in server payload
-    if(window.initalState) {
-
+    if(initialState !== undefined) {
         // User
-        if(window.initalState.user) {
-            UserActionCreators.receiveUser(Immutable.fromJS(window.initalState.user));
+        if(initialState.user !== undefined) {
+            UserActionCreators.receiveUser(Immutable.fromJS(initialState.user), false);
         }
 
         // Instances
-        if(window.initalState.jiraInstances) {
-            InstanceActionCreators.receiveInstances(Immutable.fromJS(window.initalState.jiraInstances));
+        if(initialState.jiraInstances !== undefined) {
+            InstanceActionCreators.receiveInstances(Immutable.fromJS(initialState.jiraInstances), false);
         }
 
         // Analyses
-        if(window.initalState.analysis) {
-            AnalysisActionCreators.receiveAnalyses(Immutable.fromJS(window.initalState.analysis));
+        if(initialState.analysis !== undefined) {
+            AnalysisActionCreators.receiveAnalyses(Immutable.fromJS(initialState.analysis), false);
         }
 
     }
