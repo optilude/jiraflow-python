@@ -3,8 +3,9 @@
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
+
+var NavigationConstants = require('navigation/navigationConstants');
 var UserConstants = require('user/userConstants');
 var UserStore = require('user/userStore');
 var InstanceConstants = require('./instanceConstants');
@@ -44,6 +45,7 @@ var InstanceStore = Marty.createStore({
 
     handlers: {
         _changeUser: UserConstants.RECEIVE_USER,
+        _navigate: NavigationConstants.NAVIGATE,
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
@@ -67,6 +69,13 @@ var InstanceStore = Marty.createStore({
             .catch(function(error) {
                 console.error(error);
             });
+        }
+    },
+
+    _navigate: function(action) {
+        var instanceId = action.params.instanceId;
+        if(instanceId) {
+            this._selectInstance(instanceId);
         }
     },
 

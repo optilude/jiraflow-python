@@ -3,8 +3,8 @@
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
+
 var UserConstants = require('./userConstants');
 
 /**

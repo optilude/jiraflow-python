@@ -3,7 +3,6 @@
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
 
 /**

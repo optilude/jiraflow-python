@@ -3,8 +3,9 @@
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
+
+var NavigationConstants = require('navigation/navigationConstants');
 var InstanceConstants = require('instances/instanceConstants');
 var InstanceStore = require('instances/instanceStore');
 var AnalysisConstants = require('./analysisConstants');
@@ -45,6 +46,7 @@ var AnalysisStore = Marty.createStore({
     handlers: {
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
+        _navigate: NavigationConstants.NAVIGATE,
         _selectAnalysis: AnalysisConstants.SELECT_ANALYSIS,
         _receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES,
         _receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS,
@@ -86,6 +88,13 @@ var AnalysisStore = Marty.createStore({
             .catch(function(error) {
                 console.error(error);
             });
+        }
+    },
+
+    _navigate: function(action) {
+        var analysisId = action.params.analysisId;
+        if(analysisId) {
+            this._selectAnalysis(analysisId);
         }
     },
 

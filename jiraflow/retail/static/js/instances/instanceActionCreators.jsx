@@ -3,6 +3,7 @@
 "use strict";
 
 var Marty = require('marty');
+
 var InstanceConstants = require('./instanceConstants');
 var InstanceAPI = require('./instanceAPI');
 

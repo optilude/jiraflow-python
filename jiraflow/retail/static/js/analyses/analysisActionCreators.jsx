@@ -3,6 +3,7 @@
 "use strict";
 
 var Marty = require('marty');
+
 var AnalysisConstants = require('./analysisConstants');
 var AnalysisAPI = require('./analysisAPI');
 

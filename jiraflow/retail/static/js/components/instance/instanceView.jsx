@@ -35,7 +35,7 @@ var InstanceState = Marty.createStateMixin({
  * Controller-view depending on the InstanceStore and the AnalysisStore.
  */
 var InstanceView = React.createClass({
-    mixins: [InstanceState, Router.State],
+    mixins: [InstanceState],
 
     render: function() {
         return (

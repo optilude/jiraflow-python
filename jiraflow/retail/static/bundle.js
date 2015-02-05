@@ -10,6 +10,7 @@ var Marty = require('marty');
 
 var Router = require('./router');
 
+var NavigationActionCreators = require('navigation/navigationActionCreators');
 var UserActionCreators = require('user/userActionCreators');
 var InstanceActionCreators = require('instances/instanceActionCreators');
 var AnalysisActionCreators = require('analyses/analysisActionCreators');
@@ -19,37 +20,36 @@ window.Marty = Marty; // For Marty Developer Tools
 
 var initialState = window.initialState;
 
-Router.run(function (Handler, state) {
-
-    // Populate stores with initial state in server payload
-    if(initialState !== undefined) {
-        // User
-        if(initialState.user !== undefined) {
-            UserActionCreators.receiveUser(Immutable.fromJS(initialState.user), false);
-        }
-
-        // Instances
-        if(initialState.jiraInstances !== undefined) {
-            InstanceActionCreators.receiveInstances(Immutable.fromJS(initialState.jiraInstances), false);
-        }
-
-        // Analyses
-        if(initialState.analysis !== undefined) {
-            AnalysisActionCreators.receiveAnalyses(Immutable.fromJS(initialState.analysis), false);
-        }
-
+// Populate stores with initial state in server payload
+if(initialState) {
+    // User
+    if(initialState.user !== undefined) {
+        UserActionCreators.receiveUser(Immutable.fromJS(initialState.user), false);
     }
 
-    React.render(React.createElement(Handler, React.__spread({},  state.params)), document.body);
-});
+    // Instances
+    if(initialState.jiraInstances !== undefined) {
+        InstanceActionCreators.receiveInstances(Immutable.fromJS(initialState.jiraInstances), false);
+    }
 
-},{"./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","analyses/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","instances/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceActionCreators.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisAPI.jsx":[function(require,module,exports){
+    // Analyses
+    if(initialState.analysis !== undefined) {
+        AnalysisActionCreators.receiveAnalyses(Immutable.fromJS(initialState.analysis), false);
+    }
+}
+
+var firstRender = true;
+
+Router.run(function(Handler, state) {
+    NavigationActionCreators.routerNavigate(Handler, state);
+    React.render(React.createElement(Handler, null), document.body);
+});
+},{"./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","analyses/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","instances/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceActionCreators.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisAPI.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
 
 /**
@@ -101,6 +101,7 @@ module.exports = AnalysisAPI;
 "use strict";
 
 var Marty = require('marty');
+
 var AnalysisConstants = require('./analysisConstants');
 var AnalysisAPI = require('./analysisAPI');
 
@@ -201,8 +202,9 @@ module.exports = AnalysisConstants;
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
+
+var NavigationConstants = require('navigation/navigationConstants');
 var InstanceConstants = require('instances/instanceConstants');
 var InstanceStore = require('instances/instanceStore');
 var AnalysisConstants = require('./analysisConstants');
@@ -243,6 +245,7 @@ var AnalysisStore = Marty.createStore({
     handlers: {
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
+        _navigate: NavigationConstants.NAVIGATE,
         _selectAnalysis: AnalysisConstants.SELECT_ANALYSIS,
         _receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES,
         _receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS,
@@ -284,6 +287,13 @@ var AnalysisStore = Marty.createStore({
             .catch(function(error) {
                 console.error(error);
             });
+        }
+    },
+
+    _navigate: function(action) {
+        var analysisId = action.params.analysisId;
+        if(analysisId) {
+            this._selectAnalysis(analysisId);
         }
     },
 
@@ -341,7 +351,7 @@ var AnalysisStore = Marty.createStore({
 });
 
 module.exports = AnalysisStore;
-},{"./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisAPI.jsx","./analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisActionCreators.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","instances/instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceConstants.jsx","instances/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNoneSelected.jsx":[function(require,module,exports){
+},{"./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisAPI.jsx","./analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisActionCreators.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analyses/analysisConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","instances/instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceConstants.jsx","instances/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNoneSelected.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document */
 "use strict";
@@ -473,11 +483,8 @@ module.exports = InstanceNoneSelected;
 
 var Immutable = require('immutable');
 var React = require('react/addons');
-var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
-
-var Link = Router.Link;
 
 var Button = BS.Button;
 var Nav = BS.Nav;
@@ -488,7 +495,7 @@ var NavItemLink = RBS.NavItemLink;
  * Sidebar listing the analyses under an instance.
  */
 var InstanceSidebar = React.createClass({displayName: "InstanceSidebar",
-    mixins: [Router.State, React.addons.PureRenderMixin],
+    mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
         instance: React.PropTypes.instanceOf(Immutable.Map).isRequired,
@@ -501,7 +508,7 @@ var InstanceSidebar = React.createClass({displayName: "InstanceSidebar",
 
         return (
             React.createElement("div", {className: "sidebar"}, 
-                React.createElement("h4", null, this.props.instance.get('title').value), 
+                React.createElement("h4", null, this.props.instance.get('title')), 
                 React.createElement(Nav, {bsStyle: "pills", stacked: true}, 
                     this.props.analyses.map(function(a, idx)  {return React.createElement(NavItemLink, {key: idx, to: "analysis", params: {instanceId: instanceId, analysisId: a.get('id')}}, a.get('title'));}).toArray()
                 ), 
@@ -512,7 +519,7 @@ var InstanceSidebar = React.createClass({displayName: "InstanceSidebar",
 });
 
 module.exports = InstanceSidebar;
-},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx":[function(require,module,exports){
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document */
 "use strict";
@@ -550,7 +557,7 @@ var InstanceState = Marty.createStateMixin({
  * Controller-view depending on the InstanceStore and the AnalysisStore.
  */
 var InstanceView = React.createClass({displayName: "InstanceView",
-    mixins: [InstanceState, Router.State],
+    mixins: [InstanceState],
 
     render: function() {
         return (
@@ -577,14 +584,11 @@ module.exports = InstanceView;
 
 var React = require('react');
 var Marty = require('marty');
-var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
 var UserStore = require('user/userStore');
 var InstanceStore = require('instances/instanceStore');
-
-var Link = Router.Link;
 
 var Navbar = BS.Navbar;
 var Nav = BS.Nav;
@@ -610,7 +614,7 @@ var NavigationState = Marty.createStateMixin({
  * Controller-view depending on the InstanceStore and the UserStore.
  */
 var TopNav = React.createClass({displayName: "TopNav",
-    mixins: [NavigationState, Router.State],
+    mixins: [NavigationState],
 
     // TODO: Handle new, edit, delete, prefs, logout
 
@@ -629,7 +633,7 @@ var TopNav = React.createClass({displayName: "TopNav",
                         React.createElement(MenuItem, null, "Edit"), 
                         React.createElement(MenuItem, null, "Delete"), 
                         React.createElement(MenuItem, {divider: true}), 
-                        this.state.instances.map(function(i, idx)  {return React.createElement(MenuItemLink, {key: idx, to: "instance", params: {instanceId: i.get('id')}}, i.get('title'));}).toArray()
+                        this.state.instances.map(function(i, idx)  {return React.createElement(MenuItemLink, {key: idx, to: "instance", params: {instanceId: i.get('id')}, onClick: this.linkClick}, i.get('title'));}.bind(this)).toArray()
                     )
                 ), 
                 React.createElement(Nav, {right: true}, 
@@ -645,13 +649,12 @@ var TopNav = React.createClass({displayName: "TopNav",
 
 module.exports = TopNav;
 
-},{"instances/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceAPI.jsx":[function(require,module,exports){
+},{"instances/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceAPI.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
 
 /**
@@ -703,6 +706,7 @@ module.exports = InstanceAPI;
 "use strict";
 
 var Marty = require('marty');
+
 var InstanceConstants = require('./instanceConstants');
 var InstanceAPI = require('./instanceAPI');
 
@@ -804,8 +808,9 @@ module.exports = InstanceConstants;
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
+
+var NavigationConstants = require('navigation/navigationConstants');
 var UserConstants = require('user/userConstants');
 var UserStore = require('user/userStore');
 var InstanceConstants = require('./instanceConstants');
@@ -845,6 +850,7 @@ var InstanceStore = Marty.createStore({
 
     handlers: {
         _changeUser: UserConstants.RECEIVE_USER,
+        _navigate: NavigationConstants.NAVIGATE,
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
@@ -868,6 +874,13 @@ var InstanceStore = Marty.createStore({
             .catch(function(error) {
                 console.error(error);
             });
+        }
+    },
+
+    _navigate: function(action) {
+        var instanceId = action.params.instanceId;
+        if(instanceId) {
+            this._selectInstance(instanceId);
         }
     },
 
@@ -926,7 +939,65 @@ var InstanceStore = Marty.createStore({
 });
 
 module.exports = InstanceStore;
-},{"./instanceAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceAPI.jsx","./instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceActionCreators.jsx","./instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx":[function(require,module,exports){
+},{"./instanceAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceAPI.jsx","./instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceActionCreators.jsx","./instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instances/instanceConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document, window */
+"use strict";
+
+var Marty = require('marty');
+
+var Router = require('../router');
+var NavigationConstants = require('./navigationConstants');
+
+function navigateTo(route, params) {
+    Router.transitionTo(route, params || {});
+}
+
+var NavigationActionCreators = Marty.createActionCreators({
+
+    // These trigger Router actions, which in turn trigger the NAVIGATE
+    // action.
+    navigateHome: function() {
+        navigateTo('home');
+    },
+
+    navigateToInstance: function(id) {
+        navigateTo('instance', {instanceId: id});
+    },
+
+    navigateToAnalysis: function(instanceId, id) {
+        navigateTo('analysis', {instanceId: instanceId, analysisId: id});
+    },
+
+    routerNavigate: NavigationConstants.NAVIGATE(function(handler, state) {
+        var payload = {
+            path: state.path,
+            pathName: state.pathname,
+            queryString: state.query,
+            params: state.params,
+            routes: state.routes.map(function(r)  {return r.name;})
+        };
+        this.dispatch(payload);
+    }),
+
+});
+
+
+
+module.exports = NavigationActionCreators;
+},{"../router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document, window */
+"use strict";
+
+var Marty = require('marty');
+
+var NavigationConstants = Marty.createConstants([
+    'NAVIGATE'               // e.g. a user navigates to a new page
+]);
+
+module.exports = NavigationConstants;
+},{"marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
@@ -939,9 +1010,9 @@ var DefaultRoute = Router.DefaultRoute;
 
 var routes = [
     React.createElement(Route, {name: "home", path: "/", handler: require('components/app')}, 
-        React.createElement(DefaultRoute, {handler: require('components/instance/instanceNoneSelected')}), 
+        React.createElement(DefaultRoute, {name: "noInstance", handler: require('components/instance/instanceNoneSelected')}), 
         React.createElement(Route, {name: "instance", path: "instances/:instanceId", handler: require('components/instance/instanceView')}, 
-            React.createElement(DefaultRoute, {handler: require('components/analysis/analysisNoneSelected')}), 
+            React.createElement(DefaultRoute, {name: "noAnalysis", handler: require('components/analysis/analysisNoneSelected')}), 
             React.createElement(Route, {name: "analysis", path: "analysis/:analysisId", handler: require('components/analysis/analysisView')})
         )
 
@@ -959,7 +1030,6 @@ module.exports = Router.create({
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
 
 /**
@@ -1022,6 +1092,7 @@ module.exports = UserAPI;
 "use strict";
 
 var Marty = require('marty');
+
 var UserConstants = require('./userConstants');
 var UserAPI = require('./userAPI');
 
@@ -1102,8 +1173,8 @@ module.exports = UserConstants;
 "use strict";
 
 var Immutable = require('immutable');
-
 var Marty = require('marty');
+
 var UserConstants = require('./userConstants');
 
 /**

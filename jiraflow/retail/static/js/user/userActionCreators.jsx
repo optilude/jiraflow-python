@@ -3,6 +3,7 @@
 "use strict";
 
 var Marty = require('marty');
+
 var UserConstants = require('./userConstants');
 var UserAPI = require('./userAPI');
 

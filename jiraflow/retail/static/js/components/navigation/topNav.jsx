@@ -4,14 +4,11 @@
 
 var React = require('react');
 var Marty = require('marty');
-var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
 var UserStore = require('user/userStore');
 var InstanceStore = require('instances/instanceStore');
-
-var Link = Router.Link;
 
 var Navbar = BS.Navbar;
 var Nav = BS.Nav;
@@ -37,7 +34,7 @@ var NavigationState = Marty.createStateMixin({
  * Controller-view depending on the InstanceStore and the UserStore.
  */
 var TopNav = React.createClass({
-    mixins: [NavigationState, Router.State],
+    mixins: [NavigationState],
 
     // TODO: Handle new, edit, delete, prefs, logout
 
@@ -56,7 +53,7 @@ var TopNav = React.createClass({
                         <MenuItem>Edit</MenuItem>
                         <MenuItem>Delete</MenuItem>
                         <MenuItem divider />
-                        {this.state.instances.map((i, idx) => <MenuItemLink key={idx} to="instance" params={{instanceId: i.get('id')}}>{i.get('title')}</MenuItemLink>).toArray()}
+                        {this.state.instances.map((i, idx) => <MenuItemLink key={idx} to="instance" params={{instanceId: i.get('id')}} onClick={this.linkClick}>{i.get('title')}</MenuItemLink>).toArray()}
                     </DropdownButton>
                 </Nav>
                 <Nav right={true}>

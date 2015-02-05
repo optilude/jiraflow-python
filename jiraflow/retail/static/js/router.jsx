@@ -10,9 +10,9 @@ var DefaultRoute = Router.DefaultRoute;
 
 var routes = [
     <Route name="home" path="/" handler={require('components/app')}>
-        <DefaultRoute handler={require('components/instance/instanceNoneSelected')} />
+        <DefaultRoute name="noInstance" handler={require('components/instance/instanceNoneSelected')} />
         <Route name="instance" path="instances/:instanceId" handler={require('components/instance/instanceView')}>
-            <DefaultRoute handler={require('components/analysis/analysisNoneSelected')} />
+            <DefaultRoute name="noAnalysis" handler={require('components/analysis/analysisNoneSelected')} />
             <Route name="analysis" path="analysis/:analysisId" handler={require('components/analysis/analysisView')} />
         </Route>
 
