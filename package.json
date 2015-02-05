@@ -24,11 +24,9 @@
     "gulp-if": "~1.2.5",
     "gulp-minify-css": "~0.3.13",
     "gulp-uglify": "~1.1.0",
-    "node-cortex": "~0.4.1",
     "lodash": "~2.4.1",
     "immutable": "~3.6.2",
     "marty": "~0.8.3",
-    "bluebird": "~2.9.2",
     "react-router-bootstrap": "~0.8.3"
   }
 }
