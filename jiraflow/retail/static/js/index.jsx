@@ -37,8 +37,6 @@ if(initialState) {
     }
 }
 
-var firstRender = true;
-
 Router.run(function(Handler, state) {
     NavigationActionCreators.routerNavigate(Handler, state);
     React.render(<Handler />, document.body);
