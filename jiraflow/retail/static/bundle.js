@@ -38,8 +38,6 @@ if(initialState) {
     }
 }
 
-var firstRender = true;
-
 Router.run(function(Handler, state) {
     NavigationActionCreators.routerNavigate(Handler, state);
     React.render(React.createElement(Handler, null), document.body);
@@ -955,8 +953,7 @@ function navigateTo(route, params) {
 
 var NavigationActionCreators = Marty.createActionCreators({
 
-    // These trigger Router actions, which in turn trigger the NAVIGATE
-    // action.
+    // These trigger Router actions, which in turn trigger the NAVIGATE action.
     navigateHome: function() {
         navigateTo('home');
     },
@@ -970,14 +967,13 @@ var NavigationActionCreators = Marty.createActionCreators({
     },
 
     routerNavigate: NavigationConstants.NAVIGATE(function(handler, state) {
-        var payload = {
+        this.dispatch({
             path: state.path,
             pathName: state.pathname,
             queryString: state.query,
             params: state.params,
             routes: state.routes.map(function(r)  {return r.name;})
-        };
-        this.dispatch(payload);
+        });
     }),
 
 });
