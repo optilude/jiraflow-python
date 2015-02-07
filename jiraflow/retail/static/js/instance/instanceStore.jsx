@@ -5,9 +5,9 @@
 var Immutable = require('immutable');
 var Marty = require('marty');
 
-var NavigationConstants = require('navigation/navigationConstants');
-var UserConstants = require('user/userConstants');
-var UserStore = require('user/userStore');
+var NavigationConstants = require('../navigation/navigationConstants');
+var UserConstants = require('../user/userConstants');
+var UserStore = require('../user/userStore');
 var InstanceConstants = require('./instanceConstants');
 var InstanceActionCreators = require('./instanceActionCreators');
 var InstanceAPI = require('./instanceAPI');

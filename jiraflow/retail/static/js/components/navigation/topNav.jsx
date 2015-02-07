@@ -4,11 +4,15 @@
 
 var React = require('react');
 var Marty = require('marty');
+var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-var UserStore = require('user/userStore');
-var InstanceStore = require('instance/instanceStore');
+
+var UserStore = require('../../user/userStore');
+var InstanceStore = require('../../instance/instanceStore');
+
+var Link = Router.Link;
 
 var Navbar = BS.Navbar;
 var Nav = BS.Nav;
@@ -46,7 +50,7 @@ var TopNav = React.createClass({
 
     render: function() {
         return (
-            <Navbar inverse={true} fixedTop={true} fluid={true} brand="JIRA Flow" ref="navbar">
+            <Navbar inverse={true} fixedTop={true} fluid={true} brand={<Link to="home">JIRA Flow</Link>} ref="navbar">
                 <Nav ref="mainNav">
                     <DropdownButton title="JIRA Instance" ref="instanceMenu">
                         <MenuItemLink to="newInstance" onClick={this.linkClick}>New</MenuItemLink>

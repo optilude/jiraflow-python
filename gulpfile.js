@@ -43,7 +43,6 @@ var bundler = browserify({
     entries: [jsMainFile],
     extensions: ['.jsx'],
     debug: !argv.production,
-    paths: ['./node_modules', jsDirectory], // XXX: Possibly deprecated approach, see http://stackoverflow.com/questions/20158401
     cache: {}, packageCache: {}, fullPaths: true // for watchify
 });
 
