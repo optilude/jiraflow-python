@@ -25,7 +25,7 @@ var InstanceAPI = Marty.createStateSource({
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 resolve(instance.set('id', 'new-cool-instance'));
-            }, 100);
+            }, 1000);
         });
 
         // var req = {

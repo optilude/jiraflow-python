@@ -497,7 +497,7 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
                         ), 
                         React.createElement("form", {onSubmit: this.onSubmit}, 
                             React.createElement(Form, {ref: "form", schema: schema, component: "div"}), 
-                            React.createElement(Button, {type: "submit", bsStyle: "primary"}, "Submit")
+                            React.createElement(Button, {type: "submit", bsStyle: "primary"}, "Create")
                         )
                     )
                 )
@@ -815,7 +815,7 @@ var InstanceAPI = Marty.createStateSource({
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 resolve(instance.set('id', 'new-cool-instance'));
-            }, 100);
+            }, 1000);
         });
 
         // var req = {
@@ -1216,7 +1216,7 @@ var DefaultRoute = Router.DefaultRoute;
 
 // TODO: Mixin for ensuring routes are authenticated, instance/analysis exists,
 // and forms are saved using willTransitionTo()/willTransitionFrom()
-// see https://github.com/rackt/react-router/blob/master/examples/auth-flow/app.js#L40
+// see https://github.com/rackt/react-router/blob/master/docs/api/components/RouteHandler.md
 
 var routes = [
     React.createElement(Route, {name: "home", path: "/", handler: require('./components/app')}, 

@@ -17,7 +17,7 @@ var DefaultRoute = Router.DefaultRoute;
 
 // TODO: Mixin for ensuring routes are authenticated, instance/analysis exists,
 // and forms are saved using willTransitionTo()/willTransitionFrom()
-// see https://github.com/rackt/react-router/blob/master/examples/auth-flow/app.js#L40
+// see https://github.com/rackt/react-router/blob/master/docs/api/components/RouteHandler.md
 
 var routes = [
     <Route name="home" path="/" handler={require('./components/app')}>

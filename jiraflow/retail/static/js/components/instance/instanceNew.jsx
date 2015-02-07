@@ -46,7 +46,7 @@ var InstanceNew = React.createClass({
                         </p>
                         <form onSubmit={this.onSubmit}>
                             <Form ref="form" schema={schema} component="div" />
-                            <Button type="submit" bsStyle="primary">Submit</Button>
+                            <Button type="submit" bsStyle="primary">Create</Button>
                         </form>
                     </Col>
                 </Row>
