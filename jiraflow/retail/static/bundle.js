@@ -474,7 +474,8 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
 
     getInitialState: function() {
         return {
-            invalid: false
+            invalid: false,
+            error: false
         };
     },
 
@@ -486,8 +487,10 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
                     React.createElement(Col, {sm: 3, md: 2}
                     ), 
                     React.createElement(Col, {sm: 9, md: 6}, 
-                        React.createElement("h1", null, "Create new instance"), 
                         this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please fill in all required fields") : "", 
+                        this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the new instance. Please try again later.") : "", 
+
+                        React.createElement("h1", null, "Create new instance"), 
                         React.createElement("p", {className: "help-block"}, 
                             "Enter a name and the connection details for a" + ' ' +
                             "remote JIRA instance."
@@ -508,16 +511,22 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
 
         var form = this.refs.form;
         if(!form.isValid()) {
-            this.setState({invalid: true});
+            this.setState({invalid: true, error: false});
             return;
         } else {
-            this.setState({invalid: false});
+            this.setState({invalid: false, error: false});
         }
 
         var value = this.refs.form.getValue();
 
-        // TODO: Handle error scenario if create operation fails
-        InstanceActionCreators.createInstance(value);
+        InstanceActionCreators.createInstance(value)
+        .then(function(instance)  {
+            NavigationActionCreators.navigateToInstance(instance.get('id'));
+        })
+        .catch(function(error)  {
+            console.error(error);
+            this.setState({invalid: false, error: true});
+        }.bind(this));
     }
 
 });
@@ -802,7 +811,7 @@ var InstanceAPI = Marty.createStateSource({
 
     create: function(instance) {
 
-        // XXX: Faked for now
+        // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 resolve(instance.set('id', 'new-cool-instance'));
@@ -865,6 +874,7 @@ var InstanceActionCreators = Marty.createActionCreators({
         .then(function(result) {
             // inform stores an instance has been received
             this.receiveInstance(result);
+
             // dispatch action with the instance as returned by the server
             this.dispatch(result);
             return result;
@@ -987,8 +997,7 @@ var InstanceStore = Marty.createStore({
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
-        _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE,
-        _createInstance: InstanceConstants.CREATE_INSTANCE
+        _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE
     },
 
     _changeUser: function(user, refresh /* default: true */) {
@@ -1051,7 +1060,6 @@ var InstanceStore = Marty.createStore({
             throw "Instance must be an Immutable.Map";
         }
 
-
         if(!instance.equals(this.state.instances.get(instance.get('id')))) {
             this.state.instances = this.state.instances.set(instance.get('id'), instance);
             this.hasChanged();
@@ -1070,10 +1078,6 @@ var InstanceStore = Marty.createStore({
         }
 
         this.hasChanged();
-    },
-
-    _createInstance: function(instance) {
-        NavigationActionCreators.navigateToInstance(instance.get('id'));
     }
 
 });
@@ -1202,6 +1206,17 @@ var Router = require('react-router');
 
 var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
+
+// TODO: NotFoundRoute(s)
+// TODO: Log in
+// TODO: Preferences
+// TODO: Edit instance
+// TODO: Create analysis
+// TODO: Edit analysis
+
+// TODO: Mixin for ensuring routes are authenticated, instance/analysis exists,
+// and forms are saved using willTransitionTo()/willTransitionFrom()
+// see https://github.com/rackt/react-router/blob/master/examples/auth-flow/app.js#L40
 
 var routes = [
     React.createElement(Route, {name: "home", path: "/", handler: require('./components/app')}, 

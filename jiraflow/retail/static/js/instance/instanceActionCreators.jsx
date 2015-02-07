@@ -25,6 +25,7 @@ var InstanceActionCreators = Marty.createActionCreators({
         .then(function(result) {
             // inform stores an instance has been received
             this.receiveInstance(result);
+
             // dispatch action with the instance as returned by the server
             this.dispatch(result);
             return result;

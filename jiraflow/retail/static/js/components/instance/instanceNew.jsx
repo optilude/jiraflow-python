@@ -23,7 +23,8 @@ var InstanceNew = React.createClass({
 
     getInitialState: function() {
         return {
-            invalid: false
+            invalid: false,
+            error: false
         };
     },
 
@@ -35,8 +36,10 @@ var InstanceNew = React.createClass({
                     <Col sm={3} md={2}>
                     </Col>
                     <Col sm={9} md={6}>
-                        <h1>Create new instance</h1>
                         {this.state.invalid? <Alert bsStyle="danger">Please fill in all required fields</Alert> : ""}
+                        {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the new instance. Please try again later.</Alert> : ""}
+
+                        <h1>Create new instance</h1>
                         <p className="help-block">
                             Enter a name and the connection details for a
                             remote JIRA instance.
@@ -57,16 +60,22 @@ var InstanceNew = React.createClass({
 
         var form = this.refs.form;
         if(!form.isValid()) {
-            this.setState({invalid: true});
+            this.setState({invalid: true, error: false});
             return;
         } else {
-            this.setState({invalid: false});
+            this.setState({invalid: false, error: false});
         }
 
         var value = this.refs.form.getValue();
 
-        // TODO: Handle error scenario if create operation fails
-        InstanceActionCreators.createInstance(value);
+        InstanceActionCreators.createInstance(value)
+        .then(instance => {
+            NavigationActionCreators.navigateToInstance(instance.get('id'));
+        })
+        .catch(error => {
+            console.error(error);
+            this.setState({invalid: false, error: true});
+        });
     }
 
 });

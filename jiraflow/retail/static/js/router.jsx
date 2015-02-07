@@ -8,6 +8,17 @@ var Router = require('react-router');
 var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 
+// TODO: NotFoundRoute(s)
+// TODO: Log in
+// TODO: Preferences
+// TODO: Edit instance
+// TODO: Create analysis
+// TODO: Edit analysis
+
+// TODO: Mixin for ensuring routes are authenticated, instance/analysis exists,
+// and forms are saved using willTransitionTo()/willTransitionFrom()
+// see https://github.com/rackt/react-router/blob/master/examples/auth-flow/app.js#L40
+
 var routes = [
     <Route name="home" path="/" handler={require('./components/app')}>
 

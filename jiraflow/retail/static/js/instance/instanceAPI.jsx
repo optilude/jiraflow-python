@@ -21,7 +21,7 @@ var InstanceAPI = Marty.createStateSource({
 
     create: function(instance) {
 
-        // XXX: Faked for now
+        // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
             setTimeout(function() {
                 resolve(instance.set('id', 'new-cool-instance'));

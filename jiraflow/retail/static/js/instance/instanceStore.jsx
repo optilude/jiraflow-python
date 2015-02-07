@@ -51,8 +51,7 @@ var InstanceStore = Marty.createStore({
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
-        _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE,
-        _createInstance: InstanceConstants.CREATE_INSTANCE
+        _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE
     },
 
     _changeUser: function(user, refresh /* default: true */) {
@@ -115,7 +114,6 @@ var InstanceStore = Marty.createStore({
             throw "Instance must be an Immutable.Map";
         }
 
-
         if(!instance.equals(this.state.instances.get(instance.get('id')))) {
             this.state.instances = this.state.instances.set(instance.get('id'), instance);
             this.hasChanged();
@@ -134,10 +132,6 @@ var InstanceStore = Marty.createStore({
         }
 
         this.hasChanged();
-    },
-
-    _createInstance: function(instance) {
-        NavigationActionCreators.navigateToInstance(instance.get('id'));
     }
 
 });
