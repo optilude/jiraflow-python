@@ -6,8 +6,8 @@ var Immutable = require('immutable');
 var Marty = require('marty');
 
 var NavigationConstants = require('navigation/navigationConstants');
-var InstanceConstants = require('instances/instanceConstants');
-var InstanceStore = require('instances/instanceStore');
+var InstanceConstants = require('instance/instanceConstants');
+var InstanceStore = require('instance/instanceStore');
 var AnalysisConstants = require('./analysisConstants');
 var AnalysisActionCreators = require('./analysisActionCreators');
 var AnalysisAPI = require('./analysisAPI');

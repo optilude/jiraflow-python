@@ -6,7 +6,7 @@ var React = require('react/addons');
 var ReactForms = require('react-forms');
 var BS = require('react-bootstrap');
 
-var InstanceActionCreators = require('instances/instanceActionCreators');
+var InstanceActionCreators = require('instance/instanceActionCreators');
 var NavigationActionCreators = require('navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 

@@ -7,8 +7,8 @@ var React = require('react');
 var Router = require('react-router');
 var BS = require('react-bootstrap');
 
-var InstanceStore = require('instances/instanceStore');
-var AnalysisStore = require('analyses/analysisStore');
+var InstanceStore = require('instance/instanceStore');
+var AnalysisStore = require('analysis/analysisStore');
 
 var Sidebar = require('./instanceSidebar');
 var RouteHandler = Router.RouteHandler;

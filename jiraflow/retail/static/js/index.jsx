@@ -11,8 +11,8 @@ var Router = require('./router');
 
 var NavigationActionCreators = require('navigation/navigationActionCreators');
 var UserActionCreators = require('user/userActionCreators');
-var InstanceActionCreators = require('instances/instanceActionCreators');
-var AnalysisActionCreators = require('analyses/analysisActionCreators');
+var InstanceActionCreators = require('instance/instanceActionCreators');
+var AnalysisActionCreators = require('analysis/analysisActionCreators');
 
 window.React = React; // For React Developer Tools
 window.Marty = Marty; // For Marty Developer Tools

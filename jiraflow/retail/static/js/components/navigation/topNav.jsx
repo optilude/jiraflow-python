@@ -8,7 +8,7 @@ var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
 var UserStore = require('user/userStore');
-var InstanceStore = require('instances/instanceStore');
+var InstanceStore = require('instance/instanceStore');
 
 var Navbar = BS.Navbar;
 var Nav = BS.Nav;
