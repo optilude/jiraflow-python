@@ -49,7 +49,7 @@ var TopNav = React.createClass({
             <Navbar inverse={true} fixedTop={true} fluid={true} brand="JIRA Flow" ref="navbar">
                 <Nav ref="mainNav">
                     <DropdownButton title="JIRA Instance" ref="instanceMenu">
-                        <MenuItem>New</MenuItem>
+                        <MenuItemLink to="newInstance" onClick={this.linkClick}>New</MenuItemLink>
                         <MenuItem>Edit</MenuItem>
                         <MenuItem>Delete</MenuItem>
                         <MenuItem divider />

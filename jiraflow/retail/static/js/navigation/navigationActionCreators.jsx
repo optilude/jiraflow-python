@@ -3,11 +3,11 @@
 "use strict";
 
 var Marty = require('marty');
-
-var Router = require('../router');
 var NavigationConstants = require('./navigationConstants');
 
 function navigateTo(route, params) {
+    // avoid cyclical import
+    var Router = require('../router');
     Router.transitionTo(route, params || {});
 }
 
