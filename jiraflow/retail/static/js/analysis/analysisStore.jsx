@@ -6,6 +6,7 @@ var Immutable = require('immutable');
 var Marty = require('marty');
 
 var NavigationConstants = require('../navigation/navigationConstants');
+var NavigationStore = require('../navigation/navigationStore');
 var InstanceConstants = require('../instance/instanceConstants');
 var InstanceStore = require('../instance/instanceStore');
 var AnalysisConstants = require('./analysisConstants');
@@ -92,7 +93,9 @@ var AnalysisStore = Marty.createStore({
     },
 
     _navigate: function(action) {
-        var analysisId = action.params.analysisId;
+        this.waitFor(NavigationStore);
+
+        var analysisId = NavigationStore.getParams().analysisId;
         if(analysisId) {
             this._selectAnalysis(analysisId);
         }
@@ -129,8 +132,8 @@ var AnalysisStore = Marty.createStore({
             throw "Analysis must be an Immutable.Map";
         }
 
-        if(!analysis.equals(this.state.analyses.get(analysis.id))) {
-            this.state.analyses = this.state.analyses.set(analysis.id, analysis);
+        if(!analysis.equals(this.state.analyses.get(analysis.get('id')))) {
+            this.state.analyses = this.state.analyses.set(analysis.get('id'), analysis);
             this.hasChanged();
         }
     },
@@ -140,7 +143,7 @@ var AnalysisStore = Marty.createStore({
             throw "Instance not found";
         }
 
-        this.state.analyses = this.state.analysis.delete(id);
+        this.state.analyses = this.state.analyses.delete(id);
 
         if(this.state.id === id) {
             this.state.id = null;

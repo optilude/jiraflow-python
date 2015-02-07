@@ -1,5 +1,5 @@
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
+/*global require, module, exports, document, window, setTimeout */
 "use strict";
 
 var Immutable = require('immutable');
@@ -38,6 +38,10 @@ if(initialState) {
 }
 
 Router.run(function(Handler, state) {
-    NavigationActionCreators.routerNavigate(Handler, state);
-    React.render(<Handler />, document.body);
+    // trigger navigation as an action, but defer until after any current
+    // action that actually caused the navigation has completed
+    setTimeout(function() {
+        NavigationActionCreators.routerNavigate(Handler, state);
+        React.render(<Handler />, document.body);
+    }, 0);
 });

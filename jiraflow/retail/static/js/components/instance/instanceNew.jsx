@@ -65,11 +65,8 @@ var InstanceNew = React.createClass({
 
         var value = this.refs.form.getValue();
 
-        // TODO: Error handling if submit fails
+        // TODO: Handle error scenario if create operation fails
         InstanceActionCreators.createInstance(value);
-
-        // TODO: Navigate to the new instance
-        NavigationActionCreators.navigateHome();
     }
 
 });

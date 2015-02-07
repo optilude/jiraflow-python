@@ -13,19 +13,7 @@ function navigateTo(route, params) {
 
 var NavigationActionCreators = Marty.createActionCreators({
 
-    // These trigger Router actions, which in turn trigger the NAVIGATE action.
-    navigateHome: function() {
-        navigateTo('home');
-    },
-
-    navigateToInstance: function(id) {
-        navigateTo('instance', {instanceId: id});
-    },
-
-    navigateToAnalysis: function(instanceId, id) {
-        navigateTo('analysis', {instanceId: instanceId, analysisId: id});
-    },
-
+    // Directly trigger the NAVIGATE action
     routerNavigate: NavigationConstants.NAVIGATE(function(handler, state) {
         this.dispatch({
             path: state.path,
@@ -34,10 +22,23 @@ var NavigationActionCreators = Marty.createActionCreators({
             params: state.params,
             routes: state.routes.map(r => r.name)
         });
-    }),
+    })
 
 });
 
+// Helper functions that are not really action creators, but end up triggering
+// the NAVIGATE action indirectly
 
+NavigationActionCreators.navigateHome = function() {
+    navigateTo('home');
+};
+
+NavigationActionCreators.navigateToInstance = function(id) {
+    navigateTo('instance', {instanceId: id});
+};
+
+NavigationActionCreators.navigateToAnalysis = function(instanceId, id) {
+    navigateTo('analysis', {instanceId: instanceId, analysisId: id});
+};
 
 module.exports = NavigationActionCreators;

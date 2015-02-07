@@ -21,19 +21,13 @@ var InstanceActionCreators = Marty.createActionCreators({
     }),
 
     createInstance: InstanceConstants.CREATE_INSTANCE(function(instance) {
-        // optimistically dispatch
-        var action = this.dispatch(instance);
-
         return InstanceAPI.create(instance)
         .then(function(result) {
             // inform stores an instance has been received
             this.receiveInstance(result);
+            // dispatch action with the instance as returned by the server
+            this.dispatch(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
-            // roll back action if AJAX opertion failed
-            action.rollback();
-            throw error;
         }.bind(this));
     }),
 

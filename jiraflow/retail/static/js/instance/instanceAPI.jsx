@@ -1,5 +1,5 @@
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
+/*global require, module, exports, document, window, setTimeout */
 "use strict";
 
 var Immutable = require('immutable');
@@ -20,14 +20,22 @@ var InstanceAPI = Marty.createStateSource({
     },
 
     create: function(instance) {
-        var req = {
-            url: '/api/instances',
-            body: instance.toJS()
-        };
 
-        return this.post(req).then(function(res) {
-            return Immutable.fromJS(res.body);
+        // XXX: Faked for now
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                resolve(instance.set('id', 'new-cool-instance'));
+            }, 100);
         });
+
+        // var req = {
+        //     url: '/api/instances',
+        //     body: instance.toJS()
+        // };
+
+        // return this.post(req).then(function(res) {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     update: function(id, instance) {

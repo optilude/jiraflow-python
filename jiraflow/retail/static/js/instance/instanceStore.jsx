@@ -6,6 +6,8 @@ var Immutable = require('immutable');
 var Marty = require('marty');
 
 var NavigationConstants = require('../navigation/navigationConstants');
+var NavigationStore = require('../navigation/navigationStore');
+var NavigationActionCreators = require('../navigation/navigationActionCreators');
 var UserConstants = require('../user/userConstants');
 var UserStore = require('../user/userStore');
 var InstanceConstants = require('./instanceConstants');
@@ -49,7 +51,8 @@ var InstanceStore = Marty.createStore({
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
-        _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE
+        _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE,
+        _createInstance: InstanceConstants.CREATE_INSTANCE
     },
 
     _changeUser: function(user, refresh /* default: true */) {
@@ -73,7 +76,9 @@ var InstanceStore = Marty.createStore({
     },
 
     _navigate: function(action) {
-        var instanceId = action.params.instanceId;
+        this.waitFor(NavigationStore);
+
+        var instanceId = NavigationStore.getParams().instanceId;
         if(instanceId) {
             this._selectInstance(instanceId);
         }
@@ -111,8 +116,8 @@ var InstanceStore = Marty.createStore({
         }
 
 
-        if(!instance.equals(this.state.instances.get(instance.id))) {
-            this.state.instances = this.state.instances.set(instance.id, instance);
+        if(!instance.equals(this.state.instances.get(instance.get('id')))) {
+            this.state.instances = this.state.instances.set(instance.get('id'), instance);
             this.hasChanged();
         }
     },
@@ -129,6 +134,10 @@ var InstanceStore = Marty.createStore({
         }
 
         this.hasChanged();
+    },
+
+    _createInstance: function(instance) {
+        NavigationActionCreators.navigateToInstance(instance.get('id'));
     }
 
 });
