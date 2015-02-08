@@ -16,7 +16,7 @@ var DefaultRoute = Router.DefaultRoute;
 
 var routes = [
     <Route name="login" path="/login" handler={require('./components/user/login')} />,
-    <Route name="home" path="/" handler={require('./components/app')}>
+    <Route name="home"  path="/"      handler={require('./components/app')}>
 
         <DefaultRoute name="noInstance"                               handler={require('./components/instance/instanceNoneSelected')} />
         <Route        name="newInstance" path="new-instance"          handler={require('./components/instance/instanceNew')} />
