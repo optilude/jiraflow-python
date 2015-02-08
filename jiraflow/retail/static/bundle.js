@@ -1323,16 +1323,11 @@ var Router = require('react-router');
 var Route = Router.Route;
 var DefaultRoute = Router.DefaultRoute;
 
-// TODO: NotFoundRoute(s)
-// TODO: Log in
+// TODO: NotFoundRoute(s) + handle invalid instanceId/analysisId param
 // TODO: Preferences
 // TODO: Edit instance
 // TODO: Create analysis
 // TODO: Edit analysis
-
-// TODO: Mixin for ensuring routes are authenticated, instance/analysis exists,
-// and forms are saved using willTransitionTo()/willTransitionFrom()
-// see https://github.com/rackt/react-router/blob/master/docs/api/components/RouteHandler.md
 
 var routes = [
     React.createElement(Route, {name: "login", path: "/login", handler: require('./components/user/login')}),
