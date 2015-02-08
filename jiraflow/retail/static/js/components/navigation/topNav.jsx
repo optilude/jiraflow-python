@@ -9,7 +9,9 @@ var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
 
+var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var UserStore = require('../../user/userStore');
+var UserActionCreators = require('../../user/userActionCreators');
 var InstanceStore = require('../../instance/instanceStore');
 
 var Link = Router.Link;
@@ -40,13 +42,7 @@ var NavigationState = Marty.createStateMixin({
 var TopNav = React.createClass({
     mixins: [NavigationState],
 
-    // TODO: Handle new, edit, delete, prefs, logout
-
-    linkClick: function(event) {
-        // This is something of a hack. For an explanation, see
-        // https://github.com/react-bootstrap/react-bootstrap/issues/202
-        this.refs.navbar.refs.mainNav.refs.instanceMenu.setDropdownState(false);
-    },
+    // TODO: Handle edit, delete, prefs
 
     render: function() {
         return (
@@ -61,14 +57,32 @@ var TopNav = React.createClass({
                     </DropdownButton>
                 </Nav>
                 <Nav right={true}>
-                    <DropdownButton eventKey={1} title={this.state.user.get('name')}>
+                    <DropdownButton eventKey={1} title={this.state.user? this.state.user.get('name') : "Unknown user"}>
                         <MenuItem>Preferences</MenuItem>
-                        <MenuItem>Log out</MenuItem>
+                        <MenuItem onSelect={this.logout}>Log out</MenuItem>
                     </DropdownButton>
                 </Nav>
             </Navbar>
         );
+    },
+
+    logout: function(event) {
+        UserActionCreators.logout()
+        .then(() => {
+            NavigationActionCreators.navigateToLogin();
+        })
+        .catch(error => {
+            console.error(error);
+            alert("An unexpected error occurred logging out.");
+        });
+    },
+
+    linkClick: function(event) {
+        // This is something of a hack. For an explanation, see
+        // https://github.com/react-bootstrap/react-bootstrap/issues/202
+        this.refs.navbar.refs.mainNav.refs.instanceMenu.setDropdownState(false);
     }
+
 });
 
 module.exports = TopNav;

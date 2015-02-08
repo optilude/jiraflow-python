@@ -7,6 +7,8 @@ var Marty = require('marty');
 
 var NavigationConstants = require('../navigation/navigationConstants');
 var NavigationStore = require('../navigation/navigationStore');
+var UserConstants = require('../user/userConstants');
+var UserStore = require('../user/userStore');
 var InstanceConstants = require('../instance/instanceConstants');
 var InstanceStore = require('../instance/instanceStore');
 var AnalysisConstants = require('./analysisConstants');
@@ -45,6 +47,7 @@ var AnalysisStore = Marty.createStore({
     // Action handlers
 
     handlers: {
+        _changeUser: UserConstants.RECEIVE_USER,
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _navigate: NavigationConstants.NAVIGATE,
@@ -54,17 +57,25 @@ var AnalysisStore = Marty.createStore({
         _receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE
     },
 
+    _changeUser: function(user, refresh /* default: true */) {
+        this.waitFor(UserStore);
+
+        // Clear out existing data
+        this.state.analyses = Immutable.OrderedMap();
+        this.hasChanged();
+    },
+
     _selectInstance: function(id) {
         this.waitFor(InstanceStore);
 
         this.state.updatePending = true;
-        this.instances = Immutable.OrderedMap();
+        this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
 
         // force a re-fetch of everything
         AnalysisAPI.fetchAll()
         .then(function(result) {
-            AnalysisActionCreators.receiveInstances(result);
+            AnalysisActionCreators.receiveAnalyses(result);
             return result;
         })
         .catch(function(error) {
@@ -76,14 +87,14 @@ var AnalysisStore = Marty.createStore({
         this.waitFor(InstanceStore);
 
         this.state.updatePending = true;
-        this.instances = Immutable.OrderedMap();
+        this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
 
         if(refresh !== false) { // true or undefined
             // force a re-fetch of everything
             AnalysisAPI.fetchAll()
             .then(function(result) {
-                AnalysisActionCreators.receiveInstances(result);
+                AnalysisActionCreators.receiveAnalyses(result);
                 return result;
             })
             .catch(function(error) {

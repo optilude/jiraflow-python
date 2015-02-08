@@ -1,5 +1,5 @@
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
+/*global require, module, exports, document, window, setTimeout */
 "use strict";
 
 var Immutable = require('immutable');
@@ -14,21 +14,56 @@ var UserAPI = Marty.createStateSource({
     // TODO: Implement correct API
 
     getUser: function() {
-        return this.get('/api/user').then(function(res) {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                resolve({
+                    email: "john@example.org",
+                    name: "John Smith",
+                    roles: []
+                });
+            }, 1000);
         });
+
+        // return this.get('/api/user').then(function(res) {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     login: function(username, password) {
-        return this.post('/api/user/login').then(function(res) {
-            return Immutable.fromJS(res.body);
+
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                if(username === "john@example.org" && password === "secret") {
+                    resolve(Immutable.fromJS({
+                        email: "john@example.org",
+                        name: "John Smith",
+                        roles: []
+                    }));
+                } else {
+                    reject(401);
+                }
+            }, 1000);
         });
+
+        // return this.post('/api/user/login').then(function(res) {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     logout: function() {
-        return this.post('/api/user/logout').then(function(res) {
-            return null;
+
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(function() {
+                resolve(null);
+            }, 1000);
         });
+
+        // return this.post('/api/user/logout').then(function(res) {
+        //     return null;
+        // });
     },
 
     changePassword: function(oldPassword, newPassword) {

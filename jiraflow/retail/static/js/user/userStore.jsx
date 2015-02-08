@@ -31,8 +31,7 @@ var UserStore = Marty.createStore({
 
     _receiveUser: function(user, refresh /* default: true */) {
         if(user === null) {
-            this.state = null;
-            this.hasChanged();
+            this.setState(null);
             return;
         }
 
@@ -41,8 +40,7 @@ var UserStore = Marty.createStore({
         }
 
         if(!user.equals(this.state)) {
-            this.state = user;
-            this.hasChanged();
+            this.setState(user);
         }
     }
 

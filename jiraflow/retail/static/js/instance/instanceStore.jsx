@@ -57,12 +57,14 @@ var InstanceStore = Marty.createStore({
     _changeUser: function(user, refresh /* default: true */) {
         this.waitFor(UserStore);
 
-        this.state.updatePending = true;
-        this.instances = Immutable.OrderedMap();
+        // Clear out existing data
+        this.state.instances = Immutable.OrderedMap();
         this.hasChanged();
 
-        if(refresh !== false) { // true or undefined
+        if(user !== null && refresh !== false) { // true or undefined
             // force a re-fetch of everything
+            this.state.updatePending = true;
+            this.hasChanged();
             InstanceAPI.fetchAll()
             .then(function(result) {
                 InstanceActionCreators.receiveInstances(result);

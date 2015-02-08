@@ -33,6 +33,10 @@ NavigationActionCreators.navigateHome = function() {
     navigateTo('home');
 };
 
+NavigationActionCreators.navigateToLogin = function() {
+    navigateTo('login');
+};
+
 NavigationActionCreators.navigateToInstance = function(id) {
     navigateTo('instance', {instanceId: id});
 };

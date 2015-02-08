@@ -20,6 +20,7 @@ var DefaultRoute = Router.DefaultRoute;
 // see https://github.com/rackt/react-router/blob/master/docs/api/components/RouteHandler.md
 
 var routes = [
+    <Route name="login" path="/login" handler={require('./components/user/login')} />,
     <Route name="home" path="/" handler={require('./components/app')}>
 
         <DefaultRoute name="noInstance"                               handler={require('./components/instance/instanceNoneSelected')} />
