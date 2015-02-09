@@ -16,7 +16,7 @@ var UserActionCreators = Marty.createActionCreators({
 
     login: UserConstants.LOGIN_USER(function(username, password) {
         return UserAPI.login(username, password)
-        .then(function(result) {
+        .then(result => {
             // inform stores a user has been received
             this.receiveUser(result);
 
@@ -24,15 +24,15 @@ var UserActionCreators = Marty.createActionCreators({
             this.dispatch(username);
 
             return result;
-        }.bind(this))
-        .catch(function(error) {
-            throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        })
+        .catch(error => {
+            throw new Exception(error, "Server request failed", error);
+        });
     }),
 
     logout: UserConstants.LOGOUT_USER(function() {
         return UserAPI.logout()
-        .then(function(result) {
+        .then(result => {
             // inform stores a user has been received
             this.receiveUser(null);
 
@@ -40,26 +40,26 @@ var UserActionCreators = Marty.createActionCreators({
             this.dispatch();
 
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     changePassword: UserConstants.CHANGE_USER_PASSWORD(function(oldPassword, newPassword) {
         return UserAPI.changePassword(oldPassword, newPassword)
-        .then(function(result) {
+        .then(result => {
             this.dispatch();
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     changePreferences: UserConstants.CHANGE_USER_PREFS(function(newUser) {
         return UserAPI.changePreferences(newUser)
-        .then(function(result) {
+        .then(result => {
             // inform stores a user has been received
             this.receiveUser(null);
 
@@ -67,10 +67,10 @@ var UserActionCreators = Marty.createActionCreators({
             this.dispatch();
 
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     receiveUser: UserConstants.RECEIVE_USER()

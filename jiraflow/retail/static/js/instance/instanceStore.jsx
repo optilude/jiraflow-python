@@ -67,11 +67,12 @@ var InstanceStore = Marty.createStore({
             this.state.updatePending = true;
             this.hasChanged();
             InstanceAPI.fetchAll()
-            .then(function(result) {
+            .then(result => {
                 InstanceActionCreators.receiveInstances(result);
                 return result;
             })
-            .catch(function(error) {
+            .catch(error => {
+                // TODO: Handle better
                 console.error(error);
             });
         }

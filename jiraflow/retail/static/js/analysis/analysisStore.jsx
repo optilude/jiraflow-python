@@ -75,11 +75,12 @@ var AnalysisStore = Marty.createStore({
 
         // force a re-fetch of everything
         AnalysisAPI.fetchAll()
-        .then(function(result) {
+        .then(result => {
             AnalysisActionCreators.receiveAnalyses(result);
             return result;
         })
-        .catch(function(error) {
+        .catch(error => {
+            // TODO: Handle better
             console.error(error);
         });
     },
@@ -94,11 +95,12 @@ var AnalysisStore = Marty.createStore({
         if(refresh !== false) { // true or undefined
             // force a re-fetch of everything
             AnalysisAPI.fetchAll()
-            .then(function(result) {
+            .then(result => {
                 AnalysisActionCreators.receiveAnalyses(result);
                 return result;
             })
-            .catch(function(error) {
+            .catch(error => {
+                // TODO: Handle better
                 console.error(error);
             });
         }

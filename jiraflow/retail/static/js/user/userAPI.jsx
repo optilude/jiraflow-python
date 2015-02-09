@@ -16,7 +16,7 @@ var UserAPI = Marty.createStateSource({
     getUser: function() {
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(() => {
                 resolve({
                     email: "john@example.org",
                     name: "John Smith",
@@ -25,7 +25,8 @@ var UserAPI = Marty.createStateSource({
             }, 1000);
         });
 
-        // return this.get('/api/user').then(function(res) {
+        // return this.get('/api/user')
+        // .then(res => {
         //     return Immutable.fromJS(res.body);
         // });
     },
@@ -34,7 +35,7 @@ var UserAPI = Marty.createStateSource({
 
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(() => {
                 if(username === "john@example.org" && password === "secret") {
                     resolve(Immutable.fromJS({
                         email: "john@example.org",
@@ -47,7 +48,8 @@ var UserAPI = Marty.createStateSource({
             }, 1000);
         });
 
-        // return this.post('/api/user/login').then(function(res) {
+        // return this.post('/api/user/login')
+        // .then(res => {
         //     return Immutable.fromJS(res.body);
         // });
     },
@@ -56,12 +58,13 @@ var UserAPI = Marty.createStateSource({
 
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(() => {
                 resolve(null);
             }, 1000);
         });
 
-        // return this.post('/api/user/logout').then(function(res) {
+        // return this.post('/api/user/logout')
+        // .then(res => {
         //     return null;
         // });
     },
@@ -75,7 +78,8 @@ var UserAPI = Marty.createStateSource({
             }
         };
 
-        return this.post(req).then(function(res) {
+        return this.post(req)
+        .then(res => {
             return Immutable.fromJS(res.body);
         });
     },
@@ -86,7 +90,8 @@ var UserAPI = Marty.createStateSource({
             body: user.toJS()
         };
 
-        return this.post(req).then(function(res) {
+        return this.post(req)
+        .then(res => {
             return Immutable.fromJS(res.body);
         });
     }

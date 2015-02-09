@@ -39,17 +39,13 @@ if(initialState) {
 }
 
 Router.run(function(Handler, state) {
-    // trigger navigation as an action, but defer until after any current
-    // action that actually caused the navigation has completed
-    setTimeout(function() {
-        // TODO: Catch exception here and navigate to 404 page?
-        NavigationActionCreators.routerNavigate(Handler, state);
-        React.render(React.createElement(Handler, null), document.body);
-    }, 0);
+    // TODO: Catch exception here and navigate to 404 page?
+    NavigationActionCreators.routerNavigate(Handler, state);
+    React.render(React.createElement(Handler, null), document.body);
 });
 },{"./analysis/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
+/*global require, module, exports, document, window, setTimeout */
 "use strict";
 
 var Immutable = require('immutable');
@@ -64,9 +60,31 @@ var AnalysisAPI = Marty.createStateSource({
     // TODO: Implement correct API
 
     fetchAll: function(instanceId) {
-        return this.get('/api/instances/' + instanceId + '/analyses').then(function(res) {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(function()  {
+                resolve(Immutable.fromJS([
+                    {
+                        id: "cfd",
+                        title: "Cumulative flow",
+                        type: "cfd",
+                    }, {
+                        id: "control-chart",
+                        title: "Control chart",
+                        type: "control_chart",
+                    }, {
+                        id: "delivery-forecast",
+                        title: "Delivery forecast",
+                        type: "delivery_forecast",
+                    },
+                ]));
+            }, 1000);
         });
+
+        // return this.get('/api/instances/' + instanceId + '/analyses')
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     create: function(instanceId, analysis) {
@@ -75,7 +93,8 @@ var AnalysisAPI = Marty.createStateSource({
             body: analysis.toJS()
         };
 
-        return this.post(req).then(function(res) {
+        return this.post(req)
+        .then(function(res)  {
             return Immutable.fromJS(res.body);
         });
     },
@@ -86,7 +105,8 @@ var AnalysisAPI = Marty.createStateSource({
             body: analysis.toJS()
         };
 
-        return this.put(req).then(function(res) {
+        return this.put(req)
+        .then(function(res)  {
             return Immutable.fromJS(res.body);
         });
     },
@@ -116,19 +136,19 @@ var AnalysisActionCreators = Marty.createActionCreators({
 
     fetchAnalyses: AnalysisConstants.FETCH_ANALYSES(function(instanceId) {
         return AnalysisAPI.fetchAll(instanceId)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores analyses have been received
             this.receiveAnalyses(result);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     createAnalysis: AnalysisConstants.CREATE_ANALYSIS(function(instanceId, analysis) {
         return AnalysisAPI.create(instanceId, analysis)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
 
@@ -137,9 +157,9 @@ var AnalysisActionCreators = Marty.createActionCreators({
             var action = this.dispatch(analysis);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     updateAnalysis: AnalysisConstants.UPDATE_ANALYSIS(function(instanceId, id, analysis) {
@@ -147,16 +167,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id, analysis);
 
         return AnalysisAPI.update(instanceId, id, analysis)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     deleteAnalysis: AnalysisConstants.DELETE_ANALYSIS(function(instanceId, id) {
@@ -164,16 +184,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id);
 
         return AnalysisAPI.delete(instanceId, id)
-        .then(function(id) {
+        .then(function(id)  {
             // inform stores an analysis has been deleted
             this.receiveAnalysisDelete(id);
             return id;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
@@ -282,11 +302,12 @@ var AnalysisStore = Marty.createStore({
 
         // force a re-fetch of everything
         AnalysisAPI.fetchAll()
-        .then(function(result) {
+        .then(function(result)  {
             AnalysisActionCreators.receiveAnalyses(result);
             return result;
         })
-        .catch(function(error) {
+        .catch(function(error)  {
+            // TODO: Handle better
             console.error(error);
         });
     },
@@ -301,11 +322,12 @@ var AnalysisStore = Marty.createStore({
         if(refresh !== false) { // true or undefined
             // force a re-fetch of everything
             AnalysisAPI.fetchAll()
-            .then(function(result) {
+            .then(function(result)  {
                 AnalysisActionCreators.receiveAnalyses(result);
                 return result;
             })
-            .catch(function(error) {
+            .catch(function(error)  {
+                // TODO: Handle better
                 console.error(error);
             });
         }
@@ -934,16 +956,38 @@ var InstanceAPI = Marty.createStateSource({
     // TODO: Implement correct API
 
     fetchAll: function() {
-        return this.get('/api/instances').then(function(res) {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(function()  {
+                resolve(Immutable.fromJS([
+                    {
+                        id: "project-snowflake",
+                        title: "Project Snowflake",
+                        url: "https://snowflake.atlassian.net",
+                    }, {
+                        id: "acme-corp",
+                        title: "Acme Corp",
+                        url: "https://acme.atlassian.net",
+                    }, {
+                        id: "internal-projects",
+                        title: "Internal projects",
+                        url: "https://jira.acmecorp.com",
+                    },
+                ]));
+            }, 1000);
         });
+
+        // return this.get('/api/instances')
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     create: function(instance) {
 
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(function()  {
                 resolve(instance.set('id', 'new-cool-instance'));
             }, 1000);
         });
@@ -953,7 +997,8 @@ var InstanceAPI = Marty.createStateSource({
         //     body: instance.toJS()
         // };
 
-        // return this.post(req).then(function(res) {
+        // return this.post(req)
+        // .then(res => {
         //     return Immutable.fromJS(res.body);
         // });
     },
@@ -964,7 +1009,8 @@ var InstanceAPI = Marty.createStateSource({
             body: instance.toJS()
         };
 
-        return this.put(req).then(function(res) {
+        return this.put(req)
+        .then(function(res)  {
             return Immutable.fromJS(res.body);
         });
     },
@@ -994,19 +1040,19 @@ var InstanceActionCreators = Marty.createActionCreators({
 
     fetchInstances: InstanceConstants.FETCH_INSTANCES(function() {
         return InstanceAPI.fetchAll()
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores instances have been received
             this.receiveInstances(result);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     createInstance: InstanceConstants.CREATE_INSTANCE(function(instance) {
         return InstanceAPI.create(instance)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores an instance has been received
             this.receiveInstance(result);
 
@@ -1014,9 +1060,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             this.dispatch(result);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     updateInstance: InstanceConstants.UPDATE_INSTANCE(function(id, instance) {
@@ -1024,16 +1070,16 @@ var InstanceActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id, instance);
 
         return InstanceAPI.update(instance)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores an instance has been received
             this.receiveInstance(result);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     deleteInstance: InstanceConstants.DELETE_INSTANCE(function(id) {
@@ -1041,16 +1087,16 @@ var InstanceActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id);
 
         return InstanceAPI.delete(instance)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores an instance has been received
             this.receiveInstanceDelete(result);
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     selectInstance: InstanceConstants.SELECT_INSTANCE(),
@@ -1151,11 +1197,12 @@ var InstanceStore = Marty.createStore({
             this.state.updatePending = true;
             this.hasChanged();
             InstanceAPI.fetchAll()
-            .then(function(result) {
+            .then(function(result)  {
                 InstanceActionCreators.receiveInstances(result);
                 return result;
             })
-            .catch(function(error) {
+            .catch(function(error)  {
+                // TODO: Handle better
                 console.error(error);
             });
         }
@@ -1397,7 +1444,7 @@ var UserAPI = Marty.createStateSource({
     getUser: function() {
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(function()  {
                 resolve({
                     email: "john@example.org",
                     name: "John Smith",
@@ -1406,7 +1453,8 @@ var UserAPI = Marty.createStateSource({
             }, 1000);
         });
 
-        // return this.get('/api/user').then(function(res) {
+        // return this.get('/api/user')
+        // .then(res => {
         //     return Immutable.fromJS(res.body);
         // });
     },
@@ -1415,7 +1463,7 @@ var UserAPI = Marty.createStateSource({
 
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(function()  {
                 if(username === "john@example.org" && password === "secret") {
                     resolve(Immutable.fromJS({
                         email: "john@example.org",
@@ -1428,7 +1476,8 @@ var UserAPI = Marty.createStateSource({
             }, 1000);
         });
 
-        // return this.post('/api/user/login').then(function(res) {
+        // return this.post('/api/user/login')
+        // .then(res => {
         //     return Immutable.fromJS(res.body);
         // });
     },
@@ -1437,12 +1486,13 @@ var UserAPI = Marty.createStateSource({
 
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(function()  {
                 resolve(null);
             }, 1000);
         });
 
-        // return this.post('/api/user/logout').then(function(res) {
+        // return this.post('/api/user/logout')
+        // .then(res => {
         //     return null;
         // });
     },
@@ -1456,7 +1506,8 @@ var UserAPI = Marty.createStateSource({
             }
         };
 
-        return this.post(req).then(function(res) {
+        return this.post(req)
+        .then(function(res)  {
             return Immutable.fromJS(res.body);
         });
     },
@@ -1467,7 +1518,8 @@ var UserAPI = Marty.createStateSource({
             body: user.toJS()
         };
 
-        return this.post(req).then(function(res) {
+        return this.post(req)
+        .then(function(res)  {
             return Immutable.fromJS(res.body);
         });
     }
@@ -1494,7 +1546,7 @@ var UserActionCreators = Marty.createActionCreators({
 
     login: UserConstants.LOGIN_USER(function(username, password) {
         return UserAPI.login(username, password)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores a user has been received
             this.receiveUser(result);
 
@@ -1503,14 +1555,14 @@ var UserActionCreators = Marty.createActionCreators({
 
             return result;
         }.bind(this))
-        .catch(function(error) {
-            throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        .catch(function(error)  {
+            throw new Exception(error, "Server request failed", error);
+        });
     }),
 
     logout: UserConstants.LOGOUT_USER(function() {
         return UserAPI.logout()
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores a user has been received
             this.receiveUser(null);
 
@@ -1519,25 +1571,25 @@ var UserActionCreators = Marty.createActionCreators({
 
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     changePassword: UserConstants.CHANGE_USER_PASSWORD(function(oldPassword, newPassword) {
         return UserAPI.changePassword(oldPassword, newPassword)
-        .then(function(result) {
+        .then(function(result)  {
             this.dispatch();
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     changePreferences: UserConstants.CHANGE_USER_PREFS(function(newUser) {
         return UserAPI.changePreferences(newUser)
-        .then(function(result) {
+        .then(function(result)  {
             // inform stores a user has been received
             this.receiveUser(null);
 
@@ -1546,9 +1598,9 @@ var UserActionCreators = Marty.createActionCreators({
 
             return result;
         }.bind(this))
-        .catch(function(error) {
+        .catch(function(error)  {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     receiveUser: UserConstants.RECEIVE_USER()

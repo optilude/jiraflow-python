@@ -14,16 +14,38 @@ var InstanceAPI = Marty.createStateSource({
     // TODO: Implement correct API
 
     fetchAll: function() {
-        return this.get('/api/instances').then(function(res) {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(() => {
+                resolve(Immutable.fromJS([
+                    {
+                        id: "project-snowflake",
+                        title: "Project Snowflake",
+                        url: "https://snowflake.atlassian.net",
+                    }, {
+                        id: "acme-corp",
+                        title: "Acme Corp",
+                        url: "https://acme.atlassian.net",
+                    }, {
+                        id: "internal-projects",
+                        title: "Internal projects",
+                        url: "https://jira.acmecorp.com",
+                    },
+                ]));
+            }, 1000);
         });
+
+        // return this.get('/api/instances')
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     create: function(instance) {
 
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
-            setTimeout(function() {
+            setTimeout(() => {
                 resolve(instance.set('id', 'new-cool-instance'));
             }, 1000);
         });
@@ -33,7 +55,8 @@ var InstanceAPI = Marty.createStateSource({
         //     body: instance.toJS()
         // };
 
-        // return this.post(req).then(function(res) {
+        // return this.post(req)
+        // .then(res => {
         //     return Immutable.fromJS(res.body);
         // });
     },
@@ -44,7 +67,8 @@ var InstanceAPI = Marty.createStateSource({
             body: instance.toJS()
         };
 
-        return this.put(req).then(function(res) {
+        return this.put(req)
+        .then(res => {
             return Immutable.fromJS(res.body);
         });
     },

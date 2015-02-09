@@ -15,29 +15,29 @@ var InstanceActionCreators = Marty.createActionCreators({
 
     fetchInstances: InstanceConstants.FETCH_INSTANCES(function() {
         return InstanceAPI.fetchAll()
-        .then(function(result) {
+        .then(result => {
             // inform stores instances have been received
             this.receiveInstances(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     createInstance: InstanceConstants.CREATE_INSTANCE(function(instance) {
         return InstanceAPI.create(instance)
-        .then(function(result) {
+        .then(result => {
             // inform stores an instance has been received
             this.receiveInstance(result);
 
             // dispatch action with the instance as returned by the server
             this.dispatch(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     updateInstance: InstanceConstants.UPDATE_INSTANCE(function(id, instance) {
@@ -45,16 +45,16 @@ var InstanceActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id, instance);
 
         return InstanceAPI.update(instance)
-        .then(function(result) {
+        .then(result => {
             // inform stores an instance has been received
             this.receiveInstance(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     deleteInstance: InstanceConstants.DELETE_INSTANCE(function(id) {
@@ -62,16 +62,16 @@ var InstanceActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id);
 
         return InstanceAPI.delete(instance)
-        .then(function(result) {
+        .then(result => {
             // inform stores an instance has been received
             this.receiveInstanceDelete(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     selectInstance: InstanceConstants.SELECT_INSTANCE(),

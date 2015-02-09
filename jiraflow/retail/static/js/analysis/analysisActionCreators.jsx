@@ -15,19 +15,19 @@ var AnalysisActionCreators = Marty.createActionCreators({
 
     fetchAnalyses: AnalysisConstants.FETCH_ANALYSES(function(instanceId) {
         return AnalysisAPI.fetchAll(instanceId)
-        .then(function(result) {
+        .then(result => {
             // inform stores analyses have been received
             this.receiveAnalyses(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     createAnalysis: AnalysisConstants.CREATE_ANALYSIS(function(instanceId, analysis) {
         return AnalysisAPI.create(instanceId, analysis)
-        .then(function(result) {
+        .then(result => {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
 
@@ -35,10 +35,10 @@ var AnalysisActionCreators = Marty.createActionCreators({
 
             var action = this.dispatch(analysis);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     updateAnalysis: AnalysisConstants.UPDATE_ANALYSIS(function(instanceId, id, analysis) {
@@ -46,16 +46,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id, analysis);
 
         return AnalysisAPI.update(instanceId, id, analysis)
-        .then(function(result) {
+        .then(result => {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
             return result;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     deleteAnalysis: AnalysisConstants.DELETE_ANALYSIS(function(instanceId, id) {
@@ -63,16 +63,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
         var action = this.dispatch(id);
 
         return AnalysisAPI.delete(instanceId, id)
-        .then(function(id) {
+        .then(id => {
             // inform stores an analysis has been deleted
             this.receiveAnalysisDelete(id);
             return id;
-        }.bind(this))
-        .catch(function(error) {
+        })
+        .catch(error => {
             // roll back action if AJAX operation failed
             action.rollback();
             throw new Exception(500, "Server request failed", error);
-        }.bind(this));
+        });
     }),
 
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),

@@ -1,5 +1,5 @@
 /*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
+/*global require, module, exports, document, window, setTimeout */
 "use strict";
 
 var Immutable = require('immutable');
@@ -14,9 +14,31 @@ var AnalysisAPI = Marty.createStateSource({
     // TODO: Implement correct API
 
     fetchAll: function(instanceId) {
-        return this.get('/api/instances/' + instanceId + '/analyses').then(function(res) {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(() => {
+                resolve(Immutable.fromJS([
+                    {
+                        id: "cfd",
+                        title: "Cumulative flow",
+                        type: "cfd",
+                    }, {
+                        id: "control-chart",
+                        title: "Control chart",
+                        type: "control_chart",
+                    }, {
+                        id: "delivery-forecast",
+                        title: "Delivery forecast",
+                        type: "delivery_forecast",
+                    },
+                ]));
+            }, 1000);
         });
+
+        // return this.get('/api/instances/' + instanceId + '/analyses')
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     create: function(instanceId, analysis) {
@@ -25,7 +47,8 @@ var AnalysisAPI = Marty.createStateSource({
             body: analysis.toJS()
         };
 
-        return this.post(req).then(function(res) {
+        return this.post(req)
+        .then(res => {
             return Immutable.fromJS(res.body);
         });
     },
@@ -36,7 +59,8 @@ var AnalysisAPI = Marty.createStateSource({
             body: analysis.toJS()
         };
 
-        return this.put(req).then(function(res) {
+        return this.put(req)
+        .then(res => {
             return Immutable.fromJS(res.body);
         });
     },
