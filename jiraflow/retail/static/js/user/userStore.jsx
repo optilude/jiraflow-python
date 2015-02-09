@@ -5,6 +5,7 @@
 var Immutable = require('immutable');
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var UserConstants = require('./userConstants');
 
 /**
@@ -36,7 +37,7 @@ var UserStore = Marty.createStore({
         }
 
         if(!(user instanceof Immutable.Map)) {
-            throw "User must be an Immutable.Map";
+            throw new Exception(500, "User must be an Immutable.Map");
         }
 
         if(!user.equals(this.state)) {

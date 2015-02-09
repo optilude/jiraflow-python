@@ -4,6 +4,7 @@
 
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var InstanceConstants = require('./instanceConstants');
 var InstanceAPI = require('./instanceAPI');
 
@@ -13,10 +14,14 @@ var InstanceAPI = require('./instanceAPI');
 var InstanceActionCreators = Marty.createActionCreators({
 
     fetchInstances: InstanceConstants.FETCH_INSTANCES(function() {
-        return InstanceAPI.fetchAll().then(function(result) {
+        return InstanceAPI.fetchAll()
+        .then(function(result) {
             // inform stores instances have been received
             this.receiveInstances(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -29,6 +34,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             // dispatch action with the instance as returned by the server
             this.dispatch(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -43,9 +51,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
+            // roll back action if AJAX operation failed
             action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -60,9 +68,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
+            // roll back action if AJAX operation failed
             action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 

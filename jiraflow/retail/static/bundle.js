@@ -105,6 +105,7 @@ module.exports = AnalysisAPI;
 
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var AnalysisConstants = require('./analysisConstants');
 var AnalysisAPI = require('./analysisAPI');
 
@@ -114,27 +115,30 @@ var AnalysisAPI = require('./analysisAPI');
 var AnalysisActionCreators = Marty.createActionCreators({
 
     fetchAnalyses: AnalysisConstants.FETCH_ANALYSES(function(instanceId) {
-        return AnalysisAPI.fetchAll(instanceId).then(function(result) {
+        return AnalysisAPI.fetchAll(instanceId)
+        .then(function(result) {
             // inform stores analyses have been received
             this.receiveAnalyses(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
     createAnalysis: AnalysisConstants.CREATE_ANALYSIS(function(instanceId, analysis) {
-        // optimistically dispatch
-        var action = this.dispatch(analysis);
-
         return AnalysisAPI.create(instanceId, analysis)
         .then(function(result) {
             // inform stores an analysis has been received
             this.receiveAnalysis(result);
+
+            // dispatch action with the analysis returned from the server
+
+            var action = this.dispatch(analysis);
             return result;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
-            action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -149,9 +153,9 @@ var AnalysisActionCreators = Marty.createActionCreators({
             return result;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
+            // roll back action if AJAX operation failed
             action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -159,15 +163,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
         // optimistically dispatch
         var action = this.dispatch(id);
 
-        return AnalysisAPI.delete(instanceId, id).then(function(id) {
+        return AnalysisAPI.delete(instanceId, id)
+        .then(function(id) {
             // inform stores an analysis has been deleted
             this.receiveAnalysisDelete(id);
             return id;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
+            // roll back action if AJAX operation failed
             action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -179,7 +184,7 @@ var AnalysisActionCreators = Marty.createActionCreators({
 });
 
 module.exports = AnalysisActionCreators;
-},{"./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
@@ -207,6 +212,7 @@ module.exports = AnalysisConstants;
 var Immutable = require('immutable');
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var NavigationConstants = require('../navigation/navigationConstants');
 var NavigationStore = require('../navigation/navigationStore');
 var UserConstants = require('../user/userConstants');
@@ -316,7 +322,7 @@ var AnalysisStore = Marty.createStore({
 
     _selectAnalysis: function(id) {
         if(!this.state.analyses.has(id)) {
-            throw "Analysis with id " + id + " not known";
+            throw new Exception(404, "Analysis with id " + id + " not known");
         }
 
         if(id !== this.state.id) {
@@ -328,7 +334,7 @@ var AnalysisStore = Marty.createStore({
     _receiveAnalyses: function(analyses) {
         var analysisData = analyses.map(function(analysis) {
             if(!(analysis instanceof Immutable.Map)) {
-                throw "Each analysis must be an Immutable.Map";
+                throw new Exception(500, "Each analysis must be an Immutable.Map");
             }
 
             return [analysis.get('id'), analysis];
@@ -342,7 +348,7 @@ var AnalysisStore = Marty.createStore({
 
     _receiveAnalysis: function(analysis) {
         if(!(analysis instanceof Immutable.Map)) {
-            throw "Analysis must be an Immutable.Map";
+            throw new Exception(500, "Analysis must be an Immutable.Map");
         }
 
         if(!analysis.equals(this.state.analyses.get(analysis.get('id')))) {
@@ -353,7 +359,7 @@ var AnalysisStore = Marty.createStore({
 
     _receiveAnalysisDelete: function(id) {
         if(!this.state.analyses.has(id)) {
-            throw "Instance not found";
+            throw new Exception(400, "Instance not found");
         }
 
         this.state.analyses = this.state.analyses.delete(id);
@@ -368,7 +374,7 @@ var AnalysisStore = Marty.createStore({
 });
 
 module.exports = AnalysisStore;
-},{"../instance/instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","../navigation/navigationStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationStore.jsx","../user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNoneSelected.jsx":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../instance/instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","../navigation/navigationStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationStore.jsx","../user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNoneSelected.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document */
 "use strict";
@@ -896,7 +902,22 @@ var Login = React.createClass({displayName: "Login",
 });
 
 module.exports = Login;
-},{"../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceAPI.jsx":[function(require,module,exports){
+},{"../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document, window, setTimeout */
+"use strict";
+
+var Exception = function(status, message, nestedError) {
+    this.status = status;
+    this.message = message;
+    this.nestedError = nestedError;
+};
+
+Exception.protype = Object.create(Error.prototype);
+Exception.protype.constructor = Exception;
+
+module.exports = Exception;
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceAPI.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window, setTimeout */
 "use strict";
@@ -962,6 +983,7 @@ module.exports = InstanceAPI;
 
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var InstanceConstants = require('./instanceConstants');
 var InstanceAPI = require('./instanceAPI');
 
@@ -971,10 +993,14 @@ var InstanceAPI = require('./instanceAPI');
 var InstanceActionCreators = Marty.createActionCreators({
 
     fetchInstances: InstanceConstants.FETCH_INSTANCES(function() {
-        return InstanceAPI.fetchAll().then(function(result) {
+        return InstanceAPI.fetchAll()
+        .then(function(result) {
             // inform stores instances have been received
             this.receiveInstances(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -987,6 +1013,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             // dispatch action with the instance as returned by the server
             this.dispatch(result);
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -1001,9 +1030,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
+            // roll back action if AJAX operation failed
             action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -1018,9 +1047,9 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         }.bind(this))
         .catch(function(error) {
-            // roll back action if AJAX opertion failed
+            // roll back action if AJAX operation failed
             action.rollback();
-            throw error;
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -1032,7 +1061,7 @@ var InstanceActionCreators = Marty.createActionCreators({
 });
 
 module.exports = InstanceActionCreators;
-},{"./instanceAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceAPI.jsx","./instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./instanceAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceAPI.jsx","./instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
@@ -1060,6 +1089,7 @@ module.exports = InstanceConstants;
 var Immutable = require('immutable');
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var NavigationConstants = require('../navigation/navigationConstants');
 var NavigationStore = require('../navigation/navigationStore');
 var NavigationActionCreators = require('../navigation/navigationActionCreators');
@@ -1142,7 +1172,7 @@ var InstanceStore = Marty.createStore({
 
     _selectInstance: function(id) {
         if(!this.state.instances.has(id)) {
-            throw "Instance with id " + id + " not known";
+            throw new Exception(404, "Instance with id " + id + " not known");
         }
 
         if(id !== this.state.id) {
@@ -1154,7 +1184,7 @@ var InstanceStore = Marty.createStore({
     _receiveInstances: function(instances) {
         var instanceData = instances.map(function(instance) {
             if(!(instance instanceof Immutable.Map)) {
-                throw "Each instance must be an Immutable.Map";
+                throw new Exception(500, "Each instance must be an Immutable.Map");
             }
 
             return [instance.get('id'), instance];
@@ -1168,7 +1198,7 @@ var InstanceStore = Marty.createStore({
 
     _receiveInstance: function(instance) {
         if(!(instance instanceof Immutable.Map)) {
-            throw "Instance must be an Immutable.Map";
+            throw new Exception(500, "Instance must be an Immutable.Map");
         }
 
         if(!instance.equals(this.state.instances.get(instance.get('id')))) {
@@ -1179,7 +1209,7 @@ var InstanceStore = Marty.createStore({
 
     _receiveInstanceDelete: function(id) {
         if(!this.state.instances.has(id)) {
-            throw "Instance not found";
+            throw new Exception(404, "Instance not found");
         }
 
         this.state.instances = this.state.instances.delete(id);
@@ -1194,7 +1224,7 @@ var InstanceStore = Marty.createStore({
 });
 
 module.exports = InstanceStore;
-},{"../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","../navigation/navigationStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationStore.jsx","../user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./instanceAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceAPI.jsx","./instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","../navigation/navigationStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationStore.jsx","../user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./instanceAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceAPI.jsx","./instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
@@ -1452,6 +1482,7 @@ module.exports = UserAPI;
 
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var UserConstants = require('./userConstants');
 var UserAPI = require('./userAPI');
 
@@ -1462,7 +1493,8 @@ var UserAPI = require('./userAPI');
 var UserActionCreators = Marty.createActionCreators({
 
     login: UserConstants.LOGIN_USER(function(username, password) {
-        return UserAPI.login(username, password).then(function(result) {
+        return UserAPI.login(username, password)
+        .then(function(result) {
             // inform stores a user has been received
             this.receiveUser(result);
 
@@ -1470,11 +1502,15 @@ var UserActionCreators = Marty.createActionCreators({
             this.dispatch(username);
 
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
     logout: UserConstants.LOGOUT_USER(function() {
-        return UserAPI.logout().then(function(result) {
+        return UserAPI.logout()
+        .then(function(result) {
             // inform stores a user has been received
             this.receiveUser(null);
 
@@ -1482,18 +1518,26 @@ var UserActionCreators = Marty.createActionCreators({
             this.dispatch();
 
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
     changePassword: UserConstants.CHANGE_USER_PASSWORD(function(oldPassword, newPassword) {
-        return UserAPI.changePassword(oldPassword, newPassword).then(function(result) {
+        return UserAPI.changePassword(oldPassword, newPassword)
+        .then(function(result) {
             this.dispatch();
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
     changePreferences: UserConstants.CHANGE_USER_PREFS(function(newUser) {
-        return UserAPI.changePreferences(newUser).then(function(result) {
+        return UserAPI.changePreferences(newUser)
+        .then(function(result) {
             // inform stores a user has been received
             this.receiveUser(null);
 
@@ -1501,6 +1545,9 @@ var UserActionCreators = Marty.createActionCreators({
             this.dispatch();
 
             return result;
+        }.bind(this))
+        .catch(function(error) {
+            throw new Exception(500, "Server request failed", error);
         }.bind(this));
     }),
 
@@ -1509,7 +1556,7 @@ var UserActionCreators = Marty.createActionCreators({
 });
 
 module.exports = UserActionCreators;
-},{"./userAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userAPI.jsx","./userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./userAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userAPI.jsx","./userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
@@ -1534,6 +1581,7 @@ module.exports = UserConstants;
 var Immutable = require('immutable');
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var UserConstants = require('./userConstants');
 
 /**
@@ -1565,7 +1613,7 @@ var UserStore = Marty.createStore({
         }
 
         if(!(user instanceof Immutable.Map)) {
-            throw "User must be an Immutable.Map";
+            throw new Exception(500, "User must be an Immutable.Map");
         }
 
         if(!user.equals(this.state)) {
@@ -1576,7 +1624,7 @@ var UserStore = Marty.createStore({
 });
 
 module.exports = UserStore;
-},{"./userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/browserify/node_modules/buffer/index.js":[function(require,module,exports){
 /*!
  * The buffer module from node.js, for the browser.
  *

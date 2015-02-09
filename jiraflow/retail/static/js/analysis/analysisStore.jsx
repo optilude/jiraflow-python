@@ -5,6 +5,7 @@
 var Immutable = require('immutable');
 var Marty = require('marty');
 
+var Exception = require('../exception');
 var NavigationConstants = require('../navigation/navigationConstants');
 var NavigationStore = require('../navigation/navigationStore');
 var UserConstants = require('../user/userConstants');
@@ -114,7 +115,7 @@ var AnalysisStore = Marty.createStore({
 
     _selectAnalysis: function(id) {
         if(!this.state.analyses.has(id)) {
-            throw "Analysis with id " + id + " not known";
+            throw new Exception(404, "Analysis with id " + id + " not known");
         }
 
         if(id !== this.state.id) {
@@ -126,7 +127,7 @@ var AnalysisStore = Marty.createStore({
     _receiveAnalyses: function(analyses) {
         var analysisData = analyses.map(function(analysis) {
             if(!(analysis instanceof Immutable.Map)) {
-                throw "Each analysis must be an Immutable.Map";
+                throw new Exception(500, "Each analysis must be an Immutable.Map");
             }
 
             return [analysis.get('id'), analysis];
@@ -140,7 +141,7 @@ var AnalysisStore = Marty.createStore({
 
     _receiveAnalysis: function(analysis) {
         if(!(analysis instanceof Immutable.Map)) {
-            throw "Analysis must be an Immutable.Map";
+            throw new Exception(500, "Analysis must be an Immutable.Map");
         }
 
         if(!analysis.equals(this.state.analyses.get(analysis.get('id')))) {
@@ -151,7 +152,7 @@ var AnalysisStore = Marty.createStore({
 
     _receiveAnalysisDelete: function(id) {
         if(!this.state.analyses.has(id)) {
-            throw "Instance not found";
+            throw new Exception(400, "Instance not found");
         }
 
         this.state.analyses = this.state.analyses.delete(id);
