@@ -41,6 +41,7 @@ Router.run(function(Handler, state) {
     // trigger navigation as an action, but defer until after any current
     // action that actually caused the navigation has completed
     setTimeout(function() {
+        // TODO: Catch exception here and navigate to 404 page?
         NavigationActionCreators.routerNavigate(Handler, state);
         React.render(<Handler />, document.body);
     }, 0);

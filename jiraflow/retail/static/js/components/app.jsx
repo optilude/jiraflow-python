@@ -16,14 +16,12 @@ var RouteHandler = Router.RouteHandler;
 var App = React.createClass({
 
     statics: {
-
         willTransitionTo: function(transition, params) {
             var user = UserStore.getUser();
-            if(user === null) {
+            if(user === null) { // no user/not logged in
                 transition.redirect('/login');
             }
         }
-
     },
 
     render: function() {

@@ -42,6 +42,7 @@ Router.run(function(Handler, state) {
     // trigger navigation as an action, but defer until after any current
     // action that actually caused the navigation has completed
     setTimeout(function() {
+        // TODO: Catch exception here and navigate to 404 page?
         NavigationActionCreators.routerNavigate(Handler, state);
         React.render(React.createElement(Handler, null), document.body);
     }, 0);
@@ -449,14 +450,12 @@ var RouteHandler = Router.RouteHandler;
 var App = React.createClass({displayName: "App",
 
     statics: {
-
         willTransitionTo: function(transition, params) {
             var user = UserStore.getUser();
-            if(user === null) {
+            if(user === null) { // no user/not logged in
                 transition.redirect('/login');
             }
         }
-
     },
 
     render: function() {
