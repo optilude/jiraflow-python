@@ -38,6 +38,22 @@ var InstanceView = React.createClass({
     mixins: [InstanceState],
 
     render: function() {
+
+        // XXX: This is annoying. It is needed because for a brief moment
+        // during deletion of an instance, the view re-renders and we get
+        // errors if we assume selectedInstance is never null.
+        if(this.state.selectedInstance === null) {
+            return (
+                <Grid fluid={true}>
+                    <Row>
+                        <Col sm={9} smOffset={3} md={10} mdOffset={2}>
+                            Instance deleted
+                        </Col>
+                    </Row>
+                </Grid>
+            );
+        }
+
         return (
             <Grid fluid={true}>
                 <Row>
@@ -48,7 +64,7 @@ var InstanceView = React.createClass({
                         <RouteHandler analysis={this.state.selectedAnalysis} />
                     </Col>
                 </Row>
-          </Grid>
+            </Grid>
         );
 
     }

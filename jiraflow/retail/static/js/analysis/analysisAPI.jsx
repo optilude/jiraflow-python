@@ -65,7 +65,7 @@ var AnalysisAPI = Marty.createStateSource({
         });
     },
 
-    delete: function(instanceId, id) {
+    deleteAnalysis: function(instanceId, id) {
         return this.delete('/api/instances/' + instanceId + '/analyses/' + id);
     }
 

@@ -111,7 +111,7 @@ var AnalysisAPI = Marty.createStateSource({
         });
     },
 
-    delete: function(instanceId, id) {
+    deleteAnalysis: function(instanceId, id) {
         return this.delete('/api/instances/' + instanceId + '/analyses/' + id);
     }
 
@@ -180,18 +180,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
     }),
 
     deleteAnalysis: AnalysisConstants.DELETE_ANALYSIS(function(instanceId, id) {
-        // optimistically dispatch
-        var action = this.dispatch(id);
-
-        return AnalysisAPI.delete(instanceId, id)
+        return AnalysisAPI.deleteAnalysis(instanceId, id)
         .then(function(id)  {
             // inform stores an analysis has been deleted
             this.receiveAnalysisDelete(id);
+
+            // dispatch this action
+            var action = this.dispatch(id);
             return id;
         }.bind(this))
         .catch(function(error)  {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(500, "Server request failed", error);
         });
     }),
@@ -744,6 +742,22 @@ var InstanceView = React.createClass({displayName: "InstanceView",
     mixins: [InstanceState],
 
     render: function() {
+
+        // XXX: This is annoying. It is needed because for a brief moment
+        // during deletion of an instance, the view re-renders and we get
+        // errors if we assume selectedInstance is never null.
+        if(this.state.selectedInstance === null) {
+            return (
+                React.createElement(Grid, {fluid: true}, 
+                    React.createElement(Row, null, 
+                        React.createElement(Col, {sm: 9, smOffset: 3, md: 10, mdOffset: 2}, 
+                            "Instance deleted"
+                        )
+                    )
+                )
+            );
+        }
+
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
@@ -754,7 +768,7 @@ var InstanceView = React.createClass({displayName: "InstanceView",
                         React.createElement(RouteHandler, {analysis: this.state.selectedAnalysis})
                     )
                 )
-          )
+            )
         );
 
     }
@@ -772,11 +786,12 @@ var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var UserStore = require('../../user/userStore');
 var UserActionCreators = require('../../user/userActionCreators');
 var InstanceStore = require('../../instance/instanceStore');
+var InstanceActionCreators = require('../../instance/instanceActionCreators');
+var ConfirmModal = require('../utilities/confirm');
 
 var Link = Router.Link;
 
@@ -785,6 +800,7 @@ var Nav = BS.Nav;
 var NavItem = BS.NavItem;
 var DropdownButton = BS.DropdownButton;
 var MenuItem = BS.MenuItem;
+var ModalTrigger = BS.ModalTrigger;
 var MenuItemLink = RBS.MenuItemLink;
 
 var NavigationState = Marty.createStateMixin({
@@ -798,6 +814,7 @@ var NavigationState = Marty.createStateMixin({
     }
 });
 
+
 /**
  * Top navigation, rendering user menu and instance list.
  *
@@ -809,13 +826,30 @@ var TopNav = React.createClass({displayName: "TopNav",
     // TODO: Handle edit, delete, prefs
 
     render: function() {
+
+        var deleteConfirmModal = (
+            React.createElement(ConfirmModal, {
+                title: "Delete instance", 
+                text: "Are you sure you want to delete this instance? This action cannot be undone.", 
+                onRequestHide: this.cancelDelete, 
+                onYes: this.confirmDelete, 
+                onNo: this.cancelDelete}
+                )
+        );
+
+        var haveInstance = this.state.selectedInstance !== null;
+
         return (
             React.createElement(Navbar, {inverse: true, fixedTop: true, fluid: true, brand: React.createElement(Link, {to: "home"}, "JIRA Flow"), ref: "navbar"}, 
                 React.createElement(Nav, {ref: "mainNav"}, 
                     React.createElement(DropdownButton, {title: "JIRA Instance", ref: "instanceMenu"}, 
                         React.createElement(MenuItemLink, {to: "newInstance", onClick: this.linkClick}, "New"), 
-                        React.createElement(MenuItem, null, "Edit"), 
-                        React.createElement(MenuItem, null, "Delete"), 
+                        haveInstance? React.createElement(MenuItem, null, "Edit") : "", 
+                        haveInstance? React.createElement(MenuItem, null, 
+                            React.createElement(ModalTrigger, {ref: "deleteConfirmModalTrigger", modal: deleteConfirmModal}, 
+                                React.createElement("div", {onClick: this.deleteLinkClick}, "Delete")
+                            )
+                        ) : "", 
                         React.createElement(MenuItem, {divider: true}), 
                         this.state.instances.map(function(i, idx)  {return React.createElement(MenuItemLink, {key: idx, to: "instance", params: {instanceId: i.get('id')}, onClick: this.linkClick}, i.get('title'));}.bind(this)).toArray()
                     )
@@ -831,6 +865,8 @@ var TopNav = React.createClass({displayName: "TopNav",
     },
 
     logout: function(event) {
+        event.preventDefault();
+
         UserActionCreators.logout()
         .then(function()  {
             NavigationActionCreators.navigateToLogin();
@@ -838,6 +874,30 @@ var TopNav = React.createClass({displayName: "TopNav",
         .catch(function(error)  {
             console.error(error);
             alert("An unexpected error occurred logging out.");
+        });
+    },
+
+    deleteLinkClick: function(event) {
+        event.preventDefault();
+        this.refs.navbar.refs.mainNav.refs.instanceMenu.setDropdownState(false);
+    },
+
+    cancelDelete: function(event) {
+        event.preventDefault();
+        this.refs.deleteConfirmModalTrigger.hide();
+    },
+
+    confirmDelete: function(event) {
+        event.preventDefault();
+        this.refs.deleteConfirmModalTrigger.hide();
+
+        InstanceActionCreators.deleteInstance(this.state.selectedInstance.get('id'))
+        .then(function(id)  {
+           NavigationActionCreators.navigateHome();
+        })
+        .catch(function(error)  {
+           console.error(error);
+           alert("An unexpected error occurred deleting an instance.");
         });
     },
 
@@ -851,7 +911,7 @@ var TopNav = React.createClass({displayName: "TopNav",
 
 module.exports = TopNav;
 
-},{"../../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","../../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx":[function(require,module,exports){
+},{"../../instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","../../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","../../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","../utilities/confirm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/utilities/confirm.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window */
 "use strict";
@@ -924,7 +984,45 @@ var Login = React.createClass({displayName: "Login",
 });
 
 module.exports = Login;
-},{"../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx":[function(require,module,exports){
+},{"../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/utilities/confirm.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document */
+"use strict";
+
+var React = require('react');
+var BS = require('react-bootstrap');
+
+var Modal = BS.Modal;
+var Button = BS.Button;
+
+var ConfirmModal = React.createClass({displayName: "ConfirmModal",
+
+    propTypes: {
+        title: React.PropTypes.node.isRequired,
+        text: React.PropTypes.node.isRequired,
+        onRequestHide: React.PropTypes.func.isRequired,
+        onYes: React.PropTypes.func.isRequired,
+        onNo: React.PropTypes.func.isRequired
+    },
+
+    render: function() {
+        return (
+            React.createElement(Modal, {title: this.props.title, onRequestHide: this.props.onRequestHide}, 
+                React.createElement("div", {className: "modal-body"}, 
+                    this.props.text
+                ), 
+                React.createElement("div", {className: "modal-footer"}, 
+                    React.createElement(Button, {bsStyle: "primary", onClick: this.props.onYes}, "Yes"), 
+                    React.createElement(Button, {bsStyle: "default", onClick: this.props.onNo}, "No")
+                )
+            )
+        );
+    }
+
+});
+
+module.exports = ConfirmModal;
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window, setTimeout */
 "use strict";
@@ -1015,8 +1113,16 @@ var InstanceAPI = Marty.createStateSource({
         });
     },
 
-    delete: function(id) {
-        return this.delete('/api/instances/' + id);
+    deleteInstance: function(id) {
+
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(function()  {
+                resolve(id);
+            }, 1000);
+        });
+
+        // return this.delete('/api/instances/' + id);
     }
 
 });
@@ -1083,18 +1189,16 @@ var InstanceActionCreators = Marty.createActionCreators({
     }),
 
     deleteInstance: InstanceConstants.DELETE_INSTANCE(function(id) {
-        // optimistically dispatch
-        var action = this.dispatch(id);
-
-        return InstanceAPI.delete(instance)
+        return InstanceAPI.deleteInstance(id)
         .then(function(result)  {
             // inform stores an instance has been received
             this.receiveInstanceDelete(result);
+
+            // dispatch
+            var action = this.dispatch(id);
             return result;
         }.bind(this))
         .catch(function(error)  {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(500, "Server request failed", error);
         });
     }),
@@ -1222,7 +1326,7 @@ var InstanceStore = Marty.createStore({
             throw new Exception(404, "Instance with id " + id + " not known");
         }
 
-        if(id !== this.state.id) {
+        if(id !== this.state.selectedInstance) {
             this.state.selectedInstance = id;
             this.hasChanged();
         }
@@ -1261,8 +1365,8 @@ var InstanceStore = Marty.createStore({
 
         this.state.instances = this.state.instances.delete(id);
 
-        if(this.state.id === id) {
-            this.state.id = null;
+        if(this.state.selectedInstance === id) {
+            this.state.selectedInstance = null;
         }
 
         this.hasChanged();

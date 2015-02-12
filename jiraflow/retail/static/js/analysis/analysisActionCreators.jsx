@@ -59,18 +59,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
     }),
 
     deleteAnalysis: AnalysisConstants.DELETE_ANALYSIS(function(instanceId, id) {
-        // optimistically dispatch
-        var action = this.dispatch(id);
-
-        return AnalysisAPI.delete(instanceId, id)
+        return AnalysisAPI.deleteAnalysis(instanceId, id)
         .then(id => {
             // inform stores an analysis has been deleted
             this.receiveAnalysisDelete(id);
+
+            // dispatch this action
+            var action = this.dispatch(id);
             return id;
         })
         .catch(error => {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(500, "Server request failed", error);
         });
     }),

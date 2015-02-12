@@ -58,18 +58,16 @@ var InstanceActionCreators = Marty.createActionCreators({
     }),
 
     deleteInstance: InstanceConstants.DELETE_INSTANCE(function(id) {
-        // optimistically dispatch
-        var action = this.dispatch(id);
-
-        return InstanceAPI.delete(instance)
+        return InstanceAPI.deleteInstance(id)
         .then(result => {
             // inform stores an instance has been received
             this.receiveInstanceDelete(result);
+
+            // dispatch
+            var action = this.dispatch(id);
             return result;
         })
         .catch(error => {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(500, "Server request failed", error);
         });
     }),

@@ -92,7 +92,7 @@ var InstanceStore = Marty.createStore({
             throw new Exception(404, "Instance with id " + id + " not known");
         }
 
-        if(id !== this.state.id) {
+        if(id !== this.state.selectedInstance) {
             this.state.selectedInstance = id;
             this.hasChanged();
         }
@@ -131,8 +131,8 @@ var InstanceStore = Marty.createStore({
 
         this.state.instances = this.state.instances.delete(id);
 
-        if(this.state.id === id) {
-            this.state.id = null;
+        if(this.state.selectedInstance === id) {
+            this.state.selectedInstance = null;
         }
 
         this.hasChanged();

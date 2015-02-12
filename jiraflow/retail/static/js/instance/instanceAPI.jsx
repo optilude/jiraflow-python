@@ -73,8 +73,16 @@ var InstanceAPI = Marty.createStateSource({
         });
     },
 
-    delete: function(id) {
-        return this.delete('/api/instances/' + id);
+    deleteInstance: function(id) {
+
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(() => {
+                resolve(id);
+            }, 1000);
+        });
+
+        // return this.delete('/api/instances/' + id);
     }
 
 });
