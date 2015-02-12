@@ -19,6 +19,8 @@ var AnalysisView = React.createClass({
         analysis: React.PropTypes.instanceOf(Immutable.Map).isRequired
     },
 
+    // TODO: Implement views for different analysis types; edit; delete
+
     render: function () {
 
         return (

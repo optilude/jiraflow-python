@@ -23,6 +23,8 @@ var InstanceSidebar = React.createClass({
         analyses: React.PropTypes.instanceOf(Immutable.Iterable).isRequired
     },
 
+    // TODO: Implement new analysis
+
     render: function () {
 
         var instanceId = this.props.instance.get('id');

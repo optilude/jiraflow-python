@@ -45,7 +45,7 @@ var NavigationState = Marty.createStateMixin({
 var TopNav = React.createClass({
     mixins: [NavigationState],
 
-    // TODO: Handle edit, delete, prefs
+    // TODO: Handle edit, prefs
 
     render: function() {
 

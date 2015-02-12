@@ -440,6 +440,8 @@ var AnalysisView = React.createClass({displayName: "AnalysisView",
         analysis: React.PropTypes.instanceOf(Immutable.Map).isRequired
     },
 
+    // TODO: Implement views for different analysis types; edit; delete
+
     render: function () {
 
         return (
@@ -684,6 +686,8 @@ var InstanceSidebar = React.createClass({displayName: "InstanceSidebar",
         analyses: React.PropTypes.instanceOf(Immutable.Iterable).isRequired
     },
 
+    // TODO: Implement new analysis
+
     render: function () {
 
         var instanceId = this.props.instance.get('id');
@@ -823,7 +827,7 @@ var NavigationState = Marty.createStateMixin({
 var TopNav = React.createClass({displayName: "TopNav",
     mixins: [NavigationState],
 
-    // TODO: Handle edit, delete, prefs
+    // TODO: Handle edit, prefs
 
     render: function() {
 
