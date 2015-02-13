@@ -15,7 +15,6 @@ var UserActionCreators = require('./user/userActionCreators');
 var InstanceActionCreators = require('./instance/instanceActionCreators');
 var AnalysisActionCreators = require('./analysis/analysisActionCreators');
 
-window.React = React; // For React Developer Tools
 window.Marty = Marty; // For Marty Developer Tools
 
 var initialState = window.initialState;
