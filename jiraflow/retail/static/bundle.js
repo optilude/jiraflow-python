@@ -926,9 +926,7 @@ var TopNav = React.createClass({displayName: "TopNav",
         );
     },
 
-    logout: function(event) {
-        event.preventDefault();
-
+    logout: function() {
         UserActionCreators.logout()
         .then(function()  {
             NavigationActionCreators.navigateToLogin();
