@@ -73,15 +73,17 @@ var AnalysisStore = Marty.createStore({
         this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
 
-        // force a re-fetch of everything
-        AnalysisAPI.fetchAll()
-        .then(result => {
-            AnalysisActionCreators.receiveAnalyses(result);
-            return result;
-        })
-        .catch(error => {
-            throw new Exception(500, "Unable to refresh analyses for newly selected instance", error);
-        });
+        if(id !== null) {
+            // force a re-fetch of everything
+            AnalysisAPI.fetchAll(id)
+            .then(result => {
+                AnalysisActionCreators.receiveAnalyses(result);
+                return result;
+            })
+            .catch(error => {
+                throw new Exception(500, "Unable to refresh analyses for newly selected instance", error);
+            });
+        }
     },
 
     _receiveInstances: function(instances, refresh /* default: true */) {
@@ -105,16 +107,18 @@ var AnalysisStore = Marty.createStore({
     },
 
     _navigate: function(action) {
-        this.waitFor(NavigationStore);
+        this.waitFor(NavigationStore, InstanceStore);
 
         var analysisId = NavigationStore.getParams().analysisId;
         if(analysisId) {
             this._selectAnalysis(analysisId);
+        } else {
+            this._selectAnalysis(null);
         }
     },
 
     _selectAnalysis: function(id) {
-        if(!this.state.analyses.has(id)) {
+        if(id !== null && !this.state.analyses.has(id)) {
             throw new Exception(404, "Analysis with id " + id + " not known");
         }
 

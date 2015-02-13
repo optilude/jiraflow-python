@@ -83,11 +83,13 @@ var InstanceStore = Marty.createStore({
         var instanceId = NavigationStore.getParams().instanceId;
         if(instanceId) {
             this._selectInstance(instanceId);
+        } else {
+            this._selectInstance(null);
         }
     },
 
     _selectInstance: function(id) {
-        if(!this.state.instances.has(id)) {
+        if(id !== null && !this.state.instances.has(id)) {
             throw new Exception(404, "Instance with id " + id + " not known");
         }
 
