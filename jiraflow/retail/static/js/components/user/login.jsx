@@ -9,9 +9,7 @@ var BS = require('react-bootstrap');
 var UserActionCreators = require('../../user/userActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 
-var Input = BS.Input;
-var Button = BS.Button;
-var Alert = BS.Alert;
+var { Input, Button, Alert } = BS;
 
 /**
  * Document body handler, rendering nav and main body area

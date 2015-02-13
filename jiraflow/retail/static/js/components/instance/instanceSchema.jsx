@@ -4,8 +4,8 @@
 
 var React = require('react');
 var ReactForms = require('react-forms');
-var Mapping = ReactForms.schema.Mapping;
-var Scalar = ReactForms.schema.Scalar;
+
+var { Mapping, Scalar } = ReactForms.schema;
 
 var schema = Mapping({
 

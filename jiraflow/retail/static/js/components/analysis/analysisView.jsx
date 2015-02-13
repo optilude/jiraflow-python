@@ -6,8 +6,7 @@ var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var Nav = BS.Nav;
-var NavItem = BS.NavItem;
+var { Nav, NavItem } = BS;
 
 /**
  * Renders a single analysis

@@ -420,9 +420,7 @@ module.exports = AnalysisStore;
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
+var $__0=      BS,Grid=$__0.Grid,Row=$__0.Row,Col=$__0.Col;
 
 var AnalysisNoneSelected = React.createClass({displayName: "AnalysisNoneSelected",
     mixins: [React.addons.PureRenderMixin],
@@ -445,8 +443,7 @@ var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var Nav = BS.Nav;
-var NavItem = BS.NavItem;
+var $__0=     BS,Nav=$__0.Nav,NavItem=$__0.NavItem;
 
 /**
  * Renders a single analysis
@@ -488,7 +485,7 @@ var Router = require('react-router');
 var UserStore = require('../user/userStore');
 var TopNav = require('./navigation/topNav');
 
-var RouteHandler = Router.RouteHandler;
+var $__0=    Router,RouteHandler=$__0.RouteHandler;
 
 /**
  * Document body handler, rendering nav and main body area
@@ -589,13 +586,8 @@ var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
-var Button = BS.Button;
-var Alert = BS.Alert;
-
-var Form = ReactForms.Form;
+var $__0=        BS,Grid=$__0.Grid,Row=$__0.Row,Col=$__0.Col,Button=$__0.Button,Alert=$__0.Alert;
+var $__1=    ReactForms,Form=$__1.Form;
 
 var InstanceNew = React.createClass({displayName: "InstanceNew",
     mixins: [React.addons.PureRenderMixin],
@@ -668,9 +660,7 @@ module.exports = InstanceNew;
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
+var $__0=      BS,Grid=$__0.Grid,Row=$__0.Row,Col=$__0.Col;
 
 var InstanceNoneSelected = React.createClass({displayName: "InstanceNoneSelected",
     mixins: [React.addons.PureRenderMixin],
@@ -698,8 +688,8 @@ module.exports = InstanceNoneSelected;
 
 var React = require('react');
 var ReactForms = require('react-forms');
-var Mapping = ReactForms.schema.Mapping;
-var Scalar = ReactForms.schema.Scalar;
+
+var $__0=     ReactForms.schema,Mapping=$__0.Mapping,Scalar=$__0.Scalar;
 
 var schema = Mapping({
 
@@ -746,10 +736,8 @@ var React = require('react/addons');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-var Button = BS.Button;
-var Nav = BS.Nav;
-var NavItem = BS.NavItem;
-var NavItemLink = RBS.NavItemLink;
+var $__0=      BS,Button=$__0.Button,Nav=$__0.Nav,NavItem=$__0.NavItem;
+var $__1=    RBS,NavItemLink=$__1.NavItemLink;
 
 /**
  * Sidebar listing the analyses under an instance.
@@ -795,11 +783,10 @@ var InstanceStore = require('../../instance/instanceStore');
 var AnalysisStore = require('../../analysis/analysisStore');
 
 var Sidebar = require('./instanceSidebar');
-var RouteHandler = Router.RouteHandler;
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
+var $__0=    Router,RouteHandler=$__0.RouteHandler;
+
+var $__1=      BS,Grid=$__1.Grid,Row=$__1.Row,Col=$__1.Col;
 
 var InstanceState = Marty.createStateMixin({
     listenTo: [InstanceStore, AnalysisStore],
@@ -873,15 +860,10 @@ var InstanceStore = require('../../instance/instanceStore');
 var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var ConfirmModal = require('../utilities/confirm');
 
-var Link = Router.Link;
+var $__0=    Router,Link=$__0.Link;
 
-var Navbar = BS.Navbar;
-var Nav = BS.Nav;
-var NavItem = BS.NavItem;
-var DropdownButton = BS.DropdownButton;
-var MenuItem = BS.MenuItem;
-var ModalTrigger = BS.ModalTrigger;
-var MenuItemLink = RBS.MenuItemLink;
+var $__1=         BS,Navbar=$__1.Navbar,Nav=$__1.Nav,NavItem=$__1.NavItem,DropdownButton=$__1.DropdownButton,MenuItem=$__1.MenuItem,ModalTrigger=$__1.ModalTrigger;
+var $__2=    RBS,MenuItemLink=$__2.MenuItemLink;
 
 var NavigationState = Marty.createStateMixin({
     listenTo: [UserStore, InstanceStore],
@@ -1003,9 +985,7 @@ var BS = require('react-bootstrap');
 var UserActionCreators = require('../../user/userActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 
-var Input = BS.Input;
-var Button = BS.Button;
-var Alert = BS.Alert;
+var $__0=      BS,Input=$__0.Input,Button=$__0.Button,Alert=$__0.Alert;
 
 /**
  * Document body handler, rendering nav and main body area
@@ -1072,8 +1052,7 @@ module.exports = Login;
 var React = require('react');
 var BS = require('react-bootstrap');
 
-var Modal = BS.Modal;
-var Button = BS.Button;
+var $__0=     BS,Modal=$__0.Modal,Button=$__0.Button;
 
 var ConfirmModal = React.createClass({displayName: "ConfirmModal",
 

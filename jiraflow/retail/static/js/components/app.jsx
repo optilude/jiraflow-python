@@ -8,7 +8,7 @@ var Router = require('react-router');
 var UserStore = require('../user/userStore');
 var TopNav = require('./navigation/topNav');
 
-var RouteHandler = Router.RouteHandler;
+var { RouteHandler } = Router;
 
 /**
  * Document body handler, rendering nav and main body area

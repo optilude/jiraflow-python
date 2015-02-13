@@ -10,13 +10,8 @@ var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
-var Button = BS.Button;
-var Alert = BS.Alert;
-
-var Form = ReactForms.Form;
+var { Grid, Row, Col, Button, Alert } = BS;
+var { Form } = ReactForms;
 
 var InstanceNew = React.createClass({
     mixins: [React.addons.PureRenderMixin],

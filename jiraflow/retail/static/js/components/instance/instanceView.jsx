@@ -11,11 +11,10 @@ var InstanceStore = require('../../instance/instanceStore');
 var AnalysisStore = require('../../analysis/analysisStore');
 
 var Sidebar = require('./instanceSidebar');
-var RouteHandler = Router.RouteHandler;
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
+var { RouteHandler } = Router;
+
+var { Grid, Row, Col } = BS;
 
 var InstanceState = Marty.createStateMixin({
     listenTo: [InstanceStore, AnalysisStore],

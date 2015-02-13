@@ -7,10 +7,8 @@ var React = require('react/addons');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-var Button = BS.Button;
-var Nav = BS.Nav;
-var NavItem = BS.NavItem;
-var NavItemLink = RBS.NavItemLink;
+var { Button, Nav, NavItem } = BS;
+var { NavItemLink } = RBS;
 
 /**
  * Sidebar listing the analyses under an instance.

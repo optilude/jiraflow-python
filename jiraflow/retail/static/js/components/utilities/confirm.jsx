@@ -5,8 +5,7 @@
 var React = require('react');
 var BS = require('react-bootstrap');
 
-var Modal = BS.Modal;
-var Button = BS.Button;
+var { Modal, Button } = BS;
 
 var ConfirmModal = React.createClass({
 

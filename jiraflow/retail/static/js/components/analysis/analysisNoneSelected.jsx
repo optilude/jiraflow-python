@@ -5,9 +5,7 @@
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
+var { Grid, Row, Col } = BS;
 
 var AnalysisNoneSelected = React.createClass({
     mixins: [React.addons.PureRenderMixin],

@@ -15,15 +15,10 @@ var InstanceStore = require('../../instance/instanceStore');
 var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var ConfirmModal = require('../utilities/confirm');
 
-var Link = Router.Link;
+var { Link } = Router;
 
-var Navbar = BS.Navbar;
-var Nav = BS.Nav;
-var NavItem = BS.NavItem;
-var DropdownButton = BS.DropdownButton;
-var MenuItem = BS.MenuItem;
-var ModalTrigger = BS.ModalTrigger;
-var MenuItemLink = RBS.MenuItemLink;
+var { Navbar, Nav, NavItem, DropdownButton, MenuItem, ModalTrigger } = BS;
+var { MenuItemLink } = RBS;
 
 var NavigationState = Marty.createStateMixin({
     listenTo: [UserStore, InstanceStore],
