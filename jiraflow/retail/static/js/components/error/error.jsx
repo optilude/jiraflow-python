@@ -5,11 +5,9 @@
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var Grid = BS.Grid;
-var Row = BS.Row;
-var Col = BS.Col;
+var { Grid, Row, Col, Alert } = BS;
 
-var InstanceNoneSelected = React.createClass({
+var NotFound = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
     render: function() {
@@ -17,8 +15,9 @@ var InstanceNoneSelected = React.createClass({
         return (
             <Grid fluid={true}>
                 <Row>
-                    <Col sm={9} smOffset={3} md={10} mdOffset={2}>
-                        <h1>No instance selected</h1>
+                    <Col sm={6} smOffset={3} md={8} mdOffset={2}>
+                        <h1>Error</h1>
+                        <Alert bsStyle="danger">An unexpected error occurred.</Alert>
                     </Col>
                 </Row>
           </Grid>
@@ -27,4 +26,4 @@ var InstanceNoneSelected = React.createClass({
     }
 });
 
-module.exports = InstanceNoneSelected;
+module.exports = NotFound;

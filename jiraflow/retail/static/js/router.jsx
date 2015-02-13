@@ -5,10 +5,8 @@
 var React = require('react');
 var Router = require('react-router');
 
-var Route = Router.Route;
-var DefaultRoute = Router.DefaultRoute;
+var { Route, DefaultRoute, NotFoundRoute } = Router;
 
-// TODO: NotFoundRoute(s) + handle invalid instanceId/analysisId param
 // TODO: Preferences
 // TODO: Edit instance
 // TODO: Create analysis
@@ -18,8 +16,13 @@ var routes = [
     <Route name="login" path="/login" handler={require('./components/user/login')} />,
     <Route name="home"  path="/"      handler={require('./components/app')}>
 
+        <NotFoundRoute                           handler={require('./components/error/notFound')} />
+        <Route        name="notFound" path="404" handler={require('./components/error/notFound')} />
+        <Route        name="error"    path="500" handler={require('./components/error/error')} />
+
         <DefaultRoute name="noInstance"                               handler={require('./components/instance/instanceNoneSelected')} />
         <Route        name="newInstance" path="new-instance"          handler={require('./components/instance/instanceNew')} />
+
         <Route        name="instance"    path="instances/:instanceId" handler={require('./components/instance/instanceView')}>
 
             <DefaultRoute name="noAnalysis"                             handler={require('./components/analysis/analysisNoneSelected')} />

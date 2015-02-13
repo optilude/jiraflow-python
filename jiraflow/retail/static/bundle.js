@@ -8,6 +8,7 @@ var Immutable = require('immutable');
 var React = require('react');
 var Marty = require('marty');
 
+var Exception = require('./exception');
 var Router = require('./router');
 
 var NavigationActionCreators = require('./navigation/navigationActionCreators');
@@ -39,11 +40,28 @@ if(initialState) {
 }
 
 Router.run(function(Handler, state) {
-    // TODO: Catch exception here and navigate to 404 page?
-    NavigationActionCreators.routerNavigate(Handler, state);
-    React.render(React.createElement(Handler, null), document.body);
+
+    try {
+        NavigationActionCreators.routerNavigate(Handler, state);
+        React.render(React.createElement(Handler, null), document.body);
+    } catch(e) {
+        // Route to an appropriate error page if something went wrong during navigation
+        console.error(e);
+        var lastRouteName = state.routes[state.routes.length - 1].name;
+
+        if(e instanceof Exception) {
+            if(e.status === 404 && lastRouteName !== "notFound") {
+                Router.transitionTo("notFound");
+            } else if(lastRouteName !== "error") {
+                Router.transitionTo("error");
+            }
+        } else if(lastRouteName !== "error") {
+            Router.transitionTo("error");
+        }
+    }
+
 });
-},{"./analysis/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
+},{"./analysis/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window, setTimeout */
 "use strict";
@@ -498,7 +516,67 @@ var App = React.createClass({displayName: "App",
 });
 
 module.exports = App;
-},{"../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./navigation/topNav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/navigation/topNav.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx":[function(require,module,exports){
+},{"../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./navigation/topNav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/navigation/topNav.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/error.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document */
+"use strict";
+
+var React = require('react/addons');
+var BS = require('react-bootstrap');
+
+var $__0=       BS,Grid=$__0.Grid,Row=$__0.Row,Col=$__0.Col,Alert=$__0.Alert;
+
+var NotFound = React.createClass({displayName: "NotFound",
+    mixins: [React.addons.PureRenderMixin],
+
+    render: function() {
+
+        return (
+            React.createElement(Grid, {fluid: true}, 
+                React.createElement(Row, null, 
+                    React.createElement(Col, {sm: 6, smOffset: 3, md: 8, mdOffset: 2}, 
+                        React.createElement("h1", null, "Error"), 
+                        React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred.")
+                    )
+                )
+          )
+        );
+
+    }
+});
+
+module.exports = NotFound;
+},{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx":[function(require,module,exports){
+/*jshint globalstrict:true, devel:true, newcap:false */
+/*global require, module, exports, document */
+"use strict";
+
+var React = require('react/addons');
+var BS = require('react-bootstrap');
+
+var $__0=       BS,Grid=$__0.Grid,Row=$__0.Row,Col=$__0.Col,Alert=$__0.Alert;
+
+var NotFound = React.createClass({displayName: "NotFound",
+    mixins: [React.addons.PureRenderMixin],
+
+    render: function() {
+
+        return (
+            React.createElement(Grid, {fluid: true}, 
+                React.createElement(Row, null, 
+                    React.createElement(Col, {sm: 6, smOffset: 3, md: 8, mdOffset: 2}, 
+                        React.createElement("h1", null, "Not found"), 
+                        React.createElement(Alert, {bsStyle: "danger"}, "The page you requested could not be found")
+                    )
+                )
+          )
+        );
+
+    }
+});
+
+module.exports = NotFound;
+},{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document */
 "use strict";
@@ -602,9 +680,7 @@ var InstanceNoneSelected = React.createClass({displayName: "InstanceNoneSelected
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
-                    React.createElement(Col, {sm: 3, md: 2}
-                    ), 
-                    React.createElement(Col, {sm: 9, md: 10}, 
+                    React.createElement(Col, {sm: 9, smOffset: 3, md: 10, mdOffset: 2}, 
                         React.createElement("h1", null, "No instance selected")
                     )
                 )
@@ -1504,10 +1580,8 @@ module.exports = NavigationStore;
 var React = require('react');
 var Router = require('react-router');
 
-var Route = Router.Route;
-var DefaultRoute = Router.DefaultRoute;
+var $__0=      Router,Route=$__0.Route,DefaultRoute=$__0.DefaultRoute,NotFoundRoute=$__0.NotFoundRoute;
 
-// TODO: NotFoundRoute(s) + handle invalid instanceId/analysisId param
 // TODO: Preferences
 // TODO: Edit instance
 // TODO: Create analysis
@@ -1517,8 +1591,13 @@ var routes = [
     React.createElement(Route, {name: "login", path: "/login", handler: require('./components/user/login')}),
     React.createElement(Route, {name: "home", path: "/", handler: require('./components/app')}, 
 
+        React.createElement(NotFoundRoute, {handler: require('./components/error/notFound')}), 
+        React.createElement(Route, {name: "notFound", path: "404", handler: require('./components/error/notFound')}), 
+        React.createElement(Route, {name: "error", path: "500", handler: require('./components/error/error')}), 
+
         React.createElement(DefaultRoute, {name: "noInstance", handler: require('./components/instance/instanceNoneSelected')}), 
         React.createElement(Route, {name: "newInstance", path: "new-instance", handler: require('./components/instance/instanceNew')}), 
+
         React.createElement(Route, {name: "instance", path: "instances/:instanceId", handler: require('./components/instance/instanceView')}, 
 
             React.createElement(DefaultRoute, {name: "noAnalysis", handler: require('./components/analysis/analysisNoneSelected')}), 
@@ -1533,7 +1612,7 @@ module.exports = Router.create({
   routes: routes,
   // location: Router.HistoryLocation
 });
-},{"./components/analysis/analysisNoneSelected":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNoneSelected.jsx","./components/analysis/analysisView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx","./components/app":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx","./components/instance/instanceNew":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx","./components/instance/instanceNoneSelected":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNoneSelected.jsx","./components/instance/instanceView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx","./components/user/login":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userAPI.jsx":[function(require,module,exports){
+},{"./components/analysis/analysisNoneSelected":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNoneSelected.jsx","./components/analysis/analysisView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx","./components/app":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx","./components/error/error":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/error.jsx","./components/error/notFound":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx","./components/instance/instanceNew":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx","./components/instance/instanceNoneSelected":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNoneSelected.jsx","./components/instance/instanceView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx","./components/user/login":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userAPI.jsx":[function(require,module,exports){
 /*jshint globalstrict:true, devel:true, newcap:false */
 /*global require, module, exports, document, window, setTimeout */
 "use strict";

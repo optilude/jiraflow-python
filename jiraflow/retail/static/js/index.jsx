@@ -7,6 +7,7 @@ var Immutable = require('immutable');
 var React = require('react');
 var Marty = require('marty');
 
+var Exception = require('./exception');
 var Router = require('./router');
 
 var NavigationActionCreators = require('./navigation/navigationActionCreators');
@@ -38,7 +39,24 @@ if(initialState) {
 }
 
 Router.run(function(Handler, state) {
-    // TODO: Catch exception here and navigate to 404 page?
-    NavigationActionCreators.routerNavigate(Handler, state);
-    React.render(<Handler />, document.body);
+
+    try {
+        NavigationActionCreators.routerNavigate(Handler, state);
+        React.render(<Handler />, document.body);
+    } catch(e) {
+        // Route to an appropriate error page if something went wrong during navigation
+        console.error(e);
+        var lastRouteName = state.routes[state.routes.length - 1].name;
+
+        if(e instanceof Exception) {
+            if(e.status === 404 && lastRouteName !== "notFound") {
+                Router.transitionTo("notFound");
+            } else if(lastRouteName !== "error") {
+                Router.transitionTo("error");
+            }
+        } else if(lastRouteName !== "error") {
+            Router.transitionTo("error");
+        }
+    }
+
 });
