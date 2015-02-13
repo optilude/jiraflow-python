@@ -72,8 +72,7 @@ var InstanceStore = Marty.createStore({
                 return result;
             })
             .catch(error => {
-                // TODO: Handle better
-                console.error(error);
+                throw new Exception(500, "Unable to refresh instances for new user", error);
             });
         }
     },

@@ -80,8 +80,7 @@ var AnalysisStore = Marty.createStore({
             return result;
         })
         .catch(error => {
-            // TODO: Handle better
-            console.error(error);
+            throw new Exception(500, "Unable to refresh analyses for newly selected instance", error);
         });
     },
 
