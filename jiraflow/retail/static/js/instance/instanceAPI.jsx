@@ -22,14 +22,17 @@ var InstanceAPI = Marty.createStateSource({
                         id: "project-snowflake",
                         title: "Project Snowflake",
                         url: "https://snowflake.atlassian.net",
+                        userName: "admin"
                     }, {
                         id: "acme-corp",
                         title: "Acme Corp",
                         url: "https://acme.atlassian.net",
+                        userName: "admin"
                     }, {
                         id: "internal-projects",
                         title: "Internal projects",
                         url: "https://jira.acmecorp.com",
+                        userName: "admin"
                     },
                 ]));
             }, 1000);
@@ -62,15 +65,22 @@ var InstanceAPI = Marty.createStateSource({
     },
 
     update: function(id, instance) {
-        var req = {
-            url: '/api/instances/' + id,
-            body: instance.toJS()
-        };
-
-        return this.put(req)
-        .then(res => {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(() => {
+                resolve(instance.set('id', id));
+            }, 1000);
         });
+
+        // var req = {
+        //     url: '/api/instances/' + id,
+        //     body: instance.toJS()
+        // };
+
+        // return this.put(req)
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     deleteInstance: function(id) {

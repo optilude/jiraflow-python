@@ -44,7 +44,7 @@ var InstanceActionCreators = Marty.createActionCreators({
         // optimistically dispatch
         var action = this.dispatch(id, instance);
 
-        return InstanceAPI.update(instance)
+        return InstanceAPI.update(id, instance)
         .then(result => {
             // inform stores an instance has been received
             this.receiveInstance(result);

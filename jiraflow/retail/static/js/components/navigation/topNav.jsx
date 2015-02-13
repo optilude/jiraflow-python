@@ -61,7 +61,7 @@ var TopNav = React.createClass({
                 <Nav ref="mainNav">
                     <DropdownButton title="JIRA Instance" ref="instanceMenu">
                         <MenuItemLink to="newInstance" onClick={this.linkClick}>New</MenuItemLink>
-                        {haveInstance? <MenuItem>Edit</MenuItem> : ""}
+                        {haveInstance? <MenuItemLink to="editInstance" params={{instanceId: this.state.selectedInstance.get('id')}} onClick={this.linkClick}>Edit</MenuItemLink> : ""}
                         {haveInstance? <MenuItem>
                             <ModalTrigger ref="deleteConfirmModalTrigger" modal={deleteConfirmModal}>
                                 <div onClick={this.deleteLinkClick}>Delete</div>

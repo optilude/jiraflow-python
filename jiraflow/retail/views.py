@@ -19,14 +19,17 @@ def build_jira_instances_state(request):
             "id": "project-snowflake",
             "title": "Project Snowflake",
             "url": "https://snowflake.atlassian.net",
+            "userName": "admin"
         }, {
             "id": "acme-corp",
             "title": "Acme Corp",
             "url": "https://acme.atlassian.net",
+            "userName": "admin"
         }, {
             "id": "internal-projects",
             "title": "Internal projects",
             "url": "https://jira.acmecorp.com",
+            "userName": "admin"
         },
     ]
 

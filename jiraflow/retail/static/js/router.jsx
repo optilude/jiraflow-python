@@ -25,8 +25,9 @@ var routes = [
 
         <Route        name="instance"    path="instances/:instanceId" handler={require('./components/instance/instanceView')}>
 
-            <DefaultRoute name="noAnalysis"                             handler={require('./components/analysis/analysisNoneSelected')} />
-            <Route        name="analysis"   path="analysis/:analysisId" handler={require('./components/analysis/analysisView')} />
+            <Route        name="editInstance" path="edit"                 handler={require('./components/instance/instanceEdit')} />
+            <DefaultRoute name="noAnalysis"                               handler={require('./components/analysis/analysisNoneSelected')} />
+            <Route        name="analysis"     path="analysis/:analysisId" handler={require('./components/analysis/analysisView')} />
 
         </Route>
 
