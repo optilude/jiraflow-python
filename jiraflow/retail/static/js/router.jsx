@@ -8,7 +8,6 @@ var Router = require('react-router');
 var { Route, DefaultRoute, NotFoundRoute } = Router;
 
 // TODO: Preferences
-// TODO: Edit instance
 // TODO: Create analysis
 // TODO: Edit analysis
 

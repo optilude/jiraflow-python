@@ -988,7 +988,7 @@ var NavigationState = Marty.createStateMixin({
 var TopNav = React.createClass({displayName: "TopNav",
     mixins: [NavigationState],
 
-    // TODO: Handle edit, prefs
+    // TODO: Handle prefs
 
     render: function() {
 
@@ -1674,7 +1674,6 @@ var Router = require('react-router');
 var $__0=      Router,Route=$__0.Route,DefaultRoute=$__0.DefaultRoute,NotFoundRoute=$__0.NotFoundRoute;
 
 // TODO: Preferences
-// TODO: Edit instance
 // TODO: Create analysis
 // TODO: Edit analysis
 
