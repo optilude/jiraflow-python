@@ -72,6 +72,7 @@ var TopNav = React.createClass({
                 <Nav right={true}>
                     <DropdownButton eventKey={1} title={this.state.user? this.state.user.get('name') : "Unknown user"}>
                         <MenuItemLink to="userDetails" onClick={this.linkClick}>Edit details</MenuItemLink>
+                        <MenuItemLink to="userPassword" onClick={this.linkClick}>Change password</MenuItemLink>
                         <MenuItem onSelect={this.logout}>Log out</MenuItem>
                     </DropdownButton>
                 </Nav>

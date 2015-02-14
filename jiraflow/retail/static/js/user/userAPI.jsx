@@ -73,18 +73,35 @@ var UserAPI = Marty.createStateSource({
     },
 
     changePassword: function(oldPassword, newPassword) {
-        var req = {
-            url: '/api/user/password',
-            body: {
-                oldPassword: oldPassword,
-                newPassword: newPassword
-            }
-        };
 
-        return this.post(req)
-        .then(res => {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(() => {
+
+                if(oldPassword !== 'secret') {
+                    reject({
+                        status: 401,
+                        body: {}
+                    });
+                } else {
+                    resolve();
+                }
+
+            }, 1000);
         });
+
+        // var req = {
+        //     url: '/api/user/password',
+        //     body: {
+        //         oldPassword: oldPassword,
+        //         newPassword: newPassword
+        //     }
+        // };
+
+        // return this.post(req)
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     },
 
     changePreferences: function(user) {
@@ -111,7 +128,6 @@ var UserAPI = Marty.createStateSource({
         //     body: user.toJS()
         // };
 
-        // TODO: Distinguish between 500 and other status codes
         // return this.post(req)
         // .then(res => {
         //     return Immutable.fromJS(res.body);

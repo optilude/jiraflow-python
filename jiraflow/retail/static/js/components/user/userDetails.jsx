@@ -24,8 +24,6 @@ var UserState = Marty.createStateMixin({
     }
 });
 
-var DUMMY_PASSWORD = "*****";
-
 var UserDetails = React.createClass({
     mixins: [UserState],
 

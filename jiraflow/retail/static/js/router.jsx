@@ -7,7 +7,6 @@ var Router = require('react-router');
 
 var { Route, DefaultRoute, NotFoundRoute } = Router;
 
-// TODO: Preferences
 // TODO: Create analysis
 // TODO: Edit analysis
 
@@ -20,8 +19,9 @@ var routes = [
         <Route        name="error"    path="500" handler={require('./components/error/error')} />
 
         <DefaultRoute name="noInstance"                               handler={require('./components/instance/instanceNoneSelected')} />
-        <Route        name="newInstance" path="new-instance"          handler={require('./components/instance/instanceNew')} />
-        <Route        name="userDetails" path="user-details"          handler={require('./components/user/userDetails')} />
+        <Route        name="newInstance"  path="new-instance"         handler={require('./components/instance/instanceNew')} />
+        <Route        name="userDetails"  path="user-details"         handler={require('./components/user/userDetails')} />
+        <Route        name="userPassword" path="change-password"      handler={require('./components/user/userChangePassword')} />
 
         <Route        name="instance"    path="instances/:instanceId" handler={require('./components/instance/instanceView')}>
 
