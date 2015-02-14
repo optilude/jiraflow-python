@@ -38,7 +38,7 @@ var InstanceView = React.createClass({
 
     render: function() {
 
-        // TODO: This is annoying. It is needed because for a brief moment
+        // XXX: This is annoying. It is needed because for a brief moment
         // during deletion of an instance, the view re-renders and we get
         // errors if we assume selectedInstance is never null.
         if(this.state.selectedInstance === null) {

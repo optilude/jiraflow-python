@@ -460,7 +460,7 @@ var AnalysisView = React.createClass({displayName: "AnalysisView",
 
     render: function () {
 
-        // TODO: This is annoying. It is needed because for a brief moment
+        // XXX: This is annoying. It is needed because for a brief moment
         // during deletion of an instance or navigating to a different instance,
         // the view re-renders and we get errors if we assume analysis is never null.
         if(this.props.analysis === null) {
@@ -911,7 +911,7 @@ var InstanceView = React.createClass({displayName: "InstanceView",
 
     render: function() {
 
-        // TODO: This is annoying. It is needed because for a brief moment
+        // XXX: This is annoying. It is needed because for a brief moment
         // during deletion of an instance, the view re-renders and we get
         // errors if we assume selectedInstance is never null.
         if(this.state.selectedInstance === null) {

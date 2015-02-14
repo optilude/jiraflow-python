@@ -1,0 +1,23 @@
+{
+	"folders":
+	[
+		{
+			"follow_symlinks": true,
+			"path": "."
+		}
+	],
+    "settings": {
+        "todoreview": {
+            "exclude_folders": [
+                "*.git*",
+                "*node_modules*"
+            ],
+            "exclude_files": [
+                "*.sublime-workspace",
+                "*.sublime-project",
+                "*/bundle.js",
+                "*.map"
+            ]
+        }
+    }
+}

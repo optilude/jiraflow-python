@@ -22,7 +22,7 @@ var AnalysisView = React.createClass({
 
     render: function () {
 
-        // TODO: This is annoying. It is needed because for a brief moment
+        // XXX: This is annoying. It is needed because for a brief moment
         // during deletion of an instance or navigating to a different instance,
         // the view re-renders and we get errors if we assume analysis is never null.
         if(this.props.analysis === null) {
