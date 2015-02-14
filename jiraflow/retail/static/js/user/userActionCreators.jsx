@@ -26,7 +26,7 @@ var UserActionCreators = Marty.createActionCreators({
             return result;
         })
         .catch(error => {
-            throw new Exception(error, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
@@ -42,7 +42,7 @@ var UserActionCreators = Marty.createActionCreators({
             return result;
         })
         .catch(error => {
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
@@ -53,7 +53,7 @@ var UserActionCreators = Marty.createActionCreators({
             return result;
         })
         .catch(error => {
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
@@ -61,15 +61,15 @@ var UserActionCreators = Marty.createActionCreators({
         return UserAPI.changePreferences(newUser)
         .then(result => {
             // inform stores a user has been received
-            this.receiveUser(null);
+            this.receiveUser(result);
 
-            // dispatch the higher order logout action
-            this.dispatch();
+            // dispatch the higher order change preferences action
+            this.dispatch(result);
 
             return result;
         })
         .catch(error => {
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 

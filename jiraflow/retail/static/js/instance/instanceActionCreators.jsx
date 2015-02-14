@@ -21,7 +21,7 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         })
         .catch(error => {
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
@@ -36,7 +36,7 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         })
         .catch(error => {
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
@@ -53,7 +53,7 @@ var InstanceActionCreators = Marty.createActionCreators({
         .catch(error => {
             // roll back action if AJAX operation failed
             action.rollback();
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
@@ -68,7 +68,7 @@ var InstanceActionCreators = Marty.createActionCreators({
             return result;
         })
         .catch(error => {
-            throw new Exception(500, "Server request failed", error);
+            throw new Exception(error.status, "Server request failed", error);
         });
     }),
 
