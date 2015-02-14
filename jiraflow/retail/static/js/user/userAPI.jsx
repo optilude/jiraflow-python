@@ -43,7 +43,10 @@ var UserAPI = Marty.createStateSource({
                         roles: []
                     }));
                 } else {
-                    reject(401);
+                    reject({
+                        status: 401,
+                        body: {}
+                    });
                 }
             }, 1000);
         });
@@ -85,15 +88,34 @@ var UserAPI = Marty.createStateSource({
     },
 
     changePreferences: function(user) {
-        var req = {
-            url: '/api/user',
-            body: user.toJS()
-        };
 
-        return this.post(req)
-        .then(res => {
-            return Immutable.fromJS(res.body);
+        // TODO: Remove faked implementation
+        return new Promise(function(resolve, reject) {
+            setTimeout(() => {
+
+                if(user.get('email') === 'dupe@example.org') {
+                    reject({
+                        status: 409,
+                        body: {}
+                    });
+                } else {
+                    resolve(user.delete('roles'));
+                }
+
+            }, 1000);
         });
+
+
+        // var req = {
+        //     url: '/api/user',
+        //     body: user.toJS()
+        // };
+
+        // TODO: Distinguish between 500 and other status codes
+        // return this.post(req)
+        // .then(res => {
+        //     return Immutable.fromJS(res.body);
+        // });
     }
 
 });

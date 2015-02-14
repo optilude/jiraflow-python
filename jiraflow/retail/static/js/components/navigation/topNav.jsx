@@ -40,8 +40,6 @@ var NavigationState = Marty.createStateMixin({
 var TopNav = React.createClass({
     mixins: [NavigationState],
 
-    // TODO: Handle prefs
-
     render: function() {
 
         var deleteConfirmModal = (
@@ -73,7 +71,7 @@ var TopNav = React.createClass({
                 </Nav>
                 <Nav right={true}>
                     <DropdownButton eventKey={1} title={this.state.user? this.state.user.get('name') : "Unknown user"}>
-                        <MenuItem>Preferences</MenuItem>
+                        <MenuItemLink to="userDetails" onClick={this.linkClick}>Edit details</MenuItemLink>
                         <MenuItem onSelect={this.logout}>Log out</MenuItem>
                     </DropdownButton>
                 </Nav>

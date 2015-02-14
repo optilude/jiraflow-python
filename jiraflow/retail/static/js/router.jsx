@@ -21,6 +21,7 @@ var routes = [
 
         <DefaultRoute name="noInstance"                               handler={require('./components/instance/instanceNoneSelected')} />
         <Route        name="newInstance" path="new-instance"          handler={require('./components/instance/instanceNew')} />
+        <Route        name="userDetails" path="user-details"          handler={require('./components/user/userDetails')} />
 
         <Route        name="instance"    path="instances/:instanceId" handler={require('./components/instance/instanceView')}>
 

@@ -28,9 +28,7 @@ var InstanceNew = React.createClass({
         return (
             <Grid fluid={true}>
                 <Row>
-                    <Col sm={3} md={2}>
-                    </Col>
-                    <Col sm={7} md={6}>
+                    <Col sm={7} smOffset={3} md={6} mdOffset={2}>
                         {this.state.invalid? <Alert bsStyle="danger">Please fill in all required fields</Alert> : ""}
                         {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the new instance. Please try again later.</Alert> : ""}
 
