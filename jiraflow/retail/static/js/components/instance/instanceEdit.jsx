@@ -47,13 +47,9 @@ var InstanceEdit = React.createClass({
             password: DUMMY_PASSWORD
         });
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during navigation the view re-renders and we get errors if we assume
-        // analysis is never null.
+        // XXX: Can happen during "delete" or "navigate away"
         if(!instance) {
-            return (
-                <div></div>
-            );
+            return <span></span>;
         }
 
         var instanceId = this.state.selectedInstance.get('id');

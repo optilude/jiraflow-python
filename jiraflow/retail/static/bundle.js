@@ -438,13 +438,9 @@ var AnalysisView = React.createClass({displayName: "AnalysisView",
 
     render: function () {
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during deletion of an instance or navigating to a different instance,
-        // the view re-renders and we get errors if we assume analysis is never null.
+        // XXX: Can happen during "navigate away"
         if(this.props.analysis === null) {
-            return (
-                React.createElement("div", null)
-            );
+            return React.createElement("span", null);
         }
 
         return (
@@ -611,13 +607,9 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
             password: DUMMY_PASSWORD
         });
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during navigation the view re-renders and we get errors if we assume
-        // analysis is never null.
+        // XXX: Can happen during "delete" or "navigate away"
         if(!instance) {
-            return (
-                React.createElement("div", null)
-            );
+            return React.createElement("span", null);
         }
 
         var instanceId = this.state.selectedInstance.get('id');
@@ -895,13 +887,9 @@ var InstanceOverview = React.createClass({displayName: "InstanceOverview",
 
         var instance = this.state.selectedInstance;
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during navigation the view re-renders and we get errors if we assume
-        // analysis is never null.
+        // XXX: Can happend during "navigate away"
         if(!instance) {
-            return (
-                React.createElement("div", null)
-            );
+            return React.createElement("span", null);
         }
 
         var instanceId = instance.get('id');
@@ -1058,29 +1046,22 @@ var InstanceView = React.createClass({displayName: "InstanceView",
 
     render: function() {
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during deletion of an instance, the view re-renders and we get
-        // errors if we assume selectedInstance is never null.
-        if(this.state.selectedInstance === null) {
-            return (
-                React.createElement(Grid, {fluid: true}, 
-                    React.createElement(Row, null, 
-                        React.createElement(Col, {sm: 9, smOffset: 3, md: 10, mdOffset: 2}, 
-                            "Instance deleted"
-                        )
-                    )
-                )
-            );
+        var instance = this.state.selectedInstance;
+        var analysis = this.state.selectedAnalysis;
+
+        // XXX: Can happend during "navigate away"
+        if(!instance) {
+            return React.createElement("span", null);
         }
 
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
                     React.createElement(Col, {sm: 3, md: 2}, 
-                        React.createElement(Sidebar, {instance: this.state.selectedInstance, analyses: this.state.analyses})
+                        React.createElement(Sidebar, {instance: instance, analyses: this.state.analyses})
                     ), 
                     React.createElement(Col, {sm: 9, md: 10}, 
-                        React.createElement(RouteHandler, {analysis: this.state.selectedAnalysis})
+                        React.createElement(RouteHandler, {analysis: analysis})
                     )
                 )
             )

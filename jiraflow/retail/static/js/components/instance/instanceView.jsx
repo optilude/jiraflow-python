@@ -38,29 +38,22 @@ var InstanceView = React.createClass({
 
     render: function() {
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during deletion of an instance, the view re-renders and we get
-        // errors if we assume selectedInstance is never null.
-        if(this.state.selectedInstance === null) {
-            return (
-                <Grid fluid={true}>
-                    <Row>
-                        <Col sm={9} smOffset={3} md={10} mdOffset={2}>
-                            Instance deleted
-                        </Col>
-                    </Row>
-                </Grid>
-            );
+        var instance = this.state.selectedInstance;
+        var analysis = this.state.selectedAnalysis;
+
+        // XXX: Can happend during "navigate away"
+        if(!instance) {
+            return <span></span>;
         }
 
         return (
             <Grid fluid={true}>
                 <Row>
                     <Col sm={3} md={2}>
-                        <Sidebar instance={this.state.selectedInstance} analyses={this.state.analyses} />
+                        <Sidebar instance={instance} analyses={this.state.analyses} />
                     </Col>
                     <Col sm={9} md={10}>
-                        <RouteHandler analysis={this.state.selectedAnalysis} />
+                        <RouteHandler analysis={analysis} />
                     </Col>
                 </Row>
             </Grid>

@@ -30,13 +30,9 @@ var InstanceOverview = React.createClass({
 
         var instance = this.state.selectedInstance;
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during navigation the view re-renders and we get errors if we assume
-        // analysis is never null.
+        // XXX: Can happend during "navigate away"
         if(!instance) {
-            return (
-                <div></div>
-            );
+            return <span></span>;
         }
 
         var instanceId = instance.get('id');

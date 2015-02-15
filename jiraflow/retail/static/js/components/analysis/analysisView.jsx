@@ -22,13 +22,9 @@ var AnalysisView = React.createClass({
 
     render: function () {
 
-        // XXX: This is annoying. It is needed because for a brief moment
-        // during deletion of an instance or navigating to a different instance,
-        // the view re-renders and we get errors if we assume analysis is never null.
+        // XXX: Can happen during "navigate away"
         if(this.props.analysis === null) {
-            return (
-                <div></div>
-            );
+            return <span></span>;
         }
 
         return (
