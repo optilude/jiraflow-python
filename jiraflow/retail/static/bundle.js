@@ -891,10 +891,6 @@ var InstanceState = Marty.createStateMixin({
 var InstanceOverview = React.createClass({displayName: "InstanceOverview",
     mixins: [InstanceState],
 
-    // TODO: Render with view/manage tabs like analysis
-    // TODO: Move delete to "manage" tab
-    // TODO: Remove instance edit, delete from top navs
-
     render: function() {
 
         var instance = this.state.selectedInstance;
