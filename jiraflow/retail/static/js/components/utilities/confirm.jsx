@@ -14,7 +14,8 @@ var ConfirmModal = React.createClass({
         text: React.PropTypes.node.isRequired,
         onRequestHide: React.PropTypes.func.isRequired,
         onYes: React.PropTypes.func.isRequired,
-        onNo: React.PropTypes.func.isRequired
+        onNo: React.PropTypes.func.isRequired,
+        dangerous: React.PropTypes.bool
     },
 
     render: function() {
@@ -24,7 +25,7 @@ var ConfirmModal = React.createClass({
                     {this.props.text}
                 </div>
                 <div className="modal-footer">
-                    <Button bsStyle="primary" onClick={this.props.onYes}>Yes</Button>
+                    <Button bsStyle={this.props.dangerous? "danger" : "primary"} onClick={this.props.onYes}>Yes</Button>
                     <Button bsStyle="default" onClick={this.props.onNo}>No</Button>
                 </div>
             </Modal>

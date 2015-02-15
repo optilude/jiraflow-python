@@ -6,9 +6,11 @@ var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
+var Router = require('react-router');
 
 var { Button, Nav, NavItem } = BS;
 var { NavItemLink } = RBS;
+var { Link } = Router;
 
 /**
  * Sidebar listing the analyses under an instance.
@@ -21,7 +23,7 @@ var InstanceSidebar = React.createClass({
         analyses: React.PropTypes.instanceOf(Immutable.Iterable).isRequired
     },
 
-    // TODO: Implement new analysis
+    // TODO: Implement new analysis button
 
     render: function () {
 
@@ -29,11 +31,11 @@ var InstanceSidebar = React.createClass({
 
         return (
             <div className="sidebar">
-                <h4>{this.props.instance.get('title')}</h4>
                 <Nav bsStyle="pills" stacked={true}>
+                    <NavItemLink className="currentInstance" to="instance" params={{instanceId: instanceId}}>{this.props.instance.get('title')}</NavItemLink>
                     {this.props.analyses.map((a, idx) => <NavItemLink key={idx} to="analysis" params={{instanceId: instanceId, analysisId: a.get('id')}}>{a.get('title')}</NavItemLink>).toArray()}
                 </Nav>
-                <Button className="new-analysis-button" bsStyle="success">New analysis</Button>
+                <Button className="new-analysis-button" bsStyle="success">Configure new analysis</Button>
             </div>
         );
     }

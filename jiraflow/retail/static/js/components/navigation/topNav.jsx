@@ -12,12 +12,10 @@ var NavigationActionCreators = require('../../navigation/navigationActionCreator
 var UserStore = require('../../user/userStore');
 var UserActionCreators = require('../../user/userActionCreators');
 var InstanceStore = require('../../instance/instanceStore');
-var InstanceActionCreators = require('../../instance/instanceActionCreators');
-var ConfirmModal = require('../utilities/confirm');
 
 var { Link } = Router;
 
-var { Navbar, Nav, NavItem, DropdownButton, MenuItem, ModalTrigger } = BS;
+var { Navbar, Nav, NavItem, DropdownButton, MenuItem } = BS;
 var { MenuItemLink } = RBS;
 
 var NavigationState = Marty.createStateMixin({
@@ -42,16 +40,6 @@ var TopNav = React.createClass({
 
     render: function() {
 
-        var deleteConfirmModal = (
-            <ConfirmModal
-                title="Delete instance"
-                text="Are you sure you want to delete this instance? This action cannot be undone."
-                onRequestHide={this.cancelDelete}
-                onYes={this.confirmDelete}
-                onNo={this.cancelDelete}
-                />
-        );
-
         var haveInstance = this.state.selectedInstance !== null;
 
         return (
@@ -59,12 +47,6 @@ var TopNav = React.createClass({
                 <Nav ref="mainNav">
                     <DropdownButton title="JIRA Instance" ref="instanceMenu">
                         <MenuItemLink to="newInstance" onClick={this.linkClick}>New</MenuItemLink>
-                        {haveInstance? <MenuItemLink to="editInstance" params={{instanceId: this.state.selectedInstance.get('id')}} onClick={this.linkClick}>Edit</MenuItemLink> : ""}
-                        {haveInstance? <MenuItem>
-                            <ModalTrigger ref="deleteConfirmModalTrigger" modal={deleteConfirmModal}>
-                                <div onClick={this.deleteLinkClick}>Delete</div>
-                            </ModalTrigger>
-                        </MenuItem> : ""}
                         <MenuItem divider />
                         {this.state.instances.map((i, idx) => <MenuItemLink key={idx} to="instance" params={{instanceId: i.get('id')}} onClick={this.linkClick}>{i.get('title')}</MenuItemLink>).toArray()}
                     </DropdownButton>
@@ -88,30 +70,6 @@ var TopNav = React.createClass({
         .catch(error => {
             console.error(error);
             alert("An unexpected error occurred logging out.");
-        });
-    },
-
-    deleteLinkClick: function(event) {
-        event.preventDefault();
-        this.refs.navbar.refs.mainNav.refs.instanceMenu.setDropdownState(false);
-    },
-
-    cancelDelete: function(event) {
-        event.preventDefault();
-        this.refs.deleteConfirmModalTrigger.hide();
-    },
-
-    confirmDelete: function(event) {
-        event.preventDefault();
-        this.refs.deleteConfirmModalTrigger.hide();
-
-        InstanceActionCreators.deleteInstance(this.state.selectedInstance.get('id'))
-        .then(id => {
-           NavigationActionCreators.navigateHome();
-        })
-        .catch(error => {
-           console.error(error);
-           alert("An unexpected error occurred deleting an instance.");
         });
     },
 

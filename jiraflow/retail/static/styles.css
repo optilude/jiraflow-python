@@ -6712,3 +6712,14 @@ button.rf-RepeatingFieldset__remove {
 .new-analysis-button {
   margin-top: 20px;
 }
+.sidebar li.active.currentInstance > a {
+  font-weight: bold;
+  color: #333333;
+  background-color: transparent;
+  text-decoration: none;
+  border-bottom: solid #337ab7 1px;
+  border-radius: 0;
+}
+.sidebar li.active.currentInstance > a:hover {
+  background-color: #eeeeee;
+}
