@@ -21,7 +21,7 @@ var InstanceState = Marty.createStateMixin({
     }
 });
 
-var InstanceNoneSelected = React.createClass({
+var FrontPage = React.createClass({
     mixins: [InstanceState],
 
     render: function() {
@@ -70,4 +70,4 @@ var InstanceNoneSelected = React.createClass({
 
 });
 
-module.exports = InstanceNoneSelected;
+module.exports = FrontPage;

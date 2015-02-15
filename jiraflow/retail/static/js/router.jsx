@@ -21,10 +21,11 @@ var routes = [
         <Route        name="userDetails"  path="user-details"         handler={require('./components/user/userDetails')} />
         <Route        name="userPassword" path="change-password"      handler={require('./components/user/userChangePassword')} />
 
-        <Route        name="instance"    path="instances/:instanceId" handler={require('./components/instance/instanceView')}>
+        <Route        name="instance"    path="instances/:instanceId" handler={require('./components/instance/instanceContainer')}>
 
-            <DefaultRoute name="viewInstance"                             handler={require('./components/instance/instanceOverview')} />
+            <DefaultRoute name="viewInstance"                             handler={require('./components/instance/instanceView')} />
             <Route        name="editInstance" path="edit"                 handler={require('./components/instance/instanceEdit')} />
+
             <Route        name="analysis"     path="analysis/:analysisId" handler={require('./components/analysis/analysisView')} />
 
         </Route>

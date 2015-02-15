@@ -31,7 +31,7 @@ var InstanceState = Marty.createStateMixin({
  *
  * Controller-view depending on the InstanceStore and the AnalysisStore.
  */
-var InstanceView = React.createClass({
+var InstanceContainer = React.createClass({
     mixins: [InstanceState],
 
     render: function() {
@@ -39,7 +39,7 @@ var InstanceView = React.createClass({
         var instance = this.state.selectedInstance;
         var analysis = this.state.selectedAnalysis;
 
-        // XXX: Can happend during "navigate away"
+        // XXX: Can happen during "navigate away"
         if(!instance) {
             return <span></span>;
         }
@@ -60,4 +60,4 @@ var InstanceView = React.createClass({
     }
 });
 
-module.exports = InstanceView;
+module.exports = InstanceContainer;

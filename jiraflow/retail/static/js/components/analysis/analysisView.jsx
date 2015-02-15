@@ -20,7 +20,7 @@ var AnalysisView = React.createClass({
 
     render: function () {
 
-        // XXX: Can happend during "navigate away"
+        // XXX: Can happen during "navigate away"
         if(!this.props.analysis) {
             return <span></span>;
         }
