@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
 var Immutable = require('immutable');
@@ -8,7 +6,6 @@ var Marty = require('marty');
 var Exception = require('../exception');
 var NavigationConstants = require('../navigation/navigationConstants');
 var NavigationStore = require('../navigation/navigationStore');
-var NavigationActionCreators = require('../navigation/navigationActionCreators');
 var UserConstants = require('../user/userConstants');
 var UserStore = require('../user/userStore');
 var InstanceConstants = require('./instanceConstants');

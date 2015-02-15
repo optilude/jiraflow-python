@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
 var Marty = require('marty');
@@ -33,7 +31,7 @@ var AnalysisActionCreators = Marty.createActionCreators({
 
             // dispatch action with the analysis returned from the server
 
-            var action = this.dispatch(analysis);
+            this.dispatch(analysis);
             return result;
         })
         .catch(error => {
@@ -65,7 +63,7 @@ var AnalysisActionCreators = Marty.createActionCreators({
             this.receiveAnalysisDelete(id);
 
             // dispatch this action
-            var action = this.dispatch(id);
+            this.dispatch(id);
             return id;
         })
         .catch(error => {

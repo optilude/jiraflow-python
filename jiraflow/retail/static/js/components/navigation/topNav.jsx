@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
 var React = require('react');
@@ -15,7 +13,7 @@ var InstanceStore = require('../../instance/instanceStore');
 
 var { Link } = Router;
 
-var { Navbar, Nav, NavItem, DropdownButton, MenuItem } = BS;
+var { Navbar, Nav, DropdownButton, MenuItem } = BS;
 var { MenuItemLink } = RBS;
 
 var NavigationState = Marty.createStateMixin({
@@ -40,12 +38,10 @@ var TopNav = React.createClass({
 
     render: function() {
 
-        var haveInstance = this.state.selectedInstance !== null;
-
         return (
             <Navbar inverse={true} fixedTop={true} fluid={true} brand={<Link to="home">JIRA Flow</Link>} ref="navbar">
                 <Nav ref="mainNav">
-                    <DropdownButton title="JIRA Instance" ref="instanceMenu">
+                    <DropdownButton title="Instance" ref="instanceMenu">
                         <MenuItemLink to="newInstance" onClick={this.linkClick}>New</MenuItemLink>
                         <MenuItem divider />
                         {this.state.instances.map((i, idx) => <MenuItemLink key={idx} to="instance" params={{instanceId: i.get('id')}} onClick={this.linkClick}>{i.get('title')}</MenuItemLink>).toArray()}

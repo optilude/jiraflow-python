@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
 var React = require('react/addons');
@@ -9,7 +7,6 @@ var BS = require('react-bootstrap');
 
 var UserActionCreators = require('../../user/userActionCreators');
 var UserStore = require('../../user/userStore');
-var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./userSchema');
 
 var { Grid, Row, Col, Button, Alert } = BS;

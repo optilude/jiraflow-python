@@ -1,40 +1,23 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
+var Immutable = require('immutable');
 var React = require('react/addons');
-var Marty = require('marty');
 var Router = require('react-router');
 var BS = require('react-bootstrap');
-var RBS = require('react-router-bootstrap');
 
-var InstanceStore = require('../../instance/instanceStore');
-
-var { Grid, Row, Col, Nav } = BS;
-var { NavItemLink } = RBS;
+var { Nav } = BS;
 var { Link } = Router;
 
-var InstanceState = Marty.createStateMixin({
-    listenTo: [InstanceStore],
-    getState: function() {
-        return {
-            selectedInstance: InstanceStore.getSelectedInstance(),
-        };
-    }
-});
-
 var InstanceOverview = React.createClass({
-    mixins: [InstanceState],
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        instance: React.PropTypes.instanceOf(Immutable.Map)
+    },
 
     render: function() {
 
-        var instance = this.state.selectedInstance;
-
-        // XXX: Can happend during "navigate away"
-        if(!instance) {
-            return <span></span>;
-        }
-
+        var instance = this.props.instance;
         var instanceId = instance.get('id');
 
         return (

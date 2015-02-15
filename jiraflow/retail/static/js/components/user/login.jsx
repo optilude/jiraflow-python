@@ -1,9 +1,6 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
 var React = require('react/addons');
-var Router = require('react-router');
 var BS = require('react-bootstrap');
 
 var UserActionCreators = require('../../user/userActionCreators');

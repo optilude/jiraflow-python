@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
 var Marty = require('marty');
@@ -64,7 +62,7 @@ var InstanceActionCreators = Marty.createActionCreators({
             this.receiveInstanceDelete(result);
 
             // dispatch
-            var action = this.dispatch(id);
+            this.dispatch(id);
             return result;
         })
         .catch(error => {

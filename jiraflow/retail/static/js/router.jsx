@@ -1,8 +1,6 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
-var React = require('react');
+var React = require('react'); // must be in scope to allow the use of JSX!
 var Router = require('react-router');
 
 var { Route, DefaultRoute, NotFoundRoute } = Router;

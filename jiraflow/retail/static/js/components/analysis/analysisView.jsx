@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
 var Immutable = require('immutable');
@@ -22,8 +20,8 @@ var AnalysisView = React.createClass({
 
     render: function () {
 
-        // XXX: Can happen during "navigate away"
-        if(this.props.analysis === null) {
+        // XXX: Can happend during "navigate away"
+        if(!this.props.analysis) {
             return <span></span>;
         }
 

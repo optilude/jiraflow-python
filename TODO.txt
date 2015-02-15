@@ -6,14 +6,14 @@ JIRAFlow To-Do
     - Design layout
     - React Bootstrap grid and navigation
 
-[ ] Build user management screens
+[x] Build user management screens
 
     - User CRUD via SDI
     - Login via React
     - Password reset via React
     - User profile via React
 
-[ ] Build basic JIRA configuration CRUD
+[x] Build basic JIRA configuration CRUD
 
     - Add form using React Forms
     - Show allowed configurations in navigation

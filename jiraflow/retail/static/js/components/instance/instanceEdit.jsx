@@ -1,38 +1,28 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
+var Immutable = require('immutable');
 var React = require('react/addons');
-var Marty = require('marty');
 var Router = require('react-router');
 var ReactForms = require('react-forms');
 var BS = require('react-bootstrap');
-var RBS = require('react-router-bootstrap');
 
 var ConfirmModal = require('../utilities/confirm');
 var InstanceActionCreators = require('../../instance/instanceActionCreators');
-var InstanceStore = require('../../instance/instanceStore');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 
-var { Grid, Row, Col, Button, ButtonToolbar, Alert, Nav, NavItem, ModalTrigger } = BS;
+var { Button, ButtonToolbar, Nav, ModalTrigger } = BS;
 var { Link } = Router;
 var { Form } = ReactForms;
-var { NavItemLink } = RBS;
-
-var InstanceState = Marty.createStateMixin({
-    listenTo: [InstanceStore],
-    getState: function() {
-        return {
-            selectedInstance: InstanceStore.getSelectedInstance(),
-        };
-    }
-});
 
 var DUMMY_PASSWORD = "*****";
 
 var InstanceEdit = React.createClass({
-    mixins: [InstanceState],
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        instance: React.PropTypes.instanceOf(Immutable.Map)
+    },
 
     getInitialState: function() {
         return {
@@ -43,16 +33,11 @@ var InstanceEdit = React.createClass({
 
     render: function() {
 
-        var instance = this.state.selectedInstance.delete('id').merge({
+        var instance = this.props.instance.delete('id').merge({
             password: DUMMY_PASSWORD
         });
 
-        // XXX: Can happen during "delete" or "navigate away"
-        if(!instance) {
-            return <span></span>;
-        }
-
-        var instanceId = this.state.selectedInstance.get('id');
+        var instanceId = this.props.instance.get('id');
 
         var deleteConfirmModal = (
             <ConfirmModal
@@ -109,7 +94,7 @@ var InstanceEdit = React.createClass({
             value = value.delete('password');
         }
 
-        InstanceActionCreators.updateInstance(this.state.selectedInstance.get('id'), value)
+        InstanceActionCreators.updateInstance(this.props.instance.get('id'), value)
         .then(instance => {
             NavigationActionCreators.navigateToInstance(instance.get('id'));
         })
@@ -128,7 +113,7 @@ var InstanceEdit = React.createClass({
         event.preventDefault();
         this.refs.deleteConfirmModalTrigger.hide();
 
-        InstanceActionCreators.deleteInstance(this.state.selectedInstance.get('id'))
+        InstanceActionCreators.deleteInstance(this.props.instance.get('id'))
         .then(id => {
            NavigationActionCreators.navigateHome();
         })

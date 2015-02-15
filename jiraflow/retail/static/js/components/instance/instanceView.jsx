@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
 var Marty = require('marty');
@@ -53,7 +51,7 @@ var InstanceView = React.createClass({
                         <Sidebar instance={instance} analyses={this.state.analyses} />
                     </Col>
                     <Col sm={9} md={10}>
-                        <RouteHandler analysis={analysis} />
+                        <RouteHandler instance={instance} analysis={analysis} />
                     </Col>
                 </Row>
             </Grid>

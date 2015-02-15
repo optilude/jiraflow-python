@@ -1,16 +1,12 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document */
 "use strict";
 
 var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
-var Router = require('react-router');
 
-var { Button, Nav, NavItem } = BS;
+var { Button, Nav } = BS;
 var { NavItemLink } = RBS;
-var { Link } = Router;
 
 /**
  * Sidebar listing the analyses under an instance.
