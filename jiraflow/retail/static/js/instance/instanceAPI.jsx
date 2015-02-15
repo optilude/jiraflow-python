@@ -9,8 +9,6 @@ var Marty = require('marty');
 var InstanceAPI = Marty.createStateSource({
     type: 'http',
 
-    // TODO: Implement correct API
-
     fetchAll: function() {
         // TODO: Remove faked implementation
         return new Promise(function(resolve, reject) {
