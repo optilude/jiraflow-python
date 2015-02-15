@@ -6,7 +6,7 @@ var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-var InstanceStore = require('../../instance/instanceStore');
+var InstanceStore = require('../instance/instanceStore');
 
 var { Grid, Row, Col } = BS;
 var { Link } = Router;

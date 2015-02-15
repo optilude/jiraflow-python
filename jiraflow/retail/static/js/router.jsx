@@ -16,7 +16,7 @@ var routes = [
         <Route        name="notFound" path="404" handler={require('./components/error/notFound')} />
         <Route        name="error"    path="500" handler={require('./components/error/error')} />
 
-        <DefaultRoute name="noInstance"                               handler={require('./components/instance/instanceNoneSelected')} />
+        <DefaultRoute name="frontPage"                                handler={require('./components/frontPage')} />
         <Route        name="newInstance"  path="new-instance"         handler={require('./components/instance/instanceNew')} />
         <Route        name="userDetails"  path="user-details"         handler={require('./components/user/userDetails')} />
         <Route        name="userPassword" path="change-password"      handler={require('./components/user/userChangePassword')} />
