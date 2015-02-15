@@ -1,24 +1,7 @@
 JIRAFlow To-Do
 ==============
 
-[x] Build SPA framework with React
-
-    - Design layout
-    - React Bootstrap grid and navigation
-
-[x] Build user management screens
-
-    - User CRUD via SDI
-    - Login via React
-    - Password reset via React
-    - User profile via React
-
-[x] Build basic JIRA configuration CRUD
-
-    - Add form using React Forms
-    - Show allowed configurations in navigation
-
-[ ] Add more advanced configuration
+TODO: Add more advanced JIRA configuration
 
     - Categories (map to JQL condition)
     - Types (map to list of JIRA issue types)
@@ -26,40 +9,40 @@ JIRAFlow To-Do
     - Ordering of states
     - Definition of done (JQL condition)
 
-[ ] Add content types + configuration + view for cycle time histogram
+TODO: Add content types + configuration + view for cycle time histogram
 
     - Choose types
     - Choose cycles
     - Enter buckets
     - Render chart
 
-[ ] Add content types + configuration + view for demand analysis
+TODO: Add content types + configuration + view for demand analysis
 
     - Choose types
     - Choose categories
     - Render chart
 
-[ ] Add content types + configuration + view for 'done' control chart
+TODO: Add content types + configuration + view for 'done' control chart
 
     - Choose categories
     - Choose types
     - Choose sort order
     - Render chart
 
-[ ] Add content types + configuration + view for throughput chart
+TODO: Add content types + configuration + view for throughput chart
 
     - Choose categories
     - Choose types
     - Render chart
 
-[ ] Add content types + configuration + view for cumulative throughput chart
+TODO: Add content types + configuration + view for cumulative throughput chart
 
     - Render chart
 
-[ ] Add content types + configuration + view for CFD chart
+TODO: Add content types + configuration + view for CFD chart
 
     - Render chart
 
-[ ] Add content types + configuration + view for monte carlo simulatoin
+TODO: Add content types + configuration + view for monte carlo simulatoin
 
     - (review spreadsheet)
