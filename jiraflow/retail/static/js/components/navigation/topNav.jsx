@@ -6,6 +6,7 @@ var Router = require('react-router');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
+var Exception = require('../../exception');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var UserStore = require('../../user/userStore');
 var UserActionCreators = require('../../user/userActionCreators');
@@ -64,8 +65,7 @@ var TopNav = React.createClass({
             NavigationActionCreators.navigateToLogin();
         })
         .catch(error => {
-            console.error(error);
-            alert("An unexpected error occurred logging out.");
+            throw new Exception(500, "Unable to delete instance", error);
         });
     },
 

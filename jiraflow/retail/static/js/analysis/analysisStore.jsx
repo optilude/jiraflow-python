@@ -111,7 +111,11 @@ var AnalysisStore = Marty.createStore({
         if(analysisId) {
             this._selectAnalysis(analysisId);
         } else {
-            this._selectAnalysis(null);
+            this.state.selectedAnalysis = null;
+
+            // Deliberatly don't trigger hasChanged(), because the app
+            // will be re-rendered anyway and this will cause an error in the
+            // intermediate re-render before it is.
         }
     },
 

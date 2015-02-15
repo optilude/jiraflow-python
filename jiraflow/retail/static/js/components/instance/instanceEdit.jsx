@@ -6,6 +6,7 @@ var Router = require('react-router');
 var ReactForms = require('react-forms');
 var BS = require('react-bootstrap');
 
+var Exception = require('../../exception');
 var ConfirmModal = require('../utilities/confirm');
 var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
@@ -118,8 +119,7 @@ var InstanceEdit = React.createClass({
            NavigationActionCreators.navigateHome();
         })
         .catch(error => {
-           console.error(error);
-           alert("An unexpected error occurred deleting an instance.");
+           throw new Exception(500, "Unable to delete instance", error);
         });
     },
 

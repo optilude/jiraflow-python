@@ -20,11 +20,6 @@ var AnalysisView = React.createClass({
 
     render: function () {
 
-        // XXX: Can happen during "navigate away"
-        if(!this.props.analysis) {
-            return <span></span>;
-        }
-
         return (
             <div>
                 <Nav bsStyle="tabs">

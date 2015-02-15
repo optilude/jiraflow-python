@@ -81,7 +81,12 @@ var InstanceStore = Marty.createStore({
         if(instanceId) {
             this._selectInstance(instanceId);
         } else {
-            this._selectInstance(null);
+            this.state.selectedInstance = null;
+
+
+            // Deliberatly don't trigger hasChanged(), because the app
+            // will be re-rendered anyway and this will cause an error in the
+            // intermediate re-render before it is.
         }
     },
 
