@@ -24,7 +24,7 @@ def user_json(user):
 
 @view_config(route_name="api/user", request_method='GET', renderer='json')
 def get_user(request):
-    """Render the React Single Page App
+    """Return the current user, or fail with 401 if not logged in
     """
 
     user = request.user
@@ -36,7 +36,7 @@ def get_user(request):
 
 @view_config(route_name="api/user", request_method='PUT', renderer='json')
 def update_user(request):
-    """Render the React Single Page App
+    """Update the current user's properties ('name', 'email')
     """
 
     user = request.user
@@ -53,9 +53,9 @@ def update_user(request):
 
     return user_json(user)
 
-@view_config(route_name="api/user_login", request_method='POST', renderer='json')
+@view_config(route_name="api/user/login", request_method='POST', renderer='json')
 def login(context, request):
-    """Render the React Single Page App
+    """Log in with 'username' and 'password'
     """
 
     body = request.json_body
@@ -66,28 +66,24 @@ def login(context, request):
     username = body['username']
     password = body['password']
 
-    user_locator = request.registry.queryMultiAdapter(
-        (context, request),
-        IUserLocator
-    )
-
+    user_locator = request.registry.queryMultiAdapter((context, request), IUserLocator)
     if user_locator is None:
         user_locator = DefaultUserLocator(context, request)
 
     user = user_locator.get_user_by_login(username)
-    if user is not None and user.check_password(password):
-        headers = remember(request, get_oid(user))
-        request.response.headerlist.extend(headers)
-
-        request.registry.notify(LoggedIn(username, user, context, request))
-
-        return user_json(user)
-    else:
+    if user is None or not user.check_password(password):
         raise HTTPUnauthorized()
 
-@view_config(route_name="api/user_logout", request_method='POST', renderer='json')
+    headers = remember(request, get_oid(user))
+    request.response.headerlist.extend(headers)
+
+    request.registry.notify(LoggedIn(username, user, context, request))
+
+    return user_json(user)
+
+@view_config(route_name="api/user/logout", request_method='POST', renderer='json')
 def logout(request):
-    """Render the React Single Page App
+    """Log out
     """
 
     response = request.response
@@ -96,9 +92,9 @@ def logout(request):
 
     return {}
 
-@view_config(route_name="api/user_password", request_method='POST', renderer='json')
+@view_config(route_name="api/user/password", request_method='POST', renderer='json')
 def change_password(request):
-    """Render the React Single Page App
+    """Change from 'oldPassword' to 'newPassword'
     """
 
     user = request.user

@@ -11,9 +11,9 @@ def main(global_config, **settings):
 
     # Routing table
     config.add_route('api/user', '/api/user')
-    config.add_route('api/user_login', '/api/user/login')
-    config.add_route('api/user_logout', '/api/user/logout')
-    config.add_route('api/user_password', '/api/user/password')
+    config.add_route('api/user/login', '/api/user/login')
+    config.add_route('api/user/logout', '/api/user/logout')
+    config.add_route('api/user/password', '/api/user/password')
 
 
     config.scan()
