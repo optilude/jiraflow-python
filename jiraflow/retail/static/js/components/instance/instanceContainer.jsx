@@ -39,8 +39,7 @@ var InstanceContainer = React.createClass({
         var instance = this.state.selectedInstance;
         var analysis = this.state.selectedAnalysis;
 
-        // XXX: Can happen briefly during instance delete, before we
-        // navigate away
+        // XXX: Can happen briefly during instance delete, before we navigate away
         if(!instance) {
             return <span></span>;
         }
