@@ -48,8 +48,8 @@ var TopNav = React.createClass({
                         {this.state.instances.map((i, idx) => <MenuItemLink key={idx} to="instance" params={{instanceId: i.get('id')}} onClick={this.linkClick}>{i.get('title')}</MenuItemLink>).toArray()}
                     </DropdownButton>
                 </Nav>
-                <Nav right={true}>
-                    <DropdownButton eventKey={1} title={this.state.user? this.state.user.get('name') : "Unknown user"}>
+                <Nav right={true} ref="rightNav">
+                    <DropdownButton ref="userMenu" eventKey={1} title={this.state.user? this.state.user.get('name') : "Unknown user"}>
                         <MenuItemLink to="userDetails" onClick={this.linkClick}>Edit details</MenuItemLink>
                         <MenuItemLink to="userPassword" onClick={this.linkClick}>Change password</MenuItemLink>
                         <MenuItem onSelect={this.logout}>Log out</MenuItem>
@@ -73,6 +73,7 @@ var TopNav = React.createClass({
         // This is something of a hack. For an explanation, see
         // https://github.com/react-bootstrap/react-bootstrap/issues/202
         this.refs.navbar.refs.mainNav.refs.instanceMenu.setDropdownState(false);
+        this.refs.navbar.refs.rightNav.refs.userMenu.setDropdownState(false);
     }
 
 });

@@ -33,8 +33,8 @@ var Login = React.createClass({
                     {this.state.invalid? <Alert bsStyle="danger">Please enter both email and password</Alert> : ""}
                     {this.state.error? <Alert bsStyle="danger">Login unsuccessful. Please try again.</Alert> : ""}
 
-                    <Input type="email" labelClassName="sr-only" label="Email address" required autofocus placeholder="Email address" valueLink={this.linkState('email')} />
-                    <Input type="password" labelClassName="sr-only" label="Email address" required placeholder="Password" valueLink={this.linkState('password')} />
+                    <Input type="text" labelClassName="sr-only" label="Username" required autofocus placeholder="Username" valueLink={this.linkState('email')} />
+                    <Input type="password" labelClassName="sr-only" label="Password" required placeholder="Password" valueLink={this.linkState('password')} />
 
                     <Button bsStyle="primary" block type="submit">Sign in</Button>
                 </form>

@@ -1,16 +1,17 @@
 import json
 
 from pyramid.view import view_config
+from pyramid.httpexceptions import HTTPUnauthorized
+
+from . import user
 
 # Helpers for building JSON state structures for React to render
 
 def build_user_state(request):
-    # TODO: Replace dummy data with real database lookups
-    return {
-        "email": "john@example.org",
-        "name": "John Smith",
-        "roles": ()
-    }
+    try:
+        user.get_user(request)
+    except HTTPUnauthorized:
+        return None
 
 def build_jira_instances_state(request):
     # TODO: Replace dummy data with real database lookups
@@ -60,7 +61,7 @@ def build_state(request):
 
 # Render the app view with the initial state
 
-@view_config(renderer='templates/spa.pt',)
+@view_config(renderer='templates/spa.pt')
 def spa(request):
     """Render the React Single Page App
     """

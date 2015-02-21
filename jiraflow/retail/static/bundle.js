@@ -654,8 +654,7 @@ var InstanceContainer = React.createClass({displayName: "InstanceContainer",
         var instance = this.state.selectedInstance;
         var analysis = this.state.selectedAnalysis;
 
-        // XXX: Can happen briefly during instance delete, before we
-        // navigate away
+        // XXX: Can happen briefly during instance delete, before we navigate away
         if(!instance) {
             return React.createElement("span", null);
         }
@@ -1060,8 +1059,8 @@ var TopNav = React.createClass({displayName: "TopNav",
                         this.state.instances.map(function(i, idx)  {return React.createElement(MenuItemLink, {key: idx, to: "instance", params: {instanceId: i.get('id')}, onClick: this.linkClick}, i.get('title'));}.bind(this)).toArray()
                     )
                 ), 
-                React.createElement(Nav, {right: true}, 
-                    React.createElement(DropdownButton, {eventKey: 1, title: this.state.user? this.state.user.get('name') : "Unknown user"}, 
+                React.createElement(Nav, {right: true, ref: "rightNav"}, 
+                    React.createElement(DropdownButton, {ref: "userMenu", eventKey: 1, title: this.state.user? this.state.user.get('name') : "Unknown user"}, 
                         React.createElement(MenuItemLink, {to: "userDetails", onClick: this.linkClick}, "Edit details"), 
                         React.createElement(MenuItemLink, {to: "userPassword", onClick: this.linkClick}, "Change password"), 
                         React.createElement(MenuItem, {onSelect: this.logout}, "Log out")
@@ -1085,6 +1084,7 @@ var TopNav = React.createClass({displayName: "TopNav",
         // This is something of a hack. For an explanation, see
         // https://github.com/react-bootstrap/react-bootstrap/issues/202
         this.refs.navbar.refs.mainNav.refs.instanceMenu.setDropdownState(false);
+        this.refs.navbar.refs.rightNav.refs.userMenu.setDropdownState(false);
     }
 
 });
@@ -1127,8 +1127,8 @@ var Login = React.createClass({displayName: "Login",
                     this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please enter both email and password") : "", 
                     this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "Login unsuccessful. Please try again.") : "", 
 
-                    React.createElement(Input, {type: "email", labelClassName: "sr-only", label: "Email address", required: true, autofocus: true, placeholder: "Email address", valueLink: this.linkState('email')}), 
-                    React.createElement(Input, {type: "password", labelClassName: "sr-only", label: "Email address", required: true, placeholder: "Password", valueLink: this.linkState('password')}), 
+                    React.createElement(Input, {type: "text", labelClassName: "sr-only", label: "Username", required: true, autofocus: true, placeholder: "Username", valueLink: this.linkState('email')}), 
+                    React.createElement(Input, {type: "password", labelClassName: "sr-only", label: "Password", required: true, placeholder: "Password", valueLink: this.linkState('password')}), 
 
                     React.createElement(Button, {bsStyle: "primary", block: true, type: "submit"}, "Sign in")
                 )
@@ -1950,124 +1950,59 @@ var UserAPI = Marty.createStateSource({
     type: 'http',
 
     getUser: function() {
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve({
-                    email: "john@example.org",
-                    name: "John Smith",
-                    roles: []
-                });
-            }, 1000);
+        return this.get('/api/user')
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // return this.get('/api/user')
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     login: function(username, password) {
+        var req = {
+            url: '/api/user/login',
+            body: {
+                username: username,
+                password: password
+            }
+        };
 
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                if(username === "john@example.org" && password === "secret") {
-                    resolve(Immutable.fromJS({
-                        email: "john@example.org",
-                        name: "John Smith",
-                        roles: []
-                    }));
-                } else {
-                    reject({
-                        status: 401,
-                        body: {}
-                    });
-                }
-            }, 1000);
+        return this.post(req)
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // return this.post('/api/user/login')
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     logout: function() {
-
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve(null);
-            }, 1000);
+        return this.post('/api/user/logout')
+        .then(function(res)  {
+            return null;
         });
-
-        // return this.post('/api/user/logout')
-        // .then(res => {
-        //     return null;
-        // });
     },
 
     changePassword: function(oldPassword, newPassword) {
+        var req = {
+            url: '/api/user/password',
+            body: {
+                oldPassword: oldPassword,
+                newPassword: newPassword
+            }
+        };
 
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-
-                if(oldPassword !== 'secret') {
-                    reject({
-                        status: 401,
-                        body: {}
-                    });
-                } else {
-                    resolve();
-                }
-
-            }, 1000);
+        return this.post(req)
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // var req = {
-        //     url: '/api/user/password',
-        //     body: {
-        //         oldPassword: oldPassword,
-        //         newPassword: newPassword
-        //     }
-        // };
-
-        // return this.post(req)
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     changePreferences: function(user) {
+        var req = {
+            url: '/api/user',
+            body: user.toJS()
+        };
 
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-
-                if(user.get('email') === 'dupe@example.org') {
-                    reject({
-                        status: 409,
-                        body: {}
-                    });
-                } else {
-                    resolve(user.delete('roles'));
-                }
-
-            }, 1000);
+        return this.put(req)
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-
-        // var req = {
-        //     url: '/api/user',
-        //     body: user.toJS()
-        // };
-
-        // return this.post(req)
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     }
 
 });
