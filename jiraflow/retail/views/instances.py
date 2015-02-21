@@ -4,12 +4,14 @@ from pyramid.view import view_config
 from pyramid.httpexceptions import (
     HTTPBadRequest,
     HTTPNotFound,
+    HTTPConflict,
     HTTPInternalServerError,
 )
 
+from substanced.folder import FolderKeyError
 from substanced.util import find_catalog
 
-from ... import resources
+from ...resources import instance as jira_instance
 
 def instance_json(request, instance):
 
@@ -73,7 +75,7 @@ def create_instance(request):
     """
 
     body = request.json_body
-    schema = resources.JIRAInstancePropertySheet.schema
+    schema = jira_instance.JIRAInstancePropertySheet.schema
 
     value = None
 
@@ -85,7 +87,10 @@ def create_instance(request):
     instance = request.registry.content.create('JIRA Instance', **value)
 
     # Store against the user's folder
-    request.user[instance.instance_name] = instance
+    try:
+        request.user[instance.instance_name] = instance
+    except FolderKeyError, e:
+        raise HTTPConflict(instance.instance_name)
 
     return instance_json(request, instance)
 
@@ -106,10 +111,10 @@ def update_instance(request):
     instance = find_instance(request, instance_id, permission='sdi.edit-properties')
 
     body = request.json_body
-    property_sheet = resources.JIRAInstancePropertySheet
+    property_sheet = jira_instance.JIRAInstancePropertySheet
     value = None
 
-    # Omittd password menas 'don't change
+    # Omitted password means "don't change"
     if 'password' not in body:
         body['password'] = instance.password
 
@@ -118,7 +123,10 @@ def update_instance(request):
     except colander.Invalid, e:
         raise HTTPBadRequest(e)
 
-    property_sheet(instance, request).set(value)
+    try:
+        property_sheet(instance, request).set(value)
+    except FolderKeyError, e:
+        raise HTTPConflict(instance.instance_name)
 
     return instance_json(request, instance)
 

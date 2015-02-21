@@ -12,7 +12,7 @@ var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 
-var { Button, ButtonToolbar, Nav, ModalTrigger } = BS;
+var { Button, ButtonToolbar, Nav, ModalTrigger, Alert } = BS;
 var { Link } = Router;
 var { Form } = ReactForms;
 
@@ -28,6 +28,7 @@ var InstanceEdit = React.createClass({
     getInitialState: function() {
         return {
             invalid: false,
+            exists: false,
             error: false
         };
     },
@@ -53,6 +54,10 @@ var InstanceEdit = React.createClass({
 
         return (
             <div>
+                {this.state.invalid? <Alert bsStyle="danger">Please fill in all required fields</Alert> : ""}
+                {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this short name (the first part of the URL).</Alert> : ""}
+                {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the instance. Please try again later.</Alert> : ""}
+
                 <Nav bsStyle="tabs">
                     <li><Link to="instance" params={{instanceId: instanceId}}>View</Link></li>
                     <li className="active"><Link to="editInstance" params={{instanceId: instanceId}}>Manage</Link></li>
@@ -83,10 +88,10 @@ var InstanceEdit = React.createClass({
 
         var form = this.refs.form;
         if(!form.isValid()) {
-            this.setState({invalid: true, error: false});
+            this.setState({invalid: true, exists: false, error: false});
             return;
         } else {
-            this.setState({invalid: false, error: false});
+            this.setState({invalid: false, exists: false, error: false});
         }
 
         var value = this.refs.form.getValue();
@@ -100,8 +105,12 @@ var InstanceEdit = React.createClass({
             NavigationActionCreators.navigateToInstance(instance.get('id'));
         })
         .catch(error => {
-            console.error(error);
-            this.setState({invalid: false, error: true});
+            if(error.status === 409) {
+                this.setState({invalid: false, exists: true, error: false});
+            } else {
+                console.error(error);
+                this.setState({invalid: false, exists: false, error: true});
+            }
         });
     },
 

@@ -1,6 +1,11 @@
+"""Resource definition for the JIRA instance content type
+"""
+
 import urlparse
 import colander
 import deform.widget
+
+from pyramid.httpexceptions import HTTPFound
 
 from substanced.content import content
 from substanced.folder import (
@@ -13,9 +18,9 @@ from substanced.schema import Schema
 
 from substanced.util import renamer
 
-#
-# JIRA instance
-#
+from substanced.sdi import mgmt_view
+from substanced.form import FormView
+from substanced.interfaces import IFolder
 
 def short_name(url):
     """Given a URL, return the most specific subdomain
@@ -125,3 +130,25 @@ class JIRAInstance(Folder):
     def instance_name(self):
         return short_name(self.url)
 
+
+@mgmt_view(
+    context=IFolder,
+    name='add_jira_instance',
+    tab_title='Add JIRA instance',
+    permission='sdi.add-content',
+    renderer='substanced.sdi:templates/form.pt',
+    tab_condition=False,
+)
+class AddJIRAInstanceView(FormView):
+    title = 'Add JIRA Instance'
+    schema = JIRAInstanceSchema()
+    buttons = ('add',)
+
+    def add_success(self, appstruct):
+        registry = self.request.registry
+        instance = registry.content.create('JIRA Instance', **appstruct)
+        self.context[instance.instance_name] = instance
+
+        return HTTPFound(
+            self.request.sdiapi.mgmt_path(self.context, '@@contents')
+        )

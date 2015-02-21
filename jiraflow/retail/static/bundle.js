@@ -691,7 +691,7 @@ var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 
-var $__0=       BS,Button=$__0.Button,ButtonToolbar=$__0.ButtonToolbar,Nav=$__0.Nav,ModalTrigger=$__0.ModalTrigger;
+var $__0=        BS,Button=$__0.Button,ButtonToolbar=$__0.ButtonToolbar,Nav=$__0.Nav,ModalTrigger=$__0.ModalTrigger,Alert=$__0.Alert;
 var $__1=    Router,Link=$__1.Link;
 var $__2=    ReactForms,Form=$__2.Form;
 
@@ -707,6 +707,7 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
     getInitialState: function() {
         return {
             invalid: false,
+            exists: false,
             error: false
         };
     },
@@ -732,6 +733,10 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
 
         return (
             React.createElement("div", null, 
+                this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please fill in all required fields") : "", 
+                this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this short name (the first part of the URL).") : "", 
+                this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the instance. Please try again later.") : "", 
+
                 React.createElement(Nav, {bsStyle: "tabs"}, 
                     React.createElement("li", null, React.createElement(Link, {to: "instance", params: {instanceId: instanceId}}, "View")), 
                     React.createElement("li", {className: "active"}, React.createElement(Link, {to: "editInstance", params: {instanceId: instanceId}}, "Manage"))
@@ -762,10 +767,10 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
 
         var form = this.refs.form;
         if(!form.isValid()) {
-            this.setState({invalid: true, error: false});
+            this.setState({invalid: true, exists: false, error: false});
             return;
         } else {
-            this.setState({invalid: false, error: false});
+            this.setState({invalid: false, exists: false, error: false});
         }
 
         var value = this.refs.form.getValue();
@@ -779,8 +784,12 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
             NavigationActionCreators.navigateToInstance(instance.get('id'));
         })
         .catch(function(error)  {
-            console.error(error);
-            this.setState({invalid: false, error: true});
+            if(error.status === 409) {
+                this.setState({invalid: false, exists: true, error: false});
+            } else {
+                console.error(error);
+                this.setState({invalid: false, exists: false, error: true});
+            }
         }.bind(this));
     },
 
@@ -825,6 +834,7 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
     getInitialState: function() {
         return {
             invalid: false,
+            exists: false,
             error: false
         };
     },
@@ -834,8 +844,9 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
-                    React.createElement(Col, {sm: 7, smOffset: 3, md: 6, mdOffset: 2}, 
+                    React.createElement(Col, {sm: 9, smOffset: 3, md: 10, mdOffset: 2}, 
                         this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please fill in all required fields") : "", 
+                        this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this short name (the first part of the URL).") : "", 
                         this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the new instance. Please try again later.") : "", 
 
                         React.createElement("h1", null, "Create new instance"), 
@@ -859,10 +870,10 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
 
         var form = this.refs.form;
         if(!form.isValid()) {
-            this.setState({invalid: true, error: false});
+            this.setState({invalid: true, exists: false, error: false});
             return;
         } else {
-            this.setState({invalid: false, error: false});
+            this.setState({invalid: false, exists: false, error: false});
         }
 
         var value = this.refs.form.getValue();
@@ -872,8 +883,12 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
             NavigationActionCreators.navigateToInstance(instance.get('id'));
         })
         .catch(function(error)  {
-            console.error(error);
-            this.setState({invalid: false, error: true});
+            if(error.status === 409) {
+                this.setState({invalid: false, exists: true, error: false});
+            } else {
+                console.error(error);
+                this.setState({invalid: false, exists: false, error: true});
+            }
         }.bind(this));
     }
 

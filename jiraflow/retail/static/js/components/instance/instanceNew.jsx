@@ -17,6 +17,7 @@ var InstanceNew = React.createClass({
     getInitialState: function() {
         return {
             invalid: false,
+            exists: false,
             error: false
         };
     },
@@ -26,8 +27,9 @@ var InstanceNew = React.createClass({
         return (
             <Grid fluid={true}>
                 <Row>
-                    <Col sm={7} smOffset={3} md={6} mdOffset={2}>
+                    <Col sm={9} smOffset={3} md={10} mdOffset={2}>
                         {this.state.invalid? <Alert bsStyle="danger">Please fill in all required fields</Alert> : ""}
+                        {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this short name (the first part of the URL).</Alert> : ""}
                         {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the new instance. Please try again later.</Alert> : ""}
 
                         <h1>Create new instance</h1>
@@ -51,10 +53,10 @@ var InstanceNew = React.createClass({
 
         var form = this.refs.form;
         if(!form.isValid()) {
-            this.setState({invalid: true, error: false});
+            this.setState({invalid: true, exists: false, error: false});
             return;
         } else {
-            this.setState({invalid: false, error: false});
+            this.setState({invalid: false, exists: false, error: false});
         }
 
         var value = this.refs.form.getValue();
@@ -64,8 +66,12 @@ var InstanceNew = React.createClass({
             NavigationActionCreators.navigateToInstance(instance.get('id'));
         })
         .catch(error => {
-            console.error(error);
-            this.setState({invalid: false, error: true});
+            if(error.status === 409) {
+                this.setState({invalid: false, exists: true, error: false});
+            } else {
+                console.error(error);
+                this.setState({invalid: false, exists: false, error: true});
+            }
         });
     }
 
