@@ -13,11 +13,7 @@ requires = [
     'substanced',
     'pyramid_tm',
 
-    'jira-python',
-    'numpy',
-    'pandas',
-    'python-dateutil',
-    'pytz',
+    'jira'
     ]
 
 setup(name='jiraflow',
