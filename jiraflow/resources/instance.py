@@ -23,14 +23,9 @@ from substanced.form import FormView
 from substanced.interfaces import IFolder
 
 def short_name(url):
-    """Given a URL, return the most specific subdomain
+    """Given a URL, return the location without a protocol or path
     """
-    netloc = urlparse.urlparse(url).netloc
-    if netloc:
-        return netloc.split('.')[0]
-    else:
-        return None
-
+    return urlparse.urlparse(url).netloc
 
 @colander.deferred
 def jira_url_validator(node, kw):

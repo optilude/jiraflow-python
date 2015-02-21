@@ -29,7 +29,7 @@ var InstanceNew = React.createClass({
                 <Row>
                     <Col sm={9} smOffset={3} md={10} mdOffset={2}>
                         {this.state.invalid? <Alert bsStyle="danger">Please fill in all required fields</Alert> : ""}
-                        {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this short name (the first part of the URL).</Alert> : ""}
+                        {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this URL.</Alert> : ""}
                         {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the new instance. Please try again later.</Alert> : ""}
 
                         <h1>Create new instance</h1>

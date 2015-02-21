@@ -55,7 +55,7 @@ var InstanceEdit = React.createClass({
         return (
             <div>
                 {this.state.invalid? <Alert bsStyle="danger">Please fill in all required fields</Alert> : ""}
-                {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this short name (the first part of the URL).</Alert> : ""}
+                {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this URL.</Alert> : ""}
                 {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the instance. Please try again later.</Alert> : ""}
 
                 <Nav bsStyle="tabs">

@@ -734,7 +734,7 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
         return (
             React.createElement("div", null, 
                 this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please fill in all required fields") : "", 
-                this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this short name (the first part of the URL).") : "", 
+                this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this URL.") : "", 
                 this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the instance. Please try again later.") : "", 
 
                 React.createElement(Nav, {bsStyle: "tabs"}, 
@@ -846,7 +846,7 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
                 React.createElement(Row, null, 
                     React.createElement(Col, {sm: 9, smOffset: 3, md: 10, mdOffset: 2}, 
                         this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please fill in all required fields") : "", 
-                        this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this short name (the first part of the URL).") : "", 
+                        this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this URL.") : "", 
                         this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the new instance. Please try again later.") : "", 
 
                         React.createElement("h1", null, "Create new instance"), 
