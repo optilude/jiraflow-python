@@ -15,6 +15,9 @@ def main(global_config, **settings):
     config.add_route('api/user/logout', '/api/user/logout')
     config.add_route('api/user/password', '/api/user/password')
 
+    config.add_route('api/instances', '/api/instances')
+    config.add_route('api/instances/instance', '/api/instances/{id}')
+
 
     config.scan()
     return config.make_wsgi_app()

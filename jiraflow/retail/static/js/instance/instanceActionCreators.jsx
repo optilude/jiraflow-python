@@ -39,18 +39,16 @@ var InstanceActionCreators = Marty.createActionCreators({
     }),
 
     updateInstance: InstanceConstants.UPDATE_INSTANCE(function(id, instance) {
-        // optimistically dispatch
-        var action = this.dispatch(id, instance);
-
         return InstanceAPI.update(id, instance)
         .then(result => {
             // inform stores an instance has been received
-            this.receiveInstance(result);
+            this.receiveInstanceUpdate(id, result);
+
+            // dispatch action with the instance as returned by the server
+            this.dispatch(id, result);
             return result;
         })
         .catch(error => {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(error.status, "Server request failed", error);
         });
     }),
@@ -73,6 +71,7 @@ var InstanceActionCreators = Marty.createActionCreators({
     selectInstance: InstanceConstants.SELECT_INSTANCE(),
     receiveInstance: InstanceConstants.RECEIVE_INSTANCE(),
     receiveInstances: InstanceConstants.RECEIVE_INSTANCES(),
+    receiveInstanceUpdate: InstanceConstants.RECEIVE_INSTANCE_UPDATE(),
     receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE()
 
 });

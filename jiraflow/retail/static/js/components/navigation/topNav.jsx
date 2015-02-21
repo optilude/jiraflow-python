@@ -44,7 +44,7 @@ var TopNav = React.createClass({
                 <Nav ref="mainNav">
                     <DropdownButton title="Instance" ref="instanceMenu">
                         <MenuItemLink to="newInstance" onClick={this.linkClick}>New</MenuItemLink>
-                        <MenuItem divider />
+                        {this.state.instances.size > 0? <MenuItem divider /> : ""}
                         {this.state.instances.map((i, idx) => <MenuItemLink key={idx} to="instance" params={{instanceId: i.get('id')}} onClick={this.linkClick}>{i.get('title')}</MenuItemLink>).toArray()}
                     </DropdownButton>
                 </Nav>

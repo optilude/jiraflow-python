@@ -24,7 +24,7 @@ var schema = Mapping({
         }
     }),
 
-    userName: Scalar({
+    username: Scalar({
         label: "User name",
         hint: "User name to use to connect to JIRA",
         required: true

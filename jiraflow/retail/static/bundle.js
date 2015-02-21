@@ -907,7 +907,7 @@ var schema = Mapping({
         }
     }),
 
-    userName: Scalar({
+    username: Scalar({
         label: "User name",
         hint: "User name to use to connect to JIRA",
         required: true
@@ -1055,7 +1055,7 @@ var TopNav = React.createClass({displayName: "TopNav",
                 React.createElement(Nav, {ref: "mainNav"}, 
                     React.createElement(DropdownButton, {title: "Instance", ref: "instanceMenu"}, 
                         React.createElement(MenuItemLink, {to: "newInstance", onClick: this.linkClick}, "New"), 
-                        React.createElement(MenuItem, {divider: true}), 
+                        this.state.instances.size > 0? React.createElement(MenuItem, {divider: true}) : "", 
                         this.state.instances.map(function(i, idx)  {return React.createElement(MenuItemLink, {key: idx, to: "instance", params: {instanceId: i.get('id')}, onClick: this.linkClick}, i.get('title'));}.bind(this)).toArray()
                     )
                 ), 
@@ -1456,85 +1456,41 @@ var InstanceAPI = Marty.createStateSource({
     type: 'http',
 
     fetchAll: function() {
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve(Immutable.fromJS([
-                    {
-                        id: "project-snowflake",
-                        title: "Project Snowflake",
-                        url: "https://snowflake.atlassian.net",
-                        userName: "admin"
-                    }, {
-                        id: "acme-corp",
-                        title: "Acme Corp",
-                        url: "https://acme.atlassian.net",
-                        userName: "admin"
-                    }, {
-                        id: "internal-projects",
-                        title: "Internal projects",
-                        url: "https://jira.acmecorp.com",
-                        userName: "admin"
-                    },
-                ]));
-            }, 1000);
+        return this.get('/api/instances')
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // return this.get('/api/instances')
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     create: function(instance) {
+        var req = {
+            url: '/api/instances',
+            body: instance.toJS()
+        };
 
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve(instance.set('id', 'new-cool-instance'));
-            }, 1000);
+        return this.post(req)
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // var req = {
-        //     url: '/api/instances',
-        //     body: instance.toJS()
-        // };
-
-        // return this.post(req)
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     update: function(id, instance) {
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve(instance.set('id', id));
-            }, 1000);
+        var req = {
+            url: '/api/instances/' + id,
+            body: instance.toJS()
+        };
+
+        return this.put(req)
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // var req = {
-        //     url: '/api/instances/' + id,
-        //     body: instance.toJS()
-        // };
-
-        // return this.put(req)
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     deleteInstance: function(id) {
-
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve(id);
-            }, 1000);
+        return this.delete('/api/instances/' + id)
+        .then(function(res)  {
+            return id;
         });
-
-        // return this.delete('/api/instances/' + id);
     }
 
 });
@@ -1582,18 +1538,16 @@ var InstanceActionCreators = Marty.createActionCreators({
     }),
 
     updateInstance: InstanceConstants.UPDATE_INSTANCE(function(id, instance) {
-        // optimistically dispatch
-        var action = this.dispatch(id, instance);
-
         return InstanceAPI.update(id, instance)
         .then(function(result)  {
             // inform stores an instance has been received
-            this.receiveInstance(result);
+            this.receiveInstanceUpdate(id, result);
+
+            // dispatch action with the instance as returned by the server
+            this.dispatch(id, result);
             return result;
         }.bind(this))
         .catch(function(error)  {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(error.status, "Server request failed", error);
         });
     }),
@@ -1616,6 +1570,7 @@ var InstanceActionCreators = Marty.createActionCreators({
     selectInstance: InstanceConstants.SELECT_INSTANCE(),
     receiveInstance: InstanceConstants.RECEIVE_INSTANCE(),
     receiveInstances: InstanceConstants.RECEIVE_INSTANCES(),
+    receiveInstanceUpdate: InstanceConstants.RECEIVE_INSTANCE_UPDATE(),
     receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE()
 
 });
@@ -1635,6 +1590,7 @@ var InstanceConstants = Marty.createConstants([
 
     'RECEIVE_INSTANCES',        // e.g. after a full list of instances received from the server
     'RECEIVE_INSTANCE',         // e.g. after a single instance has been received from the server
+    'RECEIVE_INSTANCE_UPDATE',  // e.g. after a single instance has been changed on the server
     'RECEIVE_INSTANCE_DELETE'   // e.g. after server has deleted an instance
 ]);
 
@@ -1691,6 +1647,7 @@ var InstanceStore = Marty.createStore({
         _selectInstance: InstanceConstants.SELECT_INSTANCE,
         _receiveInstances: InstanceConstants.RECEIVE_INSTANCES,
         _receiveInstance: InstanceConstants.RECEIVE_INSTANCE,
+        _receiveInstanceUpdate: InstanceConstants.RECEIVE_INSTANCE_UPDATE,
         _receiveInstanceDelete: InstanceConstants.RECEIVE_INSTANCE_DELETE
     },
 
@@ -1765,6 +1722,26 @@ var InstanceStore = Marty.createStore({
 
         if(!instance.equals(this.state.instances.get(instance.get('id')))) {
             this.state.instances = this.state.instances.set(instance.get('id'), instance);
+            this.hasChanged();
+        }
+    },
+
+    _receiveInstanceUpdate: function(id, instance) {
+        if(!(instance instanceof Immutable.Map)) {
+            throw new Exception(500, "Instance must be an Immutable.Map");
+        }
+
+        if(!instance.equals(this.state.instances.get(id))) {
+            this.state.instances = this.state.instances.set(instance.get('id'), instance);
+
+            // the id may have changed
+            if(id !== instance.get('id')) {
+                this.state.instances = this.state.instances.delete(id);
+                if(this.state.selectedInstance === id) {
+                    this.state.selectedInstance = instance.get('id');
+                }
+            }
+
             this.hasChanged();
         }
     },

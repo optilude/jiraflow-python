@@ -11,6 +11,7 @@ var InstanceConstants = Marty.createConstants([
 
     'RECEIVE_INSTANCES',        // e.g. after a full list of instances received from the server
     'RECEIVE_INSTANCE',         // e.g. after a single instance has been received from the server
+    'RECEIVE_INSTANCE_UPDATE',  // e.g. after a single instance has been changed on the server
     'RECEIVE_INSTANCE_DELETE'   // e.g. after server has deleted an instance
 ]);
 
