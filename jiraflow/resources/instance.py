@@ -6,6 +6,8 @@ import colander
 import deform.widget
 
 from pyramid.httpexceptions import HTTPFound
+from pyramid.threadlocal import get_current_request
+from pyramid.security import Allow
 
 from substanced.content import content
 from substanced.folder import (
@@ -16,7 +18,11 @@ from substanced.folder import (
 from substanced.property import PropertySheet
 from substanced.schema import Schema
 
-from substanced.util import renamer
+from substanced.util import (
+    renamer,
+    set_acl,
+    get_oid
+)
 
 from substanced.sdi import mgmt_view
 from substanced.form import FormView
@@ -96,6 +102,7 @@ class JIRAInstancePropertySheet(PropertySheet):
     icon='glyphicon glyphicon-tower',
     add_view='add_jira_instance',
     propertysheets=(('Basic', JIRAInstancePropertySheet),),
+    after_create='after_create',
 )
 class JIRAInstance(Folder):
     """A remote JIRA instance to analyse
@@ -125,6 +132,16 @@ class JIRAInstance(Folder):
     def instance_name(self):
         return short_name(self.url)
 
+    def after_create(self, inst, registry):
+        request = get_current_request()
+        if request is None:
+            return
+
+        user = request.user
+
+        acl = getattr(self, '__acl__', [])
+        acl.append((Allow, get_oid(user), ('sdi.view', 'sdi.edit-properties', 'sdi.add-content', 'sdi.manage-contents')))
+        set_acl(inst, acl, registry=registry)
 
 @mgmt_view(
     context=IFolder,
