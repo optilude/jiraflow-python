@@ -3,6 +3,7 @@
 
 import urllib
 import colander
+import deform.widget
 
 from persistent import Persistent
 
@@ -19,6 +20,9 @@ from substanced.util import renamer
 from substanced.sdi import mgmt_view
 from substanced.form import FormView
 from substanced.interfaces import IFolder
+
+from ..analysis.cache import AnalysisCache
+from ..constants import AnalysisTypes
 
 def short_name(title):
     """Given a title, return a url-friendly name
@@ -52,13 +56,52 @@ def name_validator(node, kw):
         except Exception as e:
             raise colander.Invalid(node, e.args[0], value)
 
-    return namecheck
+    return colander.All(
+        colander.Length(1),
+        namecheck,
+    )
+
+class AnalysisParameter(colander.Schema):
+    key = colander.SchemaNode(colander.String())
+    value = colander.SchemaNode(colander.String())
+
+class AnalysisParameters(colander.SequenceSchema):
+    parameter = AnalysisParameter()
 
 class AnalysisSchema(Schema):
 
     title = colander.SchemaNode(
         colander.String(),
         validator=name_validator
+    )
+
+    description = colander.SchemaNode(
+        colander.String(),
+        missing=None,
+        widget=deform.widget.TextAreaWidget(rows=5)
+    )
+
+    type = colander.SchemaNode(
+        colander.String(),
+        validator=colander.OneOf(AnalysisTypes.values()),
+        widget=deform.widget.SelectWidget(values=AnalysisTypes.items())
+    )
+
+    refresh_interval = colander.SchemaNode(
+        colander.Int(),
+        description="Number of minutes to cache JIRA query results for.",
+        validator=colander.Range(min=0)
+    )
+
+    query = colander.SchemaNode(
+        colander.String(),
+        missing=None,
+        description="JQL query specifying the data to include in the analysis."
+    )
+
+    parameters = AnalysisParameters(
+        missing=None,
+        description="Analysis-specific parameters."
     )
 
 class AnalysisPropertySheet(PropertySheet):
@@ -68,6 +111,7 @@ class AnalysisPropertySheet(PropertySheet):
     icon='glyphicon glyphicon-list-alt',
     add_view=lambda context, request: 'add_analysis' if request.registry.content.istype(context, 'JIRA Instance') else None,
     propertysheets=(('Basic', AnalysisPropertySheet),),
+    after_create='after_create',
 )
 class Analysis(Persistent):
     """An analysis created for a particular JIRA instance
@@ -75,9 +119,18 @@ class Analysis(Persistent):
 
     name = renamer()
 
-    def __init__(self, title=''):
+    def __init__(self, title='', description='', type='', refresh_interval=0, query='', parameters=None):
         super(Analysis, self).__init__()
+
+        if parameters is None:
+            parameters = {}
+
         self.title = title
+        self.description = description
+        self.type = type
+        self.refresh_interval = refresh_interval
+        self.query = query
+        self.parameters = parameters
 
     @property
     def title(self):
@@ -93,6 +146,9 @@ class Analysis(Persistent):
     @property
     def analysis_name(self):
         return short_name(self.title)
+
+    def after_create(self, inst, registry):
+        self.cache = AnalysisCache(inst.refresh_interval)
 
 @mgmt_view(
     context=IFolder,

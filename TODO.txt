@@ -1,48 +1,60 @@
 JIRAFlow To-Do
 ==============
 
-TODO: Add more advanced JIRA configuration
+TODO: Build analysis model
 
-    - Categories (map to JQL condition)
-    - Types (map to list of JIRA issue types)
-    - Cycles (map to start/end/ignore states)
-    - Ordering of states
-    - Definition of done (JQL condition)
+    - Server
 
-TODO: Add content types + configuration + view for cycle time histogram
+        - Analysis content type: title, type, refresh interval, query, params (map)
+        - Pandas series/data frame
+        - JIRA abstraction to query, categorise
+        - Views on Analysis render JSON abstraction, named after analysis type
+        - Cache in ZODB for analysis, invalidate on fetch based on timeout
+        - Force refresh option
+
+    - Client
+
+        - CRUD for analyses
+        - Schema for basic fields
+        - Different secondary schemata for parameters
+        - Map of type -> parameter schema
+        - Map of type -> view component for rendering/charting
+
+TODO: Burnup analysis
+
+    - AnalysisTypes entry
+    - Calculation view
+    - React schema
+    - React view
+
+TODO: Cycle time histogram
 
     - Choose types
     - Choose cycles
     - Enter buckets
     - Render chart
 
-TODO: Add content types + configuration + view for demand analysis
-
-    - Choose types
-    - Choose categories
-    - Render chart
-
-TODO: Add content types + configuration + view for 'done' control chart
+TODO: 'done' control chart
 
     - Choose categories
     - Choose types
     - Choose sort order
     - Render chart
 
-TODO: Add content types + configuration + view for throughput chart
+TODO: Throughput chart
 
     - Choose categories
     - Choose types
     - Render chart
 
-TODO: Add content types + configuration + view for cumulative throughput chart
+TODO: Throughput chart
 
     - Render chart
 
-TODO: Add content types + configuration + view for CFD chart
+TODO: CFD chart
 
     - Render chart
 
-TODO: Add content types + configuration + view for monte carlo simulatoin
+TODO: Monte carlo simulation
 
     - (review spreadsheet)
