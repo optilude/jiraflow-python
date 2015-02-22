@@ -1,4 +1,4 @@
-from pyramid.view import view_config
+from pyramid.view import view_defaults, view_config
 
 from pyramid.security import (
     forget,
@@ -15,104 +15,111 @@ from substanced.principal import DefaultUserLocator
 from substanced.event import LoggedIn
 from substanced.util import get_oid
 
-def user_json(user):
-    return dict(
-        id=user.name,
-        name=getattr(user, 'fullname', user.name), # may not be set by default
-        email=user.email
-    )
+@view_defaults(route_name="api/user", renderer='json')
+class UserViews(object):
 
-@view_config(route_name="api/user", request_method='GET', renderer='json')
-def get_user(request):
-    """Return the current user, or fail with 401 if not logged in
-    """
+    def __init__(self, context, request):
+        self.context = context
+        self.request = request
 
-    user = request.user
+    def user_json(self, user):
+        return dict(
+            id=user.name,
+            name=getattr(user, 'fullname', user.name), # may not be set by default
+            email=user.email
+        )
 
-    if user is None:
-        raise HTTPUnauthorized()
+    @view_config(request_method='GET')
+    def get(self):
+        """Return the current user, or fail with 401 if not logged in
+        """
 
-    return user_json(user)
+        user = self.request.user
 
-@view_config(route_name="api/user", request_method='PUT', renderer='json')
-def update_user(request):
-    """Update the current user's properties ('name', 'email')
-    """
+        if user is None:
+            raise HTTPUnauthorized()
 
-    user = request.user
+        return self.user_json(user)
 
-    if user is None:
-        raise HTTPUnauthorized()
+    @view_config(request_method='PUT')
+    def put(self):
+        """Update the current user's properties ('name', 'email')
+        """
 
-    body = request.json_body
+        user = self.request.user
 
-    if 'name' in body:
-        user.fullname = body['name']
-    if 'email' in body:
-        user.email = body['email']
+        if user is None:
+            raise HTTPUnauthorized()
 
-    return user_json(user)
+        body = self.request.json_body
 
-@view_config(route_name="api/user/login", request_method='POST', renderer='json')
-def login(context, request):
-    """Log in with 'username' and 'password'
-    """
+        if 'name' in body:
+            user.fullname = body['name']
+        if 'email' in body:
+            user.email = body['email']
 
-    body = request.json_body
+        return self.user_json(user)
 
-    if 'username' not in body or 'password' not in body:
-        raise HTTPBadRequest()
+    @view_config(route_name="api/user/login", request_method='POST')
+    def login(self):
+        """Log in with 'username' and 'password'
+        """
 
-    username = body['username']
-    password = body['password']
+        body = self.request.json_body
 
-    user_locator = request.registry.queryMultiAdapter((context, request), IUserLocator)
-    if user_locator is None:
-        user_locator = DefaultUserLocator(context, request)
+        if 'username' not in body or 'password' not in body:
+            raise HTTPBadRequest()
 
-    user = user_locator.get_user_by_login(username)
-    if user is None or not user.check_password(password):
-        raise HTTPUnauthorized()
+        username = body['username']
+        password = body['password']
 
-    headers = remember(request, get_oid(user))
-    request.response.headerlist.extend(headers)
+        user_locator = self.request.registry.queryMultiAdapter((self.context, self.request), IUserLocator)
+        if user_locator is None:
+            user_locator = DefaultUserLocator(self.context, self.request)
 
-    request.registry.notify(LoggedIn(username, user, context, request))
+        user = user_locator.get_user_by_login(username)
+        if user is None or not user.check_password(password):
+            raise HTTPUnauthorized()
 
-    return user_json(user)
+        headers = remember(self.request, get_oid(user))
+        self.request.response.headerlist.extend(headers)
 
-@view_config(route_name="api/user/logout", request_method='POST', renderer='json')
-def logout(request):
-    """Log out
-    """
+        self.request.registry.notify(LoggedIn(username, user, self.context, self.request))
 
-    response = request.response
-    headers = forget(request)
-    response.headerlist.extend(headers)
+        return self.user_json(user)
 
-    return {}
+    @view_config(route_name="api/user/logout", request_method='POST')
+    def logout(self):
+        """Log out
+        """
 
-@view_config(route_name="api/user/password", request_method='POST', renderer='json')
-def change_password(request):
-    """Change from 'oldPassword' to 'newPassword'
-    """
+        response = self.request.response
+        headers = forget(self.request)
+        response.headerlist.extend(headers)
 
-    user = request.user
+        return {}
 
-    if user is None:
-        raise HTTPUnauthorized()
+    @view_config(route_name="api/user/password", request_method='POST')
+    def change_password(self):
+        """Change from 'oldPassword' to 'newPassword'
+        """
 
-    body = request.json_body
+        user = self.request.user
 
-    if 'oldPassword' not in body or 'newPassword' not in body:
-        raise HTTPBadRequest()
+        if user is None:
+            raise HTTPUnauthorized()
 
-    old_password = body['oldPassword']
-    new_password = body['newPassword']
+        body = self.request.json_body
 
-    if not user.check_password(old_password):
-        raise HTTPUnauthorized()
+        if 'oldPassword' not in body or 'newPassword' not in body:
+            raise HTTPBadRequest()
 
-    user.set_password(new_password)
+        old_password = body['oldPassword']
+        new_password = body['newPassword']
 
-    return user_json(user)
+        if not user.check_password(old_password):
+            raise HTTPUnauthorized()
+
+        user.set_password(new_password)
+
+        return self.user_json(user)

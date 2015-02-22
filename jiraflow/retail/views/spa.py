@@ -12,12 +12,12 @@ from . import (
 
 def build_user_state(request):
     try:
-        return user.get_user(request)
+        return user.UserViews(request.context, request).get()
     except HTTPUnauthorized:
         return None
 
 def build_jira_instances_state(request):
-    return instances.get_instances(request)
+    return instances.InstancesViews(request.context, request).get()
 
 def build_analysis_state(request):
     # TODO: Replace dummy data with real database lookups
