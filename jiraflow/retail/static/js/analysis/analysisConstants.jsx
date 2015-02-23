@@ -1,5 +1,3 @@
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
 var Marty = require('marty');
@@ -13,6 +11,7 @@ var AnalysisConstants = Marty.createConstants([
 
     'RECEIVE_ANALYSES',         // e.g. after a full list of analyses received from the server
     'RECEIVE_ANALYSIS',         // e.g. after a single analysis has been received from the server
+    'RECEIVE_ANALYSIS_UPDATE',  // e.g. after a single analysis has been changed on the server
     'RECEIVE_ANALYSIS_DELETE'   // e.g. after server has deleted an analysis
 ]);
 

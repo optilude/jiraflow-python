@@ -40,18 +40,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
     }),
 
     updateAnalysis: AnalysisConstants.UPDATE_ANALYSIS(function(instanceId, id, analysis) {
-        // optimistically dispatch
-        var action = this.dispatch(id, analysis);
-
         return AnalysisAPI.update(instanceId, id, analysis)
         .then(result => {
-            // inform stores an analysis has been received
-            this.receiveAnalysis(result);
+            // inform stores an instance has been received
+            this.receiveAnalysisUpdate(id, result);
+
+            // dispatch action with the instance as returned by the server
+            this.dispatch(id, result);
             return result;
         })
         .catch(error => {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(error.status, "Server request failed", error);
         });
     }),
@@ -71,9 +69,12 @@ var AnalysisActionCreators = Marty.createActionCreators({
         });
     }),
 
+    // TODO: Support update via separate operation in case id changes
+
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
     receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS(),
     receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES(),
+    receiveAnalysisUpdate: AnalysisConstants.RECEIVE_ANALYSIS_UPDATE(),
     receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE()
 
 });

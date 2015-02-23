@@ -53,6 +53,7 @@ var AnalysisStore = Marty.createStore({
         _selectAnalysis: AnalysisConstants.SELECT_ANALYSIS,
         _receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES,
         _receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS,
+        _receiveAnalysisUpdate: AnalysisConstants.RECEIVE_ANALYSIS_UPDATE,
         _receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE
     },
 
@@ -156,9 +157,29 @@ var AnalysisStore = Marty.createStore({
         }
     },
 
+    _receiveAnalysisUpdate: function(id, analysis) {
+        if(!(analysis instanceof Immutable.Map)) {
+            throw new Exception(500, "Analysis must be an Immutable.Map");
+        }
+
+        if(!analysis.equals(this.state.analyses.get(id))) {
+            this.state.analyses = this.state.analyses.set(analysis.get('id'), analysis);
+
+            // the id may have changed
+            if(id !== analysis.get('id')) {
+                this.state.analyses = this.state.analyses.delete(id);
+                if(this.state.selectedAnalysis === id) {
+                    this.state.selectedAnalysis = analysis.get('id');
+                }
+            }
+
+            this.hasChanged();
+        }
+    },
+
     _receiveAnalysisDelete: function(id) {
         if(!this.state.analyses.has(id)) {
-            throw new Exception(400, "Instance not found");
+            throw new Exception(400, "Analysis not found");
         }
 
         this.state.analyses = this.state.analyses.delete(id);

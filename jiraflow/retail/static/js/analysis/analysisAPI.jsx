@@ -10,31 +10,10 @@ var AnalysisAPI = Marty.createStateSource({
     type: 'http',
 
     fetchAll: function(instanceId) {
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(() => {
-                resolve(Immutable.fromJS([
-                    {
-                        id: "cfd",
-                        title: "Cumulative flow",
-                        type: "cfd",
-                    }, {
-                        id: "control-chart",
-                        title: "Control chart",
-                        type: "control_chart",
-                    }, {
-                        id: "delivery-forecast",
-                        title: "Delivery forecast",
-                        type: "delivery_forecast",
-                    },
-                ]));
-            }, 1000);
+        return this.get('/api/instances/' + instanceId + '/analyses')
+        .then(res => {
+            return Immutable.fromJS(res.body);
         });
-
-        // return this.get('/api/instances/' + instanceId + '/analyses')
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     create: function(instanceId, analysis) {
