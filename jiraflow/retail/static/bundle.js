@@ -643,22 +643,26 @@ var InstanceState = Marty.createStateMixin({
 var InstanceContainer = React.createClass({displayName: "InstanceContainer",
     mixins: [InstanceState],
 
+    shouldComponentUpdate: function(nextProps, nextState) {
+        // XXX: Can happen briefly during instance delete, before we navigate away
+        if(!nextState.selectedInstance) {
+            return false;
+        }
+
+        return true;
+    },
+
     render: function() {
 
         var instance = this.state.selectedInstance;
         var analysis = this.state.selectedAnalysis;
-
-        // XXX: Can happen briefly during instance delete, before we navigate away
-        // TODO: Move to shouldComponentUpdate()
-        if(!instance) {
-            return React.createElement("span", null);
-        }
+        var analyses = this.state.analyses;
 
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
                     React.createElement(Col, {sm: 3, md: 2}, 
-                        React.createElement(Sidebar, {instance: instance, analyses: this.state.analyses})
+                        React.createElement(Sidebar, {instance: instance, analyses: analyses})
                     ), 
                     React.createElement(Col, {sm: 9, md: 10}, 
                         React.createElement(RouteHandler, {instance: instance, analysis: analysis})
