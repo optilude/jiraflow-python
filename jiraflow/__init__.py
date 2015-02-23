@@ -18,6 +18,8 @@ def main(global_config, **settings):
     config.add_route('api/instances', '/api/instances')
     config.add_route('api/instance', '/api/instances/{instance_id}')
 
+    config.add_route('api/analyses', '/api/instances/{instance_id}/analyses')
+    config.add_route('api/analysis', '/api/instances/{instance_id}/analyses/{analysis_id}')
 
     config.scan()
     return config.make_wsgi_app()

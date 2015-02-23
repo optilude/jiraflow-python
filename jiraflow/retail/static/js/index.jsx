@@ -11,7 +11,6 @@ var Router = require('./router');
 var NavigationActionCreators = require('./navigation/navigationActionCreators');
 var UserActionCreators = require('./user/userActionCreators');
 var InstanceActionCreators = require('./instance/instanceActionCreators');
-var AnalysisActionCreators = require('./analysis/analysisActionCreators');
 
 window.Marty = Marty; // For Marty Developer Tools
 
@@ -27,11 +26,6 @@ if(initialState) {
     // Instances
     if(initialState.jiraInstances !== undefined) {
         InstanceActionCreators.receiveInstances(Immutable.fromJS(initialState.jiraInstances), false);
-    }
-
-    // Analyses
-    if(initialState.analysis !== undefined) {
-        AnalysisActionCreators.receiveAnalyses(Immutable.fromJS(initialState.analysis), false);
     }
 }
 
