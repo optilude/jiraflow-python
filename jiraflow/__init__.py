@@ -16,7 +16,7 @@ def main(global_config, **settings):
     config.add_route('api/user/password', '/api/user/password')
 
     config.add_route('api/instances', '/api/instances')
-    config.add_route('api/instances/instance', '/api/instances/{id}')
+    config.add_route('api/instance', '/api/instances/{instance_id}')
 
 
     config.scan()

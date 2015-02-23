@@ -3,15 +3,14 @@ import colander
 from pyramid.view import view_defaults, view_config
 from pyramid.httpexceptions import (
     HTTPBadRequest,
-    HTTPNotFound,
-    HTTPConflict,
-    HTTPInternalServerError,
+    HTTPConflict
 )
 
 from substanced.folder import FolderKeyError
 from substanced.util import find_catalog
 
-from ...resources import instance as jira_instance
+from ...resources import instance as resource
+from .utils import find_instance
 
 @view_defaults(route_name="api/instances", renderer='json')
 class InstancesViews(object):
@@ -59,7 +58,7 @@ class InstancesViews(object):
         """
 
         body = self.request.json_body
-        schema = jira_instance.JIRAInstancePropertySheet.schema
+        schema = resource.JIRAInstancePropertySheet.schema
 
         value = None
 
@@ -78,38 +77,18 @@ class InstancesViews(object):
 
         return self.instance_json(instance)
 
-@view_defaults(route_name="api/instances/instance", renderer='json')
+@view_defaults(route_name="api/instance", renderer='json')
 class InstanceView(InstancesViews):
 
     def find_instance(self, instance_id, permission='sdi.view'):
-        catalog = find_catalog(self.context, 'system')
-
-        content_type = catalog['content_type']
-        allowed = catalog['allowed']
-        name = catalog['name']
-
-        q = (
-            content_type.eq('JIRA Instance') &
-            allowed.allows(self.request, permission) &
-            name.eq(instance_id)
-        )
-
-        results = q.execute()
-
-        if len(results) == 0:
-            raise HTTPNotFound(instance_id)
-
-        if len(results) > 1:
-            raise HTTPInternalServerError("More than one record matches %s" % instance_id)
-
-        return results.one()
+        return find_instance(self.context, self.request, instance_id, permission)
 
     @view_config(request_method='GET')
     def get(self):
         """Return a list of instances available to the current user
         """
 
-        instance_id = self.request.matchdict['id']
+        instance_id = self.request.matchdict['instance_id']
         return self.instance_json(self.find_instance(instance_id))
 
     @view_config(request_method='PUT')
@@ -117,11 +96,11 @@ class InstanceView(InstancesViews):
         """Return a list of instances available to the current user
         """
 
-        instance_id = self.request.matchdict['id']
+        instance_id = self.request.matchdict['instance_id']
         instance = self.find_instance(instance_id, permission='sdi.edit-properties')
 
         body = self.request.json_body
-        property_sheet = jira_instance.JIRAInstancePropertySheet
+        property_sheet = resource.JIRAInstancePropertySheet
         value = None
 
         # Omitted password means "don't change"
@@ -145,7 +124,7 @@ class InstanceView(InstancesViews):
         """Return a list of instances available to the current user
         """
 
-        instance_id = self.request.matchdict['id']
+        instance_id = self.request.matchdict['instance_id']
         instance = self.find_instance(instance_id, permission='sdi.edit-properties')
 
         del instance.__parent__[instance.__name__]
