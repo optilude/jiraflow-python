@@ -12,7 +12,6 @@ var Router = require('./router');
 var NavigationActionCreators = require('./navigation/navigationActionCreators');
 var UserActionCreators = require('./user/userActionCreators');
 var InstanceActionCreators = require('./instance/instanceActionCreators');
-var AnalysisActionCreators = require('./analysis/analysisActionCreators');
 
 window.Marty = Marty; // For Marty Developer Tools
 
@@ -28,11 +27,6 @@ if(initialState) {
     // Instances
     if(initialState.jiraInstances !== undefined) {
         InstanceActionCreators.receiveInstances(Immutable.fromJS(initialState.jiraInstances), false);
-    }
-
-    // Analyses
-    if(initialState.analysis !== undefined) {
-        AnalysisActionCreators.receiveAnalyses(Immutable.fromJS(initialState.analysis), false);
     }
 }
 
@@ -58,7 +52,7 @@ Router.run(function(Handler, state) {
     }
 
 });
-},{"./analysis/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
+},{"./exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
@@ -71,31 +65,10 @@ var AnalysisAPI = Marty.createStateSource({
     type: 'http',
 
     fetchAll: function(instanceId) {
-        // TODO: Remove faked implementation
-        return new Promise(function(resolve, reject) {
-            setTimeout(function()  {
-                resolve(Immutable.fromJS([
-                    {
-                        id: "cfd",
-                        title: "Cumulative flow",
-                        type: "cfd",
-                    }, {
-                        id: "control-chart",
-                        title: "Control chart",
-                        type: "control_chart",
-                    }, {
-                        id: "delivery-forecast",
-                        title: "Delivery forecast",
-                        type: "delivery_forecast",
-                    },
-                ]));
-            }, 1000);
+        return this.get('/api/instances/' + instanceId + '/analyses')
+        .then(function(res)  {
+            return Immutable.fromJS(res.body);
         });
-
-        // return this.get('/api/instances/' + instanceId + '/analyses')
-        // .then(res => {
-        //     return Immutable.fromJS(res.body);
-        // });
     },
 
     create: function(instanceId, analysis) {
@@ -172,18 +145,16 @@ var AnalysisActionCreators = Marty.createActionCreators({
     }),
 
     updateAnalysis: AnalysisConstants.UPDATE_ANALYSIS(function(instanceId, id, analysis) {
-        // optimistically dispatch
-        var action = this.dispatch(id, analysis);
-
         return AnalysisAPI.update(instanceId, id, analysis)
         .then(function(result)  {
-            // inform stores an analysis has been received
-            this.receiveAnalysis(result);
+            // inform stores an instance has been received
+            this.receiveAnalysisUpdate(id, result);
+
+            // dispatch action with the instance as returned by the server
+            this.dispatch(id, result);
             return result;
         }.bind(this))
         .catch(function(error)  {
-            // roll back action if AJAX operation failed
-            action.rollback();
             throw new Exception(error.status, "Server request failed", error);
         });
     }),
@@ -203,17 +174,18 @@ var AnalysisActionCreators = Marty.createActionCreators({
         });
     }),
 
+    // TODO: Support update via separate operation in case id changes
+
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
     receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS(),
     receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES(),
+    receiveAnalysisUpdate: AnalysisConstants.RECEIVE_ANALYSIS_UPDATE(),
     receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE()
 
 });
 
 module.exports = AnalysisActionCreators;
 },{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx":[function(require,module,exports){
-/*jshint globalstrict:true, devel:true, newcap:false */
-/*global require, module, exports, document, window */
 "use strict";
 
 var Marty = require('marty');
@@ -227,6 +199,7 @@ var AnalysisConstants = Marty.createConstants([
 
     'RECEIVE_ANALYSES',         // e.g. after a full list of analyses received from the server
     'RECEIVE_ANALYSIS',         // e.g. after a single analysis has been received from the server
+    'RECEIVE_ANALYSIS_UPDATE',  // e.g. after a single analysis has been changed on the server
     'RECEIVE_ANALYSIS_DELETE'   // e.g. after server has deleted an analysis
 ]);
 
@@ -287,6 +260,7 @@ var AnalysisStore = Marty.createStore({
         _selectAnalysis: AnalysisConstants.SELECT_ANALYSIS,
         _receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES,
         _receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS,
+        _receiveAnalysisUpdate: AnalysisConstants.RECEIVE_ANALYSIS_UPDATE,
         _receiveAnalysisDelete: AnalysisConstants.RECEIVE_ANALYSIS_DELETE
     },
 
@@ -390,9 +364,29 @@ var AnalysisStore = Marty.createStore({
         }
     },
 
+    _receiveAnalysisUpdate: function(id, analysis) {
+        if(!(analysis instanceof Immutable.Map)) {
+            throw new Exception(500, "Analysis must be an Immutable.Map");
+        }
+
+        if(!analysis.equals(this.state.analyses.get(id))) {
+            this.state.analyses = this.state.analyses.set(analysis.get('id'), analysis);
+
+            // the id may have changed
+            if(id !== analysis.get('id')) {
+                this.state.analyses = this.state.analyses.delete(id);
+                if(this.state.selectedAnalysis === id) {
+                    this.state.selectedAnalysis = analysis.get('id');
+                }
+            }
+
+            this.hasChanged();
+        }
+    },
+
     _receiveAnalysisDelete: function(id) {
         if(!this.state.analyses.has(id)) {
-            throw new Exception(400, "Instance not found");
+            throw new Exception(400, "Analysis not found");
         }
 
         this.state.analyses = this.state.analyses.delete(id);
@@ -655,6 +649,7 @@ var InstanceContainer = React.createClass({displayName: "InstanceContainer",
         var analysis = this.state.selectedAnalysis;
 
         // XXX: Can happen briefly during instance delete, before we navigate away
+        // TODO: Move to shouldComponentUpdate()
         if(!instance) {
             return React.createElement("span", null);
         }
