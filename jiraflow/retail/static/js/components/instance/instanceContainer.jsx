@@ -40,6 +40,7 @@ var InstanceContainer = React.createClass({
         var analysis = this.state.selectedAnalysis;
 
         // XXX: Can happen briefly during instance delete, before we navigate away
+        // TODO: Move to shouldComponentUpdate()
         if(!instance) {
             return <span></span>;
         }
