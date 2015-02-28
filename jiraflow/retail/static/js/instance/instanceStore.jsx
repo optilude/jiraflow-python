@@ -78,16 +78,9 @@ var InstanceStore = Marty.createStore({
     _navigate: function(action) {
         this.waitFor(NavigationStore);
 
-        var instanceId = NavigationStore.getParams().instanceId;
-        if(instanceId) {
-            this._selectInstance(instanceId);
-        } else {
-            this.state.selectedInstance = null;
-
-
-            // Deliberatly don't trigger hasChanged(), because the app
-            // will be re-rendered anyway and this will cause an error in the
-            // intermediate re-render before it is.
+        var instanceId = NavigationStore.getParams().instanceId || null;
+        if(this.state.selectedInstance !== instanceId) {
+            this._selectInstance(instanceId); // triggers hasChanged()
         }
     },
 

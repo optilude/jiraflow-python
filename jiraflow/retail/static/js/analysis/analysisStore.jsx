@@ -39,7 +39,8 @@ var AnalysisStore = Marty.createStore({
         return {
             updatePending: false,              // true during refresh
             analyses: Immutable.OrderedMap(),  // id -> Immutable.Map()
-            selectedAnalysis: null             // id
+            selectedAnalysis: null,            // id
+            selectedInstance: null             // id
         };
     },
 
@@ -69,6 +70,7 @@ var AnalysisStore = Marty.createStore({
         this.waitFor(InstanceStore);
 
         this.state.updatePending = true;
+        this.state.selectedInstance = id;
         this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
 
@@ -91,32 +93,19 @@ var AnalysisStore = Marty.createStore({
         this.state.updatePending = true;
         this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
-
-        if(refresh !== false) { // true or undefined
-            // force a re-fetch of everything
-            AnalysisAPI.fetchAll()
-            .then(result => {
-                AnalysisActionCreators.receiveAnalyses(result);
-                return result;
-            })
-            .catch(error => {
-                throw new Exception(500, "Unable to refresh analyses for new instance", error);
-            });
-        }
     },
 
     _navigate: function(action) {
         this.waitFor(NavigationStore, InstanceStore);
 
-        var analysisId = NavigationStore.getParams().analysisId;
-        if(analysisId) {
-            this._selectAnalysis(analysisId);
-        } else {
-            this.state.selectedAnalysis = null;
+        var instanceId = NavigationStore.getParams().instanceId || null;
+        if(this.state.selectedInstance !== instanceId) {
+            this._selectInstance(instanceId); // triggers hasChanged()
+        }
 
-            // Deliberatly don't trigger hasChanged(), because the app
-            // will be re-rendered anyway and this will cause an error in the
-            // intermediate re-render before it is.
+        var analysisId = NavigationStore.getParams().analysisId || null;
+        if(analysisId !== this.state.selectedAnalysis) {
+            this._selectAnalysis(analysisId); // triggers hasChanged()
         }
     },
 
