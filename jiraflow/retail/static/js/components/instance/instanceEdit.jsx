@@ -9,7 +9,9 @@ var Exception = require('../../exception');
 var ConfirmModal = require('../utilities/confirm');
 var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
+
 var schema = require('./instanceSchema');
+var InstanceToolbar = require('./instanceToolbar');
 
 var { Button, ButtonToolbar, ModalTrigger, Alert } = BS;
 var { Form } = ReactForms;
@@ -54,6 +56,7 @@ var InstanceEdit = React.createClass({
                 {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this URL.</Alert> : ""}
                 {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the instance. Please try again later.</Alert> : ""}
 
+                <InstanceToolbar instance={this.props.instance} />
                 <h1>Edit Instance: {instance.get('title')}</h1>
                 <p className="help-block">
                     Edit the name and connection details for a remote JIRA instance.

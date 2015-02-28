@@ -3,6 +3,8 @@
 var Immutable = require('immutable');
 var React = require('react/addons');
 
+var InstanceToolbar = require('./instanceToolbar');
+
 var InstanceView = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
@@ -16,6 +18,7 @@ var InstanceView = React.createClass({
 
         return (
             <div>
+                <InstanceToolbar instance={instance} />
                 <h1>JIRA Instance: {instance.get('title')}</h1>
                 <p>
                     <em><a href={instance.get('url')} target="_new">{instance.get('url')}</a></em>

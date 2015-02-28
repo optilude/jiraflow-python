@@ -4,7 +4,6 @@ var Marty = require('marty');
 var React = require('react');
 var Router = require('react-router');
 var BS = require('react-bootstrap');
-var RBS = require('react-router-bootstrap');
 
 var InstanceStore = require('../../instance/instanceStore');
 var AnalysisStore = require('../../analysis/analysisStore');
@@ -12,8 +11,7 @@ var AnalysisStore = require('../../analysis/analysisStore');
 var Sidebar = require('./instanceSidebar');
 
 var { RouteHandler } = Router;
-var { Grid, Row, Col, Nav } = BS;
-var { NavItemLink } = RBS;
+var { Grid, Row, Col } = BS;
 
 var InstanceState = Marty.createStateMixin({
     listenTo: [InstanceStore, AnalysisStore],
@@ -59,10 +57,6 @@ var InstanceContainer = React.createClass({
                         <Sidebar instance={instance} analyses={analyses} />
                     </Col>
                     <Col sm={9} md={10}>
-                        <Nav bsStyle="tabs">
-                            <NavItemLink to="viewInstance" params={{instanceId: instanceId}}>View</NavItemLink>
-                            <NavItemLink to="editInstance" params={{instanceId: instanceId}}>Manage</NavItemLink>
-                        </Nav>
                         <RouteHandler instance={instance} analysis={analysis} />
                     </Col>
                 </Row>
