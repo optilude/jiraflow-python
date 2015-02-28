@@ -2,7 +2,6 @@
 
 var Immutable = require('immutable');
 var React = require('react/addons');
-var Router = require('react-router');
 var ReactForms = require('react-forms');
 var BS = require('react-bootstrap');
 
@@ -12,8 +11,7 @@ var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
 var schema = require('./instanceSchema');
 
-var { Button, ButtonToolbar, Nav, ModalTrigger, Alert } = BS;
-var { Link } = Router;
+var { Button, ButtonToolbar, ModalTrigger, Alert } = BS;
 var { Form } = ReactForms;
 
 var DUMMY_PASSWORD = "*****";
@@ -39,8 +37,6 @@ var InstanceEdit = React.createClass({
             password: DUMMY_PASSWORD
         });
 
-        var instanceId = this.props.instance.get('id');
-
         var deleteConfirmModal = (
             <ConfirmModal
                 title="Delete instance"
@@ -58,10 +54,6 @@ var InstanceEdit = React.createClass({
                 {this.state.exists? <Alert bsStyle="danger">You have already configured an instance with this URL.</Alert> : ""}
                 {this.state.error? <Alert bsStyle="danger">An unexpected error occurred saving the instance. Please try again later.</Alert> : ""}
 
-                <Nav bsStyle="tabs">
-                    <li><Link to="instance" params={{instanceId: instanceId}}>View</Link></li>
-                    <li className="active"><Link to="editInstance" params={{instanceId: instanceId}}>Manage</Link></li>
-                </Nav>
                 <h1>Edit Instance: {instance.get('title')}</h1>
                 <p className="help-block">
                     Edit the name and connection details for a remote JIRA instance.
