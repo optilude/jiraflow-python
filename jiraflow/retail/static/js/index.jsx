@@ -36,9 +36,10 @@ Router.run(function(Handler, state) {
         React.render(<Handler />, document.body);
     } catch(e) {
         // Route to an appropriate error page if something went wrong during navigation
-        console.error(e);
+
         var lastRouteName = state.routes[state.routes.length - 1].name;
 
+        console.log(e.stack);
         if(e instanceof Exception) {
             if(e.status === 404 && lastRouteName !== "notFound") {
                 Router.transitionTo("notFound");
