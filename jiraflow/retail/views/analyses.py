@@ -22,7 +22,7 @@ class AnalysesViews(object):
     def analysis_json(self, analysis):
         return dict(
             id=analysis.analysis_name,
-            title=analysis.analysis,
+            title=analysis.title,
             description=analysis.description,
             type=analysis.type,
             refresh_interval=analysis.refreshInterval,
