@@ -69,8 +69,6 @@ var AnalysisActionCreators = Marty.createActionCreators({
         });
     }),
 
-    // TODO: Support update via separate operation in case id changes
-
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
     receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS(),
     receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES(),
