@@ -51,6 +51,9 @@ class AnalysesViews(object):
         body = self.request.json_body
         schema = resource.AnalysisPropertySheet.schema
 
+        instance_id = self.request.matchdict['instance_id']
+        instance = self.find_instance(instance_id)
+
         value = None
 
         try:
@@ -60,9 +63,9 @@ class AnalysesViews(object):
 
         analysis = self.request.registry.content.create('Analysis', **value)
 
-        # Store against the user's folder
+        # Store in the instance
         try:
-            self.request.user[analysis.analysis_name] = analysis
+            instance[analysis.analysis_name] = analysis
         except FolderKeyError, e:
             raise HTTPConflict(analysis.analysis_name)
 

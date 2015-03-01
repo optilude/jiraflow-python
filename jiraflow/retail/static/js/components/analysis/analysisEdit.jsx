@@ -5,7 +5,7 @@ var React = require('react/addons');
 var BS = require('react-bootstrap');
 
 /**
- * Renders a single analysis
+ * Renders the edit page for a single analysis
  */
 var AnalysisView = React.createClass({
     mixins: [React.addons.PureRenderMixin],
@@ -20,7 +20,7 @@ var AnalysisView = React.createClass({
 
         return (
             <div>
-                <h1>Analysis &mdash; {this.props.analysis.get('title')}</h1>
+                <h1>Edit analysis &mdash; {this.props.analysis.get('title')}</h1>
                 <p>Lorem ipsum</p>
             </div>
         );

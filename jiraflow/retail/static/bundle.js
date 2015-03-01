@@ -37,9 +37,10 @@ Router.run(function(Handler, state) {
         React.render(React.createElement(Handler, null), document.body);
     } catch(e) {
         // Route to an appropriate error page if something went wrong during navigation
-        console.error(e);
+
         var lastRouteName = state.routes[state.routes.length - 1].name;
 
+        console.log(e.stack);
         if(e instanceof Exception) {
             if(e.status === 404 && lastRouteName !== "notFound") {
                 Router.transitionTo("notFound");
@@ -174,8 +175,6 @@ var AnalysisActionCreators = Marty.createActionCreators({
         });
     }),
 
-    // TODO: Support update via separate operation in case id changes
-
     selectAnalysis: AnalysisConstants.SELECT_ANALYSIS(),
     receiveAnalysis: AnalysisConstants.RECEIVE_ANALYSIS(),
     receiveAnalyses: AnalysisConstants.RECEIVE_ANALYSES(),
@@ -246,7 +245,8 @@ var AnalysisStore = Marty.createStore({
         return {
             updatePending: false,              // true during refresh
             analyses: Immutable.OrderedMap(),  // id -> Immutable.Map()
-            selectedAnalysis: null             // id
+            selectedAnalysis: null,            // id
+            selectedInstance: null             // id
         };
     },
 
@@ -276,6 +276,7 @@ var AnalysisStore = Marty.createStore({
         this.waitFor(InstanceStore);
 
         this.state.updatePending = true;
+        this.state.selectedInstance = id;
         this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
 
@@ -298,32 +299,19 @@ var AnalysisStore = Marty.createStore({
         this.state.updatePending = true;
         this.state.analyses = Immutable.OrderedMap();
         this.hasChanged();
-
-        if(refresh !== false) { // true or undefined
-            // force a re-fetch of everything
-            AnalysisAPI.fetchAll()
-            .then(function(result)  {
-                AnalysisActionCreators.receiveAnalyses(result);
-                return result;
-            })
-            .catch(function(error)  {
-                throw new Exception(500, "Unable to refresh analyses for new instance", error);
-            });
-        }
     },
 
     _navigate: function(action) {
         this.waitFor(NavigationStore, InstanceStore);
 
-        var analysisId = NavigationStore.getParams().analysisId;
-        if(analysisId) {
-            this._selectAnalysis(analysisId);
-        } else {
-            this.state.selectedAnalysis = null;
+        var instanceId = NavigationStore.getParams().instanceId || null;
+        if(this.state.selectedInstance !== instanceId) {
+            this._selectInstance(instanceId); // triggers hasChanged()
+        }
 
-            // Deliberatly don't trigger hasChanged(), because the app
-            // will be re-rendered anyway and this will cause an error in the
-            // intermediate re-render before it is.
+        var analysisId = NavigationStore.getParams().analysisId || null;
+        if(analysisId !== this.state.selectedAnalysis) {
+            this._selectAnalysis(analysisId); // triggers hasChanged()
         }
     },
 
@@ -401,14 +389,295 @@ var AnalysisStore = Marty.createStore({
 });
 
 module.exports = AnalysisStore;
-},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../instance/instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","../navigation/navigationStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationStore.jsx","../user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx":[function(require,module,exports){
+},{"../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../instance/instanceConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceConstants.jsx","../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../navigation/navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","../navigation/navigationStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationStore.jsx","../user/userConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userConstants.jsx","../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./analysisAPI":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx","./analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","./analysisConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisContainer.jsx":[function(require,module,exports){
+"use strict";
+
+var Immutable = require('immutable');
+var React = require('react/addons');
+var Router = require('react-router');
+var BS = require('react-bootstrap');
+var RBS = require('react-router-bootstrap');
+
+var $__0=    BS,Nav=$__0.Nav;
+var $__1=   Router,RouteHandler=$__1.RouteHandler;
+var $__2=    RBS,NavItemLink=$__2.NavItemLink;
+
+/**
+ * Renders the tabs above the analysis
+ */
+var AnalysisContainer = React.createClass({displayName: "AnalysisContainer",
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        instance: React.PropTypes.instanceOf(Immutable.Map),
+        analysis: React.PropTypes.instanceOf(Immutable.Map)
+    },
+
+    render: function () {
+
+        var instanceId = this.props.instance.get('id');
+        var analysisId = this.props.analysis.get('id');
+
+        return (
+            React.createElement("div", null, 
+                React.createElement(Nav, {bsStyle: "tabs"}, 
+                    React.createElement(NavItemLink, {to: "viewAnalysis", params: {instanceId: instanceId, analysisId: analysisId}}, "View"), 
+                    React.createElement(NavItemLink, {to: "editAnalysis", params: {instanceId: instanceId, analysisId: analysisId}}, "Manage")
+                ), 
+                React.createElement(RouteHandler, {analysis: this.props.analysis})
+            )
+        );
+
+    }
+});
+
+module.exports = AnalysisContainer;
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisEdit.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
-var $__0=     BS,Nav=$__0.Nav,NavItem=$__0.NavItem;
+/**
+ * Renders the edit page for a single analysis
+ */
+var AnalysisView = React.createClass({displayName: "AnalysisView",
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        analysis: React.PropTypes.instanceOf(Immutable.Map)
+    },
+
+    // TODO: Complete
+
+    render: function () {
+
+        return (
+            React.createElement("div", null, 
+                React.createElement("h1", null, "Edit analysis — ", this.props.analysis.get('title')), 
+                React.createElement("p", null, "Lorem ipsum")
+            )
+        );
+
+    }
+});
+
+module.exports = AnalysisView;
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisForm.jsx":[function(require,module,exports){
+"use strict";
+
+var React = require('react');
+var ReactForms = require('react-forms');
+
+var $__0=    ReactForms,Form=$__0.Form;
+
+var Schemata = require('./analysisSchemata');
+
+/**
+ * Dynamic form that renders the correct analysis schema based on the selected
+ * type.
+ */
+var AnalysisForm = React.createClass({displayName: "AnalysisForm",
+
+    getInitialState: function() {
+        return {
+            type: null
+        };
+    },
+
+    render: function () {
+
+        var type = this.state.type;
+        var defaultValue = this.props.defaultValue;
+
+        if(type === null && defaultValue && defaultValue.get('type')) {
+            type = defaultValue.get('type');
+        }
+
+        var schema = Schemata.getSchema(type);
+        return React.createElement(Form, React.__spread({schema: schema, component: "div", onUpdate: this.onChangeForm},  this.props));
+    },
+
+    onChangeForm: function(value, validation, keyPath) {
+        var type = value.get('type');
+        if(type !== this.state.type) {
+            this.setState({
+                type: type
+            });
+        }
+    }
+
+});
+
+module.exports = AnalysisForm;
+},{"./analysisSchemata":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisSchemata.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNew.jsx":[function(require,module,exports){
+"use strict";
+
+var React = require('react/addons');
+var BS = require('react-bootstrap');
+
+var AnalysisForm = require('./analysisForm');
+
+var $__0=     BS,Button=$__0.Button,Alert=$__0.Alert;
+
+/**
+ * Form to create a new analysis
+ */
+var AnalysisNew = React.createClass({displayName: "AnalysisNew",
+    mixins: [React.addons.PureRenderMixin],
+
+    getInitialState: function() {
+        return {
+            invalid: false,
+            exists: false,
+            error: false
+        };
+    },
+
+    render: function () {
+
+        return (
+            React.createElement("div", null, 
+                this.state.invalid? React.createElement(Alert, {bsStyle: "danger"}, "Please fill in all required fields") : "", 
+                this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an analysis with this title.") : "", 
+                this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the new analysis. Please try again later.") : "", 
+
+                React.createElement("h1", null, "Create new analysis"), 
+                React.createElement("p", {className: "help-block"}, 
+                    "Pick a type and then configure the new analysis"
+                ), 
+                React.createElement("form", {onSubmit: this.onSubmit}, 
+                    React.createElement(AnalysisForm, {ref: "form"}), 
+                    React.createElement(Button, {type: "submit", bsStyle: "primary"}, "Create")
+                )
+            )
+        );
+
+    },
+
+    onSubmit: function(e) {
+        e.preventDefault();
+
+        var form = this.refs.form;
+        if(!form.isValid()) {
+            this.setState({invalid: true, exists: false, error: false});
+            return;
+        } else {
+            this.setState({invalid: false, exists: false, error: false});
+        }
+
+        var value = this.refs.form.getValue();
+
+        // TODO: Handle conversion to params and submission
+
+        // InstanceActionCreators.createInstance(value)
+        // .then(instance => {
+        //     NavigationActionCreators.navigateToInstance(instance.get('id'));
+        // })
+        // .catch(error => {
+        //     if(error.status === 409) {
+        //         this.setState({invalid: false, exists: true, error: false});
+        //     } else {
+        //         console.error(error);
+        //         this.setState({invalid: false, exists: false, error: true});
+        //     }
+        // });
+    }
+});
+
+module.exports = AnalysisNew;
+},{"./analysisForm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisForm.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisSchemata.jsx":[function(require,module,exports){
+"use strict";
+
+var React = require('react');
+var ReactForms = require('react-forms');
+var RadioButtonGroup  = require('react-forms/lib/RadioButtonGroup');
+
+var $__0=     ReactForms.schema,Mapping=$__0.Mapping,Scalar=$__0.Scalar;
+
+var ANALYSIS_TYPES = [
+    {value: 'burnup', name: 'Burn-up chart'},
+    {value: 'cfd', name: 'Cumulative flow diagram'},
+    {value: 'forecast', name: 'Forecast analysis'},
+];
+
+var CommonSchema = Mapping({
+
+    title: Scalar({
+        label: "Title",
+        hint: "Enter a short title for this analysis",
+        required: true
+    }),
+
+    description: Scalar({
+        label: "Description",
+        hint: "Enter a longer description for this analysis",
+        required: true,
+        input: React.createElement("textarea", {rows: "4"})
+    }),
+
+    query: Scalar({
+        label: "Query",
+        hint: "Enter a JQL query to find the issues to include in this analysis",
+        required: false
+    }),
+
+    refresh_interval: Scalar({
+        type: "number",
+        label: "Refresh interval (seconds)",
+        hint: "How frequently should raw data be fetched from the JIRA instance?",
+        defaultValue: 600,
+        required: true
+    }),
+
+    type: Scalar({
+        label: "Type",
+        hint: "Choose the analaysis type",
+        required: true,
+        input: React.createElement(RadioButtonGroup, {options: ANALYSIS_TYPES, allowEmpty: false})
+    })
+
+});
+
+var BurnupSchema = Mapping({
+
+    scopeLine: Scalar({
+        label: "Scope line",
+        hint: "",
+        required: true
+    })
+
+});
+
+var Schemata = {
+    common: CommonSchema,
+    burnup: BurnupSchema
+};
+
+var getSchema = function(type) {
+    var nodes = Schemata.common.props.get('children');
+
+    if(type) {
+        var typeSpecificSchema = Schemata[type];
+        if(typeSpecificSchema !== undefined) {
+            nodes = nodes.merge(typeSpecificSchema.props.get('children'));
+        }
+    }
+
+    return Mapping(nodes);
+};
+
+module.exports = {
+    schemata: Schemata,
+    getSchema:getSchema
+};
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-forms/lib/RadioButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx":[function(require,module,exports){
+"use strict";
+
+var Immutable = require('immutable');
+var React = require('react/addons');
+var BS = require('react-bootstrap');
 
 /**
  * Renders a single analysis
@@ -420,16 +689,12 @@ var AnalysisView = React.createClass({displayName: "AnalysisView",
         analysis: React.PropTypes.instanceOf(Immutable.Map)
     },
 
-    // TODO: Implement views for different analysis types; edit; delete
+    // TODO: Complete
 
     render: function () {
 
         return (
             React.createElement("div", null, 
-                React.createElement(Nav, {bsStyle: "tabs"}, 
-                    React.createElement(NavItem, {active: true, eventKey: "view"}, "View"), 
-                    React.createElement(NavItem, {eventKey: "manage"}, "Manage")
-                ), 
                 React.createElement("h1", null, "Analysis — ", this.props.analysis.get('title')), 
                 React.createElement("p", null, "Lorem ipsum")
             )
@@ -439,7 +704,7 @@ var AnalysisView = React.createClass({displayName: "AnalysisView",
 });
 
 module.exports = AnalysisView;
-},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx":[function(require,module,exports){
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -504,7 +769,7 @@ var NotFound = React.createClass({displayName: "NotFound",
 });
 
 module.exports = NotFound;
-},{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx":[function(require,module,exports){
+},{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -532,7 +797,7 @@ var NotFound = React.createClass({displayName: "NotFound",
 });
 
 module.exports = NotFound;
-},{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/frontPage.jsx":[function(require,module,exports){
+},{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/frontPage.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -606,7 +871,7 @@ var FrontPage = React.createClass({displayName: "FrontPage",
 });
 
 module.exports = FrontPage;
-},{"../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceContainer.jsx":[function(require,module,exports){
+},{"../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceContainer.jsx":[function(require,module,exports){
 "use strict";
 
 var Marty = require('marty');
@@ -620,7 +885,6 @@ var AnalysisStore = require('../../analysis/analysisStore');
 var Sidebar = require('./instanceSidebar');
 
 var $__0=    Router,RouteHandler=$__0.RouteHandler;
-
 var $__1=      BS,Grid=$__1.Grid,Row=$__1.Row,Col=$__1.Col;
 
 var InstanceState = Marty.createStateMixin({
@@ -658,6 +922,8 @@ var InstanceContainer = React.createClass({displayName: "InstanceContainer",
         var analysis = this.state.selectedAnalysis;
         var analyses = this.state.analyses;
 
+        var instanceId = instance.get('id');
+
         return (
             React.createElement(Grid, {fluid: true}, 
                 React.createElement(Row, null, 
@@ -675,12 +941,11 @@ var InstanceContainer = React.createClass({displayName: "InstanceContainer",
 });
 
 module.exports = InstanceContainer;
-},{"../../analysis/analysisStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisStore.jsx","../../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","./instanceSidebar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSidebar.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceEdit.jsx":[function(require,module,exports){
+},{"../../analysis/analysisStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisStore.jsx","../../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","./instanceSidebar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSidebar.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceEdit.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
 var React = require('react/addons');
-var Router = require('react-router');
 var ReactForms = require('react-forms');
 var BS = require('react-bootstrap');
 
@@ -688,11 +953,12 @@ var Exception = require('../../exception');
 var ConfirmModal = require('../utilities/confirm');
 var InstanceActionCreators = require('../../instance/instanceActionCreators');
 var NavigationActionCreators = require('../../navigation/navigationActionCreators');
-var schema = require('./instanceSchema');
 
-var $__0=        BS,Button=$__0.Button,ButtonToolbar=$__0.ButtonToolbar,Nav=$__0.Nav,ModalTrigger=$__0.ModalTrigger,Alert=$__0.Alert;
-var $__1=    Router,Link=$__1.Link;
-var $__2=    ReactForms,Form=$__2.Form;
+var schema = require('./instanceSchema');
+var InstanceToolbar = require('./instanceToolbar');
+
+var $__0=       BS,Button=$__0.Button,ButtonToolbar=$__0.ButtonToolbar,ModalTrigger=$__0.ModalTrigger,Alert=$__0.Alert;
+var $__1=    ReactForms,Form=$__1.Form;
 
 var DUMMY_PASSWORD = "*****";
 
@@ -717,8 +983,6 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
             password: DUMMY_PASSWORD
         });
 
-        var instanceId = this.props.instance.get('id');
-
         var deleteConfirmModal = (
             React.createElement(ConfirmModal, {
                 title: "Delete instance", 
@@ -736,10 +1000,7 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
                 this.state.exists? React.createElement(Alert, {bsStyle: "danger"}, "You have already configured an instance with this URL.") : "", 
                 this.state.error? React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred saving the instance. Please try again later.") : "", 
 
-                React.createElement(Nav, {bsStyle: "tabs"}, 
-                    React.createElement("li", null, React.createElement(Link, {to: "instance", params: {instanceId: instanceId}}, "View")), 
-                    React.createElement("li", {className: "active"}, React.createElement(Link, {to: "editInstance", params: {instanceId: instanceId}}, "Manage"))
-                ), 
+                React.createElement(InstanceToolbar, {instance: this.props.instance}), 
                 React.createElement("h1", null, "Edit Instance: ", instance.get('title')), 
                 React.createElement("p", {className: "help-block"}, 
                     "Edit the name and connection details for a remote JIRA instance."
@@ -813,7 +1074,7 @@ var InstanceEdit = React.createClass({displayName: "InstanceEdit",
 });
 
 module.exports = InstanceEdit;
-},{"../../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../../instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../utilities/confirm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/utilities/confirm.jsx","./instanceSchema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSchema.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx":[function(require,module,exports){
+},{"../../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../../instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../utilities/confirm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/utilities/confirm.jsx","./instanceSchema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSchema.jsx","./instanceToolbar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceToolbar.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -894,7 +1155,7 @@ var InstanceNew = React.createClass({displayName: "InstanceNew",
 });
 
 module.exports = InstanceNew;
-},{"../../instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./instanceSchema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSchema.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSchema.jsx":[function(require,module,exports){
+},{"../../instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./instanceSchema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSchema.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceSchema.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -945,8 +1206,8 @@ var React = require('react/addons');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-var $__0=     BS,Button=$__0.Button,Nav=$__0.Nav;
-var $__1=    RBS,NavItemLink=$__1.NavItemLink;
+var $__0=    BS,Nav=$__0.Nav;
+var $__1=     RBS,NavItemLink=$__1.NavItemLink,ButtonLink=$__1.ButtonLink;
 
 /**
  * Sidebar listing the analyses under an instance.
@@ -959,8 +1220,6 @@ var InstanceSidebar = React.createClass({displayName: "InstanceSidebar",
         analyses: React.PropTypes.instanceOf(Immutable.Iterable).isRequired
     },
 
-    // TODO: Implement new analysis button
-
     render: function () {
 
         var instanceId = this.props.instance.get('id');
@@ -971,25 +1230,25 @@ var InstanceSidebar = React.createClass({displayName: "InstanceSidebar",
                     React.createElement(NavItemLink, {className: "currentInstance", to: "instance", params: {instanceId: instanceId}}, this.props.instance.get('title')), 
                     this.props.analyses.map(function(a, idx)  {return React.createElement(NavItemLink, {key: idx, to: "analysis", params: {instanceId: instanceId, analysisId: a.get('id')}}, a.get('title'));}).toArray()
                 ), 
-                React.createElement(Button, {className: "new-analysis-button", bsStyle: "success"}, "Configure new analysis")
+                React.createElement(ButtonLink, {to: "newAnalysis", params: {instanceId: instanceId}, className: "new-analysis-button", bsStyle: "success"}, "Configure new analysis")
             )
         );
     }
 });
 
 module.exports = InstanceSidebar;
-},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx":[function(require,module,exports){
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceToolbar.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
 var React = require('react/addons');
-var Router = require('react-router');
 var BS = require('react-bootstrap');
+var RBS = require('react-router-bootstrap');
 
 var $__0=    BS,Nav=$__0.Nav;
-var $__1=    Router,Link=$__1.Link;
+var $__1=    RBS,NavItemLink=$__1.NavItemLink;
 
-var InstanceView = React.createClass({displayName: "InstanceView",
+var InstanceToolbar = React.createClass({displayName: "InstanceToolbar",
     mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
@@ -1002,11 +1261,38 @@ var InstanceView = React.createClass({displayName: "InstanceView",
         var instanceId = instance.get('id');
 
         return (
+            React.createElement(Nav, {bsStyle: "tabs"}, 
+                React.createElement(NavItemLink, {to: "viewInstance", params: {instanceId: instanceId}}, "View"), 
+                React.createElement(NavItemLink, {to: "editInstance", params: {instanceId: instanceId}}, "Manage")
+            )
+        );
+    }
+
+});
+
+module.exports = InstanceToolbar;
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx":[function(require,module,exports){
+"use strict";
+
+var Immutable = require('immutable');
+var React = require('react/addons');
+
+var InstanceToolbar = require('./instanceToolbar');
+
+var InstanceView = React.createClass({displayName: "InstanceView",
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        instance: React.PropTypes.instanceOf(Immutable.Map)
+    },
+
+    render: function() {
+
+        var instance = this.props.instance;
+
+        return (
             React.createElement("div", null, 
-                React.createElement(Nav, {bsStyle: "tabs"}, 
-                    React.createElement("li", {className: "active"}, React.createElement(Link, {to: "instance", params: {instanceId: instanceId}}, "View")), 
-                    React.createElement("li", null, React.createElement(Link, {to: "editInstance", params: {instanceId: instanceId}}, "Manage"))
-                ), 
+                React.createElement(InstanceToolbar, {instance: instance}), 
                 React.createElement("h1", null, "JIRA Instance: ", instance.get('title')), 
                 React.createElement("p", null, 
                     React.createElement("em", null, React.createElement("a", {href: instance.get('url'), target: "_new"}, instance.get('url')))
@@ -1022,7 +1308,7 @@ var InstanceView = React.createClass({displayName: "InstanceView",
 });
 
 module.exports = InstanceView;
-},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/navigation/topNav.jsx":[function(require,module,exports){
+},{"./instanceToolbar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceToolbar.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/navigation/topNav.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -1105,7 +1391,7 @@ var TopNav = React.createClass({displayName: "TopNav",
 
 module.exports = TopNav;
 
-},{"../../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","../../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx":[function(require,module,exports){
+},{"../../exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","../../instance/instanceStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceStore.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","../../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react-router-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -1173,7 +1459,7 @@ var Login = React.createClass({displayName: "Login",
 });
 
 module.exports = Login;
-},{"../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userChangePassword.jsx":[function(require,module,exports){
+},{"../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userChangePassword.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -1285,7 +1571,7 @@ var UserDetails = React.createClass({displayName: "UserDetails",
 });
 
 module.exports = UserDetails;
-},{"../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userDetails.jsx":[function(require,module,exports){
+},{"../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userDetails.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -1379,7 +1665,7 @@ var UserDetails = React.createClass({displayName: "UserDetails",
 });
 
 module.exports = UserDetails;
-},{"../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","../../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./userSchema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userSchema.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userSchema.jsx":[function(require,module,exports){
+},{"../../user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","../../user/userStore":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userStore.jsx","./userSchema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userSchema.jsx","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userSchema.jsx":[function(require,module,exports){
 "use strict";
 
 var ReactForms = require('react-forms');
@@ -1444,7 +1730,7 @@ var ConfirmModal = React.createClass({displayName: "ConfirmModal",
 });
 
 module.exports = ConfirmModal;
-},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx":[function(require,module,exports){
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx":[function(require,module,exports){
 "use strict";
 
 var Exception = function(status, message, nestedError) {
@@ -1690,16 +1976,9 @@ var InstanceStore = Marty.createStore({
     _navigate: function(action) {
         this.waitFor(NavigationStore);
 
-        var instanceId = NavigationStore.getParams().instanceId;
-        if(instanceId) {
-            this._selectInstance(instanceId);
-        } else {
-            this.state.selectedInstance = null;
-
-
-            // Deliberatly don't trigger hasChanged(), because the app
-            // will be re-rendered anyway and this will cause an error in the
-            // intermediate re-render before it is.
+        var instanceId = NavigationStore.getParams().instanceId || null;
+        if(this.state.selectedInstance !== instanceId) {
+            this._selectInstance(instanceId); // triggers hasChanged()
         }
     },
 
@@ -1891,13 +2170,10 @@ module.exports = NavigationStore;
 },{"./navigationConstants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationConstants.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx":[function(require,module,exports){
 "use strict";
 
-var React = require('react'); // must be in scope to allow the use of JSX!
+var React = require('react'); // jshint unused:false
 var Router = require('react-router');
 
 var $__0=      Router,Route=$__0.Route,DefaultRoute=$__0.DefaultRoute,NotFoundRoute=$__0.NotFoundRoute;
-
-// TODO: Create analysis
-// TODO: Edit analysis
 
 var routes = [
     React.createElement(Route, {name: "login", path: "/login", handler: require('./components/user/login')}),
@@ -1908,16 +2184,23 @@ var routes = [
         React.createElement(Route, {name: "error", path: "500", handler: require('./components/error/error')}), 
 
         React.createElement(DefaultRoute, {name: "frontPage", handler: require('./components/frontPage')}), 
-        React.createElement(Route, {name: "newInstance", path: "new-instance", handler: require('./components/instance/instanceNew')}), 
+
         React.createElement(Route, {name: "userDetails", path: "user-details", handler: require('./components/user/userDetails')}), 
         React.createElement(Route, {name: "userPassword", path: "change-password", handler: require('./components/user/userChangePassword')}), 
 
+        React.createElement(Route, {name: "newInstance", path: "new-instance", handler: require('./components/instance/instanceNew')}), 
         React.createElement(Route, {name: "instance", path: "instances/:instanceId", handler: require('./components/instance/instanceContainer')}, 
 
             React.createElement(DefaultRoute, {name: "viewInstance", handler: require('./components/instance/instanceView')}), 
             React.createElement(Route, {name: "editInstance", path: "edit", handler: require('./components/instance/instanceEdit')}), 
 
-            React.createElement(Route, {name: "analysis", path: "analysis/:analysisId", handler: require('./components/analysis/analysisView')})
+            React.createElement(Route, {name: "newAnalysis", path: "new-analysis", handler: require('./components/analysis/analysisNew')}), 
+            React.createElement(Route, {name: "analysis", path: "analysis/:analysisId", handler: require('./components/analysis/analysisContainer')}, 
+
+                React.createElement(DefaultRoute, {name: "viewAnalysis", handler: require('./components/analysis/analysisView')}), 
+                React.createElement(Route, {name: "editAnalysis", path: "edit", handler: require('./components/analysis/analysisEdit')})
+
+            )
 
         )
 
@@ -1928,7 +2211,7 @@ module.exports = Router.create({
   routes: routes,
   // location: Router.HistoryLocation
 });
-},{"./components/analysis/analysisView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx","./components/app":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx","./components/error/error":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/error.jsx","./components/error/notFound":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx","./components/frontPage":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/frontPage.jsx","./components/instance/instanceContainer":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceContainer.jsx","./components/instance/instanceEdit":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceEdit.jsx","./components/instance/instanceNew":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx","./components/instance/instanceView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx","./components/user/login":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx","./components/user/userChangePassword":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userChangePassword.jsx","./components/user/userDetails":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userDetails.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userAPI.jsx":[function(require,module,exports){
+},{"./components/analysis/analysisContainer":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisContainer.jsx","./components/analysis/analysisEdit":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisEdit.jsx","./components/analysis/analysisNew":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNew.jsx","./components/analysis/analysisView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx","./components/app":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx","./components/error/error":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/error.jsx","./components/error/notFound":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx","./components/frontPage":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/frontPage.jsx","./components/instance/instanceContainer":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceContainer.jsx","./components/instance/instanceEdit":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceEdit.jsx","./components/instance/instanceNew":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceNew.jsx","./components/instance/instanceView":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/instance/instanceView.jsx","./components/user/login":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/login.jsx","./components/user/userChangePassword":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userChangePassword.jsx","./components/user/userDetails":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/user/userDetails.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userAPI.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
@@ -14312,11 +14595,11 @@ require('whatwg-fetch');
   }
 }.call(this));
 
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Accordion.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Accordion.js":[function(require,module,exports){
 var React = require('react');
 var PanelGroup = require('./PanelGroup');
 
-var Accordion = React.createClass({displayName: 'Accordion',
+var Accordion = React.createClass({displayName: "Accordion",
   render: function () {
     return (
       React.createElement(PanelGroup, React.__spread({},  this.props, {accordion: true}), 
@@ -14327,13 +14610,13 @@ var Accordion = React.createClass({displayName: 'Accordion',
 });
 
 module.exports = Accordion;
-},{"./PanelGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PanelGroup.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Affix.js":[function(require,module,exports){
+},{"./PanelGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PanelGroup.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Affix.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var AffixMixin = require('./AffixMixin');
 var domUtils = require('./utils/domUtils');
 
-var Affix = React.createClass({displayName: 'Affix',
+var Affix = React.createClass({displayName: "Affix",
   statics: {
     domUtils: domUtils
   },
@@ -14351,7 +14634,7 @@ var Affix = React.createClass({displayName: 'Affix',
 });
 
 module.exports = Affix;
-},{"./AffixMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/AffixMixin.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/domUtils.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/AffixMixin.js":[function(require,module,exports){
+},{"./AffixMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/AffixMixin.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/domUtils.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/AffixMixin.js":[function(require,module,exports){
 /* global window, document */
 
 var React = require('react');
@@ -14483,14 +14766,14 @@ var AffixMixin = {
 };
 
 module.exports = AffixMixin;
-},{"./utils/EventListener":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/EventListener.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/domUtils.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Alert.js":[function(require,module,exports){
+},{"./utils/EventListener":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/EventListener.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/domUtils.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Alert.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
 
-var Alert = React.createClass({displayName: 'Alert',
+var Alert = React.createClass({displayName: "Alert",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -14511,7 +14794,7 @@ var Alert = React.createClass({displayName: 'Alert',
         type: "button", 
         className: "close", 
         onClick: this.props.onDismiss, 
-        'aria-hidden': "true"}, 
+        "aria-hidden": "true"}, 
         "×"
       )
     );
@@ -14543,22 +14826,27 @@ var Alert = React.createClass({displayName: 'Alert',
 });
 
 module.exports = Alert;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Badge.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Badge.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 var classSet = require('./utils/classSet');
 
-var Badge = React.createClass({displayName: 'Badge',
+var Badge = React.createClass({displayName: "Badge",
   propTypes: {
     pullRight: React.PropTypes.bool
+  },
+
+  hasContent: function () {
+    return ValidComponentChildren.hasValidComponent(this.props.children) ||
+      (typeof this.props.children === 'string') ||
+      (typeof this.props.children === 'number')
   },
 
   render: function () {
     var classes = {
       'pull-right': this.props.pullRight,
-      'badge': (ValidComponentChildren.hasValidComponent(this.props.children)
-        || (typeof this.props.children === 'string'))
+      'badge': this.hasContent()
     };
     return (
       React.createElement("span", React.__spread({}, 
@@ -14572,7 +14860,7 @@ var Badge = React.createClass({displayName: 'Badge',
 
 module.exports = Badge;
 
-},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js":[function(require,module,exports){
+},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js":[function(require,module,exports){
 var React = require('react');
 var constants = require('./constants');
 
@@ -14608,13 +14896,13 @@ var BootstrapMixin = {
 };
 
 module.exports = BootstrapMixin;
-},{"./constants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/constants.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js":[function(require,module,exports){
+},{"./constants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/constants.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
-var Button = React.createClass({displayName: 'Button',
+var Button = React.createClass({displayName: "Button",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -14623,7 +14911,9 @@ var Button = React.createClass({displayName: 'Button',
     block:    React.PropTypes.bool,
     navItem:    React.PropTypes.bool,
     navDropdown: React.PropTypes.bool,
-    componentClass: React.PropTypes.node
+    componentClass: React.PropTypes.node,
+    href: React.PropTypes.string,
+    target: React.PropTypes.string
   },
 
   getDefaultProps: function () {
@@ -14645,7 +14935,7 @@ var Button = React.createClass({displayName: 'Button',
       return this.renderNavItem(classes);
     }
 
-    renderFuncName = this.props.href || this.props.navDropdown ?
+    renderFuncName = this.props.href || this.props.target || this.props.navDropdown ?
       'renderAnchor' : 'renderButton';
 
     return this[renderFuncName](classes);
@@ -14695,14 +14985,14 @@ var Button = React.createClass({displayName: 'Button',
 
 module.exports = Button;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ButtonGroup.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ButtonGroup.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 var Button = require('./Button');
 
-var ButtonGroup = React.createClass({displayName: 'ButtonGroup',
+var ButtonGroup = React.createClass({displayName: "ButtonGroup",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -14733,14 +15023,14 @@ var ButtonGroup = React.createClass({displayName: 'ButtonGroup',
 });
 
 module.exports = ButtonGroup;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ButtonToolbar.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ButtonToolbar.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 var Button = require('./Button');
 
-var ButtonToolbar = React.createClass({displayName: 'ButtonToolbar',
+var ButtonToolbar = React.createClass({displayName: "ButtonToolbar",
   mixins: [BootstrapMixin],
 
   getDefaultProps: function () {
@@ -14764,7 +15054,7 @@ var ButtonToolbar = React.createClass({displayName: 'ButtonToolbar',
 });
 
 module.exports = ButtonToolbar;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Carousel.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Carousel.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -14772,7 +15062,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var BootstrapMixin = require('./BootstrapMixin');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 
-var Carousel = React.createClass({displayName: 'Carousel',
+var Carousel = React.createClass({displayName: "Carousel",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -15054,13 +15344,13 @@ var Carousel = React.createClass({displayName: 'Carousel',
 });
 
 module.exports = Carousel;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/CarouselItem.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/CarouselItem.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var TransitionEvents = require('./utils/TransitionEvents');
 
-var CarouselItem = React.createClass({displayName: 'CarouselItem',
+var CarouselItem = React.createClass({displayName: "CarouselItem",
   propTypes: {
     direction: React.PropTypes.oneOf(['prev', 'next']),
     onAnimateOutEnd: React.PropTypes.func,
@@ -15148,14 +15438,14 @@ var CarouselItem = React.createClass({displayName: 'CarouselItem',
 });
 
 module.exports = CarouselItem;
-},{"./utils/TransitionEvents":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/TransitionEvents.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Col.js":[function(require,module,exports){
+},{"./utils/TransitionEvents":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/TransitionEvents.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Col.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var constants = require('./constants');
 
 
-var Col = React.createClass({displayName: 'Col',
+var Col = React.createClass({displayName: "Col",
   propTypes: {
     xs: React.PropTypes.number,
     sm: React.PropTypes.number,
@@ -15223,7 +15513,7 @@ var Col = React.createClass({displayName: 'Col',
 });
 
 module.exports = Col;
-},{"./constants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/constants.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/CollapsableMixin.js":[function(require,module,exports){
+},{"./constants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/constants.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/CollapsableMixin.js":[function(require,module,exports){
 var React = require('react');
 var TransitionEvents = require('./utils/TransitionEvents');
 
@@ -15345,7 +15635,7 @@ var CollapsableMixin = {
 
 module.exports = CollapsableMixin;
 
-},{"./utils/TransitionEvents":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/TransitionEvents.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownButton.js":[function(require,module,exports){
+},{"./utils/TransitionEvents":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/TransitionEvents.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownButton.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -15360,7 +15650,7 @@ var DropdownMenu = require('./DropdownMenu');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 
 
-var DropdownButton = React.createClass({displayName: 'DropdownButton',
+var DropdownButton = React.createClass({displayName: "DropdownButton",
   mixins: [BootstrapMixin, DropdownStateMixin],
 
   propTypes: {
@@ -15370,20 +15660,22 @@ var DropdownButton = React.createClass({displayName: 'DropdownButton',
     href:      React.PropTypes.string,
     onClick:   React.PropTypes.func,
     onSelect:  React.PropTypes.func,
-    navItem:   React.PropTypes.bool
+    navItem:   React.PropTypes.bool,
+    noCaret:   React.PropTypes.bool
   },
 
   render: function () {
-    var className = 'dropdown-toggle';
-
     var renderMethod = this.props.navItem ?
       'renderNavItem' : 'renderButtonGroup';
+
+    var caret = this.props.noCaret ?
+        null : (React.createElement("span", {className: "caret"}));
 
     return this[renderMethod]([
       React.createElement(Button, React.__spread({}, 
         this.props, 
         {ref: "dropdownButton", 
-        className: joinClasses(this.props.className, className), 
+        className: "dropdown-toggle", 
         onClick: this.handleDropdownClick, 
         key: 0, 
         navDropdown: this.props.navItem, 
@@ -15392,11 +15684,11 @@ var DropdownButton = React.createClass({displayName: 'DropdownButton',
         pullRight: null, 
         dropup: null}), 
         this.props.title, ' ', 
-        React.createElement("span", {className: "caret"})
+        caret
       ),
       React.createElement(DropdownMenu, {
         ref: "menu", 
-        'aria-labelledby': this.props.id, 
+        "aria-labelledby": this.props.id, 
         pullRight: this.props.pullRight, 
         key: 1}, 
         ValidComponentChildren.map(this.props.children, this.renderMenuItem)
@@ -15413,7 +15705,7 @@ var DropdownButton = React.createClass({displayName: 'DropdownButton',
     return (
       React.createElement(ButtonGroup, {
         bsSize: this.props.bsSize, 
-        className: classSet(groupClasses)}, 
+        className: joinClasses(this.props.className, classSet(groupClasses))}, 
         children
       )
     );
@@ -15427,7 +15719,7 @@ var DropdownButton = React.createClass({displayName: 'DropdownButton',
       };
 
     return (
-      React.createElement("li", {className: classSet(classes)}, 
+      React.createElement("li", {className: joinClasses(this.props.className, classSet(classes))}, 
         children
       )
     );
@@ -15469,7 +15761,8 @@ var DropdownButton = React.createClass({displayName: 'DropdownButton',
 });
 
 module.exports = DropdownButton;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","./ButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ButtonGroup.js","./DropdownMenu":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownMenu.js","./DropdownStateMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownStateMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownMenu.js":[function(require,module,exports){
+
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","./ButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ButtonGroup.js","./DropdownMenu":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownMenu.js","./DropdownStateMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownStateMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownMenu.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -15478,7 +15771,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var createChainedFunction = require('./utils/createChainedFunction');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 
-var DropdownMenu = React.createClass({displayName: 'DropdownMenu',
+var DropdownMenu = React.createClass({displayName: "DropdownMenu",
   propTypes: {
     pullRight: React.PropTypes.bool,
     onSelect: React.PropTypes.func
@@ -15516,7 +15809,7 @@ var DropdownMenu = React.createClass({displayName: 'DropdownMenu',
 });
 
 module.exports = DropdownMenu;
-},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownStateMixin.js":[function(require,module,exports){
+},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownStateMixin.js":[function(require,module,exports){
 var React = require('react');
 var EventListener = require('./utils/EventListener');
 
@@ -15597,7 +15890,7 @@ var DropdownStateMixin = {
 };
 
 module.exports = DropdownStateMixin;
-},{"./utils/EventListener":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/EventListener.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/FadeMixin.js":[function(require,module,exports){
+},{"./utils/EventListener":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/EventListener.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/FadeMixin.js":[function(require,module,exports){
 /*global document */
 // TODO: listen for onTransitionEnd to remove el
 function getElementsAndSelf (root, classes){
@@ -15668,14 +15961,14 @@ module.exports = {
   }
 };
 
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Glyphicon.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Glyphicon.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 var constants = require('./constants');
 
-var Glyphicon = React.createClass({displayName: 'Glyphicon',
+var Glyphicon = React.createClass({displayName: "Glyphicon",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -15702,11 +15995,11 @@ var Glyphicon = React.createClass({displayName: 'Glyphicon',
 });
 
 module.exports = Glyphicon;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./constants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/constants.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Grid.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./constants":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/constants.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Grid.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 
-var Grid = React.createClass({displayName: 'Grid',
+var Grid = React.createClass({displayName: "Grid",
   propTypes: {
     fluid: React.PropTypes.bool,
     componentClass: React.PropTypes.node.isRequired
@@ -15733,13 +16026,13 @@ var Grid = React.createClass({displayName: 'Grid',
 });
 
 module.exports = Grid;
-},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Input.js":[function(require,module,exports){
+},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Input.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var Button = require('./Button');
 
-var Input = React.createClass({displayName: 'Input',
+var Input = React.createClass({displayName: "Input",
   propTypes: {
     type: React.PropTypes.string,
     label: React.PropTypes.node,
@@ -15773,7 +16066,11 @@ var Input = React.createClass({displayName: 'Input',
       return this.props.value;
     }
     else if (this.props.type) {
-      return this.getInputDOMNode().value;
+      if (this.props.type == "select" && this.props.multiple) {
+        return this.getSelectedOptions();
+      } else {
+        return this.getInputDOMNode().value;
+      }
     }
     else {
       throw Error('Cannot use getValue without specifying input type.');
@@ -15782,6 +16079,23 @@ var Input = React.createClass({displayName: 'Input',
 
   getChecked: function () {
     return this.getInputDOMNode().checked;
+  },
+
+  getSelectedOptions: function () {
+    var values = [];
+
+    Array.prototype.forEach.call(
+      this.getInputDOMNode().getElementsByTagName('option'),
+      function (option) {
+        if (option.selected) {
+          var value = option.getAttribute('value') || option.innerHTML;
+
+          values.push(value);
+        }
+      }
+    );
+
+    return values;
   },
 
   isCheckboxOrRadio: function () {
@@ -15970,7 +16284,7 @@ var Input = React.createClass({displayName: 'Input',
 
 module.exports = Input;
 
-},{"./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Interpolate.js":[function(require,module,exports){
+},{"./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Interpolate.js":[function(require,module,exports){
 // https://www.npmjs.org/package/react-interpolate-component
 'use strict';
 
@@ -16054,11 +16368,11 @@ var Interpolate = React.createClass({
 
 module.exports = Interpolate;
 
-},{"./utils/Object.assign":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/Object.assign.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Jumbotron.js":[function(require,module,exports){
+},{"./utils/Object.assign":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/Object.assign.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Jumbotron.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 
-var Jumbotron = React.createClass({displayName: 'Jumbotron',
+var Jumbotron = React.createClass({displayName: "Jumbotron",
 
   render: function () {
     return (
@@ -16070,13 +16384,13 @@ var Jumbotron = React.createClass({displayName: 'Jumbotron',
 });
 
 module.exports = Jumbotron;
-},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Label.js":[function(require,module,exports){
+},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Label.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
-var Label = React.createClass({displayName: 'Label',
+var Label = React.createClass({displayName: "Label",
   mixins: [BootstrapMixin],
 
   getDefaultProps: function () {
@@ -16098,7 +16412,7 @@ var Label = React.createClass({displayName: 'Label',
 });
 
 module.exports = Label;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ListGroup.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ListGroup.js":[function(require,module,exports){
 var React = require('react');
 var classSet = require('./utils/classSet');
 var cloneWithProps = require('./utils/cloneWithProps');
@@ -16106,7 +16420,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 var createChainedFunction = require('./utils/createChainedFunction');
 
-var ListGroup = React.createClass({displayName: 'ListGroup',
+var ListGroup = React.createClass({displayName: "ListGroup",
   propTypes: {
     onClick: React.PropTypes.func
   },
@@ -16121,7 +16435,6 @@ var ListGroup = React.createClass({displayName: 'ListGroup',
 
   renderListItem: function (child, index) {
     return cloneWithProps(child, {
-      onClick: createChainedFunction(child.props.onClick, this.props.onClick),
       ref: child.ref,
       key: child.key ? child.key : index
     });
@@ -16130,7 +16443,7 @@ var ListGroup = React.createClass({displayName: 'ListGroup',
 
 module.exports = ListGroup;
 
-},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ListGroupItem.js":[function(require,module,exports){
+},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ListGroupItem.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var BootstrapMixin = require('./BootstrapMixin');
@@ -16139,7 +16452,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 
-var ListGroupItem = React.createClass({displayName: 'ListGroupItem',
+var ListGroupItem = React.createClass({displayName: "ListGroupItem",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -16148,7 +16461,9 @@ var ListGroupItem = React.createClass({displayName: 'ListGroupItem',
     disabled: React.PropTypes.any,
     header: React.PropTypes.node,
     onClick: React.PropTypes.func,
-    eventKey: React.PropTypes.any
+    eventKey: React.PropTypes.any,
+    href: React.PropTypes.string,
+    target: React.PropTypes.string
   },
 
   getDefaultProps: function () {
@@ -16163,7 +16478,7 @@ var ListGroupItem = React.createClass({displayName: 'ListGroupItem',
     classes['active'] = this.props.active;
     classes['disabled'] = this.props.disabled;
 
-    if (this.props.href || this.props.onClick) {
+    if (this.props.href || this.props.target || this.props.onClick) {
       return this.renderAnchor(classes);
     } else {
       return this.renderSpan(classes);
@@ -16182,8 +16497,8 @@ var ListGroupItem = React.createClass({displayName: 'ListGroupItem',
     return (
       React.createElement("a", React.__spread({}, 
         this.props, 
-        {className: joinClasses(this.props.className, classSet(classes)), 
-        onClick: this.handleClick}), 
+        {className: joinClasses(this.props.className, classSet(classes))
+      }), 
         this.props.header ? this.renderStructuredContent() : this.props.children
       )
     );
@@ -16213,31 +16528,25 @@ var ListGroupItem = React.createClass({displayName: 'ListGroupItem',
       header: header,
       content: content
     };
-  },
-
-  handleClick: function (e) {
-    if (this.props.onClick) {
-      e.preventDefault();
-      this.props.onClick(this.props.eventKey, this.props.href);
-    }
   }
 });
 
 module.exports = ListGroupItem;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/MenuItem.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/MenuItem.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 
-var MenuItem = React.createClass({displayName: 'MenuItem',
+var MenuItem = React.createClass({displayName: "MenuItem",
   propTypes: {
     header:    React.PropTypes.bool,
     divider:   React.PropTypes.bool,
     href:      React.PropTypes.string,
     title:     React.PropTypes.string,
+    target:    React.PropTypes.string,
     onSelect:  React.PropTypes.func,
-    eventKey: React.PropTypes.any
+    eventKey:  React.PropTypes.any
   },
 
   getDefaultProps: function () {
@@ -16249,13 +16558,13 @@ var MenuItem = React.createClass({displayName: 'MenuItem',
   handleClick: function (e) {
     if (this.props.onSelect) {
       e.preventDefault();
-      this.props.onSelect(this.props.eventKey);
+      this.props.onSelect(this.props.eventKey, this.props.href, this.props.target);
     }
   },
 
   renderAnchor: function () {
     return (
-      React.createElement("a", {onClick: this.handleClick, href: this.props.href, title: this.props.title, tabIndex: "-1"}, 
+      React.createElement("a", {onClick: this.handleClick, href: this.props.href, target: this.props.target, title: this.props.title, tabIndex: "-1"}, 
         this.props.children
       )
     );
@@ -16284,7 +16593,7 @@ var MenuItem = React.createClass({displayName: 'MenuItem',
 });
 
 module.exports = MenuItem;
-},{"./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Modal.js":[function(require,module,exports){
+},{"./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Modal.js":[function(require,module,exports){
 /* global document:false */
 
 var React = require('react');
@@ -16300,7 +16609,7 @@ var EventListener = require('./utils/EventListener');
 // - Add `modal-body` div if only one child passed in that doesn't already have it
 // - Tests
 
-var Modal = React.createClass({displayName: 'Modal',
+var Modal = React.createClass({displayName: "Modal",
   mixins: [BootstrapMixin, FadeMixin],
 
   propTypes: {
@@ -16345,7 +16654,7 @@ var Modal = React.createClass({displayName: 'Modal',
         onClick: this.props.backdrop === true ? this.handleBackdropClick : null, 
         ref: "modal"}), 
         React.createElement("div", {className: classSet(dialogClasses)}, 
-          React.createElement("div", {className: "modal-content"}, 
+          React.createElement("div", {className: "modal-content", style: {overflow: 'hidden'}}, 
             this.props.title ? this.renderHeader() : null, 
             this.props.children
           )
@@ -16380,12 +16689,21 @@ var Modal = React.createClass({displayName: 'Modal',
     var closeButton;
     if (this.props.closeButton) {
       closeButton = (
-          React.createElement("button", {type: "button", className: "close", 'aria-hidden': "true", onClick: this.props.onRequestHide}, "×")
+          React.createElement("button", {type: "button", className: "close", "aria-hidden": "true", onClick: this.props.onRequestHide}, "×")
         );
     }
 
+    var style = this.props.bsStyle;
+    var classes = {
+      'modal-header': true
+    };
+    classes['bg-' + style] = style;
+    classes['text-' + style] = style;
+
+    var className = classSet(classes);
+
     return (
-      React.createElement("div", {className: "modal-header"}, 
+      React.createElement("div", {className: className}, 
         closeButton, 
         this.renderTitle()
       )
@@ -16411,6 +16729,9 @@ var Modal = React.createClass({displayName: 'Modal',
     this._onDocumentKeyupListener =
       EventListener.listen(document, 'keyup', this.handleDocumentKeyUp);
 
+    var container = (this.props.container && this.props.container.getDOMNode()) || document.body;
+    container.className += container.className.length ? ' modal-open' : 'modal-open';
+
     if (this.props.backdrop) {
       this.iosClickHack();
     }
@@ -16424,6 +16745,8 @@ var Modal = React.createClass({displayName: 'Modal',
 
   componentWillUnmount: function () {
     this._onDocumentKeyupListener.remove();
+    var container = (this.props.container && this.props.container.getDOMNode()) || document.body;
+    container.className = container.className.replace(/ ?modal-open/, '');
   },
 
   handleBackdropClick: function (e) {
@@ -16443,14 +16766,14 @@ var Modal = React.createClass({displayName: 'Modal',
 
 module.exports = Modal;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./FadeMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/FadeMixin.js","./utils/EventListener":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/EventListener.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ModalTrigger.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./FadeMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/FadeMixin.js","./utils/EventListener":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/EventListener.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ModalTrigger.js":[function(require,module,exports){
 var React = require('react');
 var OverlayMixin = require('./OverlayMixin');
 var cloneWithProps = require('./utils/cloneWithProps');
 
 var createChainedFunction = require('./utils/createChainedFunction');
 
-var ModalTrigger = React.createClass({displayName: 'ModalTrigger',
+var ModalTrigger = React.createClass({displayName: "ModalTrigger",
   mixins: [OverlayMixin],
 
   propTypes: {
@@ -16506,7 +16829,7 @@ var ModalTrigger = React.createClass({displayName: 'ModalTrigger',
 });
 
 module.exports = ModalTrigger;
-},{"./OverlayMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/OverlayMixin.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Nav.js":[function(require,module,exports){
+},{"./OverlayMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/OverlayMixin.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Nav.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var BootstrapMixin = require('./BootstrapMixin');
@@ -16519,7 +16842,7 @@ var ValidComponentChildren = require('./utils/ValidComponentChildren');
 var createChainedFunction = require('./utils/createChainedFunction');
 
 
-var Nav = React.createClass({displayName: 'Nav',
+var Nav = React.createClass({displayName: "Nav",
   mixins: [BootstrapMixin, CollapsableMixin],
 
   propTypes: {
@@ -16620,13 +16943,13 @@ var Nav = React.createClass({displayName: 'Nav',
 
 module.exports = Nav;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./CollapsableMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/CollapsableMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/domUtils.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/NavItem.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./CollapsableMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/CollapsableMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/domUtils.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/NavItem.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
-var NavItem = React.createClass({displayName: 'NavItem',
+var NavItem = React.createClass({displayName: "NavItem",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -16635,7 +16958,8 @@ var NavItem = React.createClass({displayName: 'NavItem',
     disabled: React.PropTypes.bool,
     href: React.PropTypes.string,
     title: React.PropTypes.string,
-    eventKey: React.PropTypes.any
+    eventKey: React.PropTypes.any,
+    target: React.PropTypes.string
   },
 
   getDefaultProps: function () {
@@ -16651,7 +16975,8 @@ var NavItem = React.createClass({displayName: 'NavItem',
         
         
         
-           this.props,disabled=$__0.disabled,active=$__0.active,href=$__0.href,title=$__0.title,children=$__0.children,props=(function(source, exclusion) {var rest = {};var hasOwn = Object.prototype.hasOwnProperty;if (source == null) {throw new TypeError();}for (var key in source) {if (hasOwn.call(source, key) && !hasOwn.call(exclusion, key)) {rest[key] = source[key];}}return rest;})($__0,{disabled:1,active:1,href:1,title:1,children:1}),
+        
+           this.props,disabled=$__0.disabled,active=$__0.active,href=$__0.href,title=$__0.title,target=$__0.target,children=$__0.children,props=(function(source, exclusion) {var rest = {};var hasOwn = Object.prototype.hasOwnProperty;if (source == null) {throw new TypeError();}for (var key in source) {if (hasOwn.call(source, key) && !hasOwn.call(exclusion, key)) {rest[key] = source[key];}}return rest;})($__0,{disabled:1,active:1,href:1,title:1,target:1,children:1}),
         classes = {
           'active': active,
           'disabled': disabled
@@ -16662,6 +16987,7 @@ var NavItem = React.createClass({displayName: 'NavItem',
         React.createElement("a", {
           href: href, 
           title: title, 
+          target: target, 
           onClick: this.handleClick, 
           ref: "anchor"}, 
           children 
@@ -16675,14 +17001,14 @@ var NavItem = React.createClass({displayName: 'NavItem',
       e.preventDefault();
 
       if (!this.props.disabled) {
-        this.props.onSelect(this.props.eventKey, this.props.href);
+        this.props.onSelect(this.props.eventKey, this.props.href, this.props.target);
       }
     }
   }
 });
 
 module.exports = NavItem;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Navbar.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Navbar.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var BootstrapMixin = require('./BootstrapMixin');
@@ -16694,7 +17020,7 @@ var createChainedFunction = require('./utils/createChainedFunction');
 var Nav = require('./Nav');
 
 
-var Navbar = React.createClass({displayName: 'Navbar',
+var Navbar = React.createClass({displayName: "Navbar",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -16707,6 +17033,10 @@ var Navbar = React.createClass({displayName: 'Navbar',
     componentClass: React.PropTypes.node.isRequired,
     brand: React.PropTypes.node,
     toggleButton: React.PropTypes.node,
+    toggleNavKey: React.PropTypes.oneOfType([
+      React.PropTypes.string,
+      React.PropTypes.number
+    ]),
     onToggle: React.PropTypes.func,
     navExpanded: React.PropTypes.bool,
     defaultNavExpanded: React.PropTypes.bool
@@ -16760,7 +17090,7 @@ var Navbar = React.createClass({displayName: 'Navbar',
     return (
       React.createElement(ComponentClass, React.__spread({},  this.props, {className: joinClasses(this.props.className, classSet(classes))}), 
         React.createElement("div", {className: this.props.fluid ? 'container-fluid' : 'container'}, 
-          (this.props.brand || this.props.toggleButton || this.props.toggleNavKey) ? this.renderHeader() : null, 
+          (this.props.brand || this.props.toggleButton || this.props.toggleNavKey != null) ? this.renderHeader() : null, 
           ValidComponentChildren.map(this.props.children, this.renderChild)
         )
       )
@@ -16823,7 +17153,7 @@ var Navbar = React.createClass({displayName: 'Navbar',
 
 module.exports = Navbar;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Nav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Nav.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/OverlayMixin.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Nav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Nav.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/OverlayMixin.js":[function(require,module,exports){
 var React = require('react');
 var CustomPropTypes = require('./utils/CustomPropTypes');
 
@@ -16875,8 +17205,15 @@ module.exports = {
       this._mountOverlayTarget();
     }
 
+    var overlay = this.renderOverlay();
+
     // Save reference to help testing
-    this._overlayInstance = React.render(this.renderOverlay(), this._overlayTarget);
+    if (overlay !== null) {
+      this._overlayInstance = React.render(overlay, this._overlayTarget);
+    } else {
+      // Unrender if the component is null for transitions to null
+      this._unrenderOverlay();
+    }
   },
 
   _unrenderOverlay: function () {
@@ -16889,7 +17226,11 @@ module.exports = {
       throw new Error('getOverlayDOMNode(): A component must be mounted to have a DOM node.');
     }
 
-    return this._overlayInstance.getDOMNode();
+    if (this._overlayInstance) {
+      return this._overlayInstance.getDOMNode();
+    }
+
+    return null;
   },
 
   getContainerDOMNode: function () {
@@ -16898,7 +17239,7 @@ module.exports = {
   }
 };
 
-},{"./utils/CustomPropTypes":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/CustomPropTypes.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/OverlayTrigger.js":[function(require,module,exports){
+},{"./utils/CustomPropTypes":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/CustomPropTypes.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/OverlayTrigger.js":[function(require,module,exports){
 var React = require('react');
 var OverlayMixin = require('./OverlayMixin');
 var domUtils = require('./utils/domUtils');
@@ -16921,7 +17262,7 @@ function isOneOf(one, of) {
   return one === of;
 }
 
-var OverlayTrigger = React.createClass({displayName: 'OverlayTrigger',
+var OverlayTrigger = React.createClass({displayName: "OverlayTrigger",
   mixins: [OverlayMixin],
 
   propTypes: {
@@ -17017,6 +17358,10 @@ var OverlayTrigger = React.createClass({displayName: 'OverlayTrigger',
 
   componentWillUnmount: function() {
     clearTimeout(this._hoverDelay);
+  },
+
+  componentDidMount: function() {
+    this.updateOverlayPosition();
   },
 
   handleDelayedShow: function () {
@@ -17122,11 +17467,11 @@ var OverlayTrigger = React.createClass({displayName: 'OverlayTrigger',
 });
 
 module.exports = OverlayTrigger;
-},{"./OverlayMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/OverlayMixin.js","./utils/Object.assign":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/Object.assign.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/domUtils.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PageHeader.js":[function(require,module,exports){
+},{"./OverlayMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/OverlayMixin.js","./utils/Object.assign":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/Object.assign.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/domUtils":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/domUtils.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PageHeader.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 
-var PageHeader = React.createClass({displayName: 'PageHeader',
+var PageHeader = React.createClass({displayName: "PageHeader",
 
   render: function () {
     return (
@@ -17138,14 +17483,16 @@ var PageHeader = React.createClass({displayName: 'PageHeader',
 });
 
 module.exports = PageHeader;
-},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PageItem.js":[function(require,module,exports){
+},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PageItem.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 
-var PageItem = React.createClass({displayName: 'PageItem',
+var PageItem = React.createClass({displayName: "PageItem",
 
   propTypes: {
+    href: React.PropTypes.string,
+    target: React.PropTypes.string,
     disabled: React.PropTypes.bool,
     previous: React.PropTypes.bool,
     next: React.PropTypes.bool,
@@ -17173,6 +17520,7 @@ var PageItem = React.createClass({displayName: 'PageItem',
         React.createElement("a", {
           href: this.props.href, 
           title: this.props.title, 
+          target: this.props.target, 
           onClick: this.handleSelect, 
           ref: "anchor"}, 
           this.props.children
@@ -17186,14 +17534,14 @@ var PageItem = React.createClass({displayName: 'PageItem',
       e.preventDefault();
 
       if (!this.props.disabled) {
-        this.props.onSelect(this.props.eventKey, this.props.href);
+        this.props.onSelect(this.props.eventKey, this.props.href, this.props.target);
       }
     }
   }
 });
 
 module.exports = PageItem;
-},{"./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Pager.js":[function(require,module,exports){
+},{"./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Pager.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var cloneWithProps = require('./utils/cloneWithProps');
@@ -17201,7 +17549,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 var createChainedFunction = require('./utils/createChainedFunction');
 
-var Pager = React.createClass({displayName: 'Pager',
+var Pager = React.createClass({displayName: "Pager",
 
   propTypes: {
     onSelect: React.PropTypes.func
@@ -17230,7 +17578,7 @@ var Pager = React.createClass({displayName: 'Pager',
 });
 
 module.exports = Pager;
-},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Panel.js":[function(require,module,exports){
+},{"./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Panel.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -17239,7 +17587,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var BootstrapMixin = require('./BootstrapMixin');
 var CollapsableMixin = require('./CollapsableMixin');
 
-var Panel = React.createClass({displayName: 'Panel',
+var Panel = React.createClass({displayName: "Panel",
   mixins: [BootstrapMixin, CollapsableMixin],
 
   propTypes: {
@@ -17275,7 +17623,7 @@ var Panel = React.createClass({displayName: 'Panel',
   },
 
   getCollapsableDimensionValue: function () {
-    return this.refs.body.getDOMNode().offsetHeight;
+    return this.refs.panel.getDOMNode().scrollHeight;
   },
 
   getCollapsableDOMNode: function () {
@@ -17309,11 +17657,63 @@ var Panel = React.createClass({displayName: 'Panel',
   },
 
   renderBody: function () {
-    return (
-      React.createElement("div", {className: "panel-body", ref: "body"}, 
-        this.props.children
-      )
-    );
+    var allChildren = this.props.children;
+    var bodyElements = [];
+
+    function getProps() {
+      return {key: bodyElements.length};
+    }
+
+    function addPanelChild (child) {
+      bodyElements.push(cloneWithProps(child, getProps()));
+    }
+
+    function addPanelBody (children) {
+      bodyElements.push(
+        React.createElement("div", React.__spread({className: "panel-body"},  getProps()), 
+          children
+        )
+      );
+    }
+
+    // Handle edge cases where we should not iterate through children.
+    if (!Array.isArray(allChildren) || allChildren.length == 0) {
+      if (this.shouldRenderFill(allChildren)) {
+        addPanelChild(allChildren);
+      } else {
+        addPanelBody(allChildren);
+      }
+    } else {
+      var panelBodyChildren = [];
+
+      function maybeRenderPanelBody () {
+        if (panelBodyChildren.length == 0) {
+          return;
+        }
+
+        addPanelBody(panelBodyChildren);
+        panelBodyChildren = [];
+      }
+
+      allChildren.forEach(function(child) {
+        if (this.shouldRenderFill(child)) {
+          maybeRenderPanelBody();
+
+          // Separately add the filled element.
+          addPanelChild(child);
+        } else {
+          panelBodyChildren.push(child);
+        }
+      }.bind(this));
+
+      maybeRenderPanelBody();
+    }
+
+    return bodyElements;
+  },
+
+  shouldRenderFill: function (child) {
+    return React.isValidElement(child) && child.props.fill != null
   },
 
   renderHeading: function () {
@@ -17377,7 +17777,8 @@ var Panel = React.createClass({displayName: 'Panel',
 });
 
 module.exports = Panel;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./CollapsableMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/CollapsableMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PanelGroup.js":[function(require,module,exports){
+
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./CollapsableMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/CollapsableMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PanelGroup.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -17386,7 +17787,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var BootstrapMixin = require('./BootstrapMixin');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 
-var PanelGroup = React.createClass({displayName: 'PanelGroup',
+var PanelGroup = React.createClass({displayName: "PanelGroup",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -17464,14 +17865,14 @@ var PanelGroup = React.createClass({displayName: 'PanelGroup',
 });
 
 module.exports = PanelGroup;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Popover.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Popover.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
 
-var Popover = React.createClass({displayName: 'Popover',
+var Popover = React.createClass({displayName: "Popover",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -17523,7 +17924,7 @@ var Popover = React.createClass({displayName: 'Popover',
 });
 
 module.exports = Popover;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ProgressBar.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ProgressBar.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var Interpolate = require('./Interpolate');
@@ -17534,7 +17935,7 @@ var cloneWithProps = require('./utils/cloneWithProps');
 var ValidComponentChildren = require('./utils/ValidComponentChildren');
 
 
-var ProgressBar = React.createClass({displayName: 'ProgressBar',
+var ProgressBar = React.createClass({displayName: "ProgressBar",
   propTypes: {
     min: React.PropTypes.number,
     now: React.PropTypes.number,
@@ -17624,9 +18025,9 @@ var ProgressBar = React.createClass({displayName: 'ProgressBar',
     return (
       React.createElement("div", React.__spread({},  this.props, {className: joinClasses(this.props.className, classSet(classes)), role: "progressbar", 
         style: {width: percentage + '%'}, 
-        'aria-valuenow': this.props.now, 
-        'aria-valuemin': this.props.min, 
-        'aria-valuemax': this.props.max}), 
+        "aria-valuenow": this.props.now, 
+        "aria-valuemin": this.props.min, 
+        "aria-valuemax": this.props.max}), 
         label
       )
     );
@@ -17658,11 +18059,11 @@ var ProgressBar = React.createClass({displayName: 'ProgressBar',
 
 module.exports = ProgressBar;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Interpolate":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Interpolate.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Row.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Interpolate":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Interpolate.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Row.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 
-var Row = React.createClass({displayName: 'Row',
+var Row = React.createClass({displayName: "Row",
   propTypes: {
     componentClass: React.PropTypes.node.isRequired
   },
@@ -17685,7 +18086,7 @@ var Row = React.createClass({displayName: 'Row',
 });
 
 module.exports = Row;
-},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/SplitButton.js":[function(require,module,exports){
+},{"./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/SplitButton.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -17695,13 +18096,14 @@ var Button = require('./Button');
 var ButtonGroup = require('./ButtonGroup');
 var DropdownMenu = require('./DropdownMenu');
 
-var SplitButton = React.createClass({displayName: 'SplitButton',
+var SplitButton = React.createClass({displayName: "SplitButton",
   mixins: [BootstrapMixin, DropdownStateMixin],
 
   propTypes: {
     pullRight:     React.PropTypes.bool,
     title:         React.PropTypes.node,
     href:          React.PropTypes.string,
+    target:        React.PropTypes.string,
     dropdownTitle: React.PropTypes.node,
     onClick:       React.PropTypes.func,
     onSelect:      React.PropTypes.func,
@@ -17738,6 +18140,8 @@ var SplitButton = React.createClass({displayName: 'SplitButton',
         className: joinClasses(this.props.className, 'dropdown-toggle'), 
         onClick: this.handleDropdownClick, 
         title: null, 
+        href: null, 
+        target: null, 
         id: null}), 
         React.createElement("span", {className: "sr-only"}, this.props.dropdownTitle), 
         React.createElement("span", {className: "caret"})
@@ -17754,7 +18158,7 @@ var SplitButton = React.createClass({displayName: 'SplitButton',
         React.createElement(DropdownMenu, {
           ref: "menu", 
           onSelect: this.handleOptionSelect, 
-          'aria-labelledby': this.props.id, 
+          "aria-labelledby": this.props.id, 
           pullRight: this.props.pullRight}, 
           this.props.children
         )
@@ -17768,7 +18172,7 @@ var SplitButton = React.createClass({displayName: 'SplitButton',
     }
 
     if (this.props.onClick) {
-      this.props.onClick(e);
+      this.props.onClick(e, this.props.href, this.props.target);
     }
   },
 
@@ -17789,7 +18193,7 @@ var SplitButton = React.createClass({displayName: 'SplitButton',
 
 module.exports = SplitButton;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","./ButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ButtonGroup.js","./DropdownMenu":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownMenu.js","./DropdownStateMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownStateMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/SubNav.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","./ButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ButtonGroup.js","./DropdownMenu":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownMenu.js","./DropdownStateMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownStateMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/SubNav.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
@@ -17800,7 +18204,7 @@ var createChainedFunction = require('./utils/createChainedFunction');
 var BootstrapMixin = require('./BootstrapMixin');
 
 
-var SubNav = React.createClass({displayName: 'SubNav',
+var SubNav = React.createClass({displayName: "SubNav",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -17809,7 +18213,8 @@ var SubNav = React.createClass({displayName: 'SubNav',
     disabled: React.PropTypes.bool,
     href: React.PropTypes.string,
     title: React.PropTypes.string,
-    text: React.PropTypes.node
+    text: React.PropTypes.node,
+    target: React.PropTypes.string
   },
 
   getDefaultProps: function () {
@@ -17823,7 +18228,7 @@ var SubNav = React.createClass({displayName: 'SubNav',
       e.preventDefault();
 
       if (!this.props.disabled) {
-        this.props.onSelect(this.props.eventKey, this.props.href);
+        this.props.onSelect(this.props.eventKey, this.props.href, this.props.target);
       }
     }
   },
@@ -17893,6 +18298,7 @@ var SubNav = React.createClass({displayName: 'SubNav',
         React.createElement("a", {
           href: this.props.href, 
           title: this.props.title, 
+          target: this.props.target, 
           onClick: this.handleClick, 
           ref: "anchor"}, 
           this.props.text
@@ -17919,13 +18325,13 @@ var SubNav = React.createClass({displayName: 'SubNav',
 
 module.exports = SubNav;
 
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/TabPane.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","./utils/createChainedFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/TabPane.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var TransitionEvents = require('./utils/TransitionEvents');
 
-var TabPane = React.createClass({displayName: 'TabPane',
+var TabPane = React.createClass({displayName: "TabPane",
   getDefaultProps: function () {
     return {
       animation: true
@@ -18002,7 +18408,7 @@ var TabPane = React.createClass({displayName: 'TabPane',
 });
 
 module.exports = TabPane;
-},{"./utils/TransitionEvents":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/TransitionEvents.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/TabbedArea.js":[function(require,module,exports){
+},{"./utils/TransitionEvents":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/TransitionEvents.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/TabbedArea.js":[function(require,module,exports){
 var React = require('react');
 var BootstrapMixin = require('./BootstrapMixin');
 var cloneWithProps = require('./utils/cloneWithProps');
@@ -18023,7 +18429,7 @@ function getDefaultActiveKeyFromChildren(children) {
   return defaultActiveKey;
 }
 
-var TabbedArea = React.createClass({displayName: 'TabbedArea',
+var TabbedArea = React.createClass({displayName: "TabbedArea",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -18142,12 +18548,12 @@ var TabbedArea = React.createClass({displayName: 'TabbedArea',
 });
 
 module.exports = TabbedArea;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Nav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Nav.js","./NavItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/NavItem.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Table.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Nav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Nav.js","./NavItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/NavItem.js","./utils/ValidComponentChildren":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js","./utils/cloneWithProps":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Table.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 
-var Table = React.createClass({displayName: 'Table',
+var Table = React.createClass({displayName: "Table",
   propTypes: {
     striped: React.PropTypes.bool,
     bordered: React.PropTypes.bool,
@@ -18179,14 +18585,14 @@ var Table = React.createClass({displayName: 'Table',
 });
 
 module.exports = Table;
-},{"./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Tooltip.js":[function(require,module,exports){
+},{"./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Tooltip.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
 
-var Tooltip = React.createClass({displayName: 'Tooltip',
+var Tooltip = React.createClass({displayName: "Tooltip",
   mixins: [BootstrapMixin],
 
   propTypes: {
@@ -18229,13 +18635,13 @@ var Tooltip = React.createClass({displayName: 'Tooltip',
 });
 
 module.exports = Tooltip;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Well.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Well.js":[function(require,module,exports){
 var React = require('react');
 var joinClasses = require('./utils/joinClasses');
 var classSet = require('./utils/classSet');
 var BootstrapMixin = require('./BootstrapMixin');
 
-var Well = React.createClass({displayName: 'Well',
+var Well = React.createClass({displayName: "Well",
   mixins: [BootstrapMixin],
 
   getDefaultProps: function () {
@@ -18256,7 +18662,7 @@ var Well = React.createClass({displayName: 'Well',
 });
 
 module.exports = Well;
-},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/constants.js":[function(require,module,exports){
+},{"./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./utils/classSet":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js","./utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/constants.js":[function(require,module,exports){
 module.exports = {
   CLASSES: {
     'alert': 'alert',
@@ -18300,6 +18706,7 @@ module.exports = {
     'asterisk',
     'plus',
     'euro',
+    'eur',
     'minus',
     'cloud',
     'envelope',
@@ -18496,11 +18903,69 @@ module.exports = {
     'cloud-download',
     'cloud-upload',
     'tree-conifer',
-    'tree-deciduous'
+    'tree-deciduous',
+    'cd',
+    'save-file',
+    'open-file',
+    'level-up',
+    'copy',
+    'paste',
+    'alert',
+    'equalizer',
+    'king',
+    'queen',
+    'pawn',
+    'bishop',
+    'knight',
+    'baby-formula',
+    'tent',
+    'blackboard',
+    'bed',
+    'apple',
+    'erase',
+    'hourglass',
+    'lamp',
+    'duplicate',
+    'piggy-bank',
+    'scissors',
+    'bitcoin',
+    'yen',
+    'ruble',
+    'scale',
+    'ice-lolly',
+    'ice-lolly-tasted',
+    'education',
+    'option-horizontal',
+    'option-vertical',
+    'menu-hamburger',
+    'modal-window',
+    'oil',
+    'grain',
+    'sunglasses',
+    'text-size',
+    'text-color',
+    'text-background',
+    'object-align-top',
+    'object-align-bottom',
+    'object-align-horizontal',
+    'object-align-left',
+    'object-align-vertical',
+    'object-align-right',
+    'triangle-right',
+    'triangle-left',
+    'triangle-bottom',
+    'triangle-top',
+    'console',
+    'superscript',
+    'subscript',
+    'menu-left',
+    'menu-right',
+    'menu-down',
+    'menu-up'
   ]
 };
 
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/main.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js":[function(require,module,exports){
 module.exports = {
   Accordion: require('./Accordion'),
   Affix: require('./Affix'),
@@ -18552,7 +19017,7 @@ module.exports = {
   Well: require('./Well')
 };
 
-},{"./Accordion":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Accordion.js","./Affix":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Affix.js","./AffixMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/AffixMixin.js","./Alert":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Alert.js","./Badge":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Badge.js","./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","./ButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ButtonGroup.js","./ButtonToolbar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ButtonToolbar.js","./Carousel":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Carousel.js","./CarouselItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/CarouselItem.js","./Col":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Col.js","./CollapsableMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/CollapsableMixin.js","./DropdownButton":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownButton.js","./DropdownMenu":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownMenu.js","./DropdownStateMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/DropdownStateMixin.js","./FadeMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/FadeMixin.js","./Glyphicon":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Glyphicon.js","./Grid":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Grid.js","./Input":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Input.js","./Interpolate":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Interpolate.js","./Jumbotron":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Jumbotron.js","./Label":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Label.js","./ListGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ListGroup.js","./ListGroupItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ListGroupItem.js","./MenuItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/MenuItem.js","./Modal":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Modal.js","./ModalTrigger":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ModalTrigger.js","./Nav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Nav.js","./NavItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/NavItem.js","./Navbar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Navbar.js","./OverlayMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/OverlayMixin.js","./OverlayTrigger":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/OverlayTrigger.js","./PageHeader":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PageHeader.js","./PageItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PageItem.js","./Pager":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Pager.js","./Panel":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Panel.js","./PanelGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/PanelGroup.js","./Popover":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Popover.js","./ProgressBar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/ProgressBar.js","./Row":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Row.js","./SplitButton":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/SplitButton.js","./SubNav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/SubNav.js","./TabPane":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/TabPane.js","./TabbedArea":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/TabbedArea.js","./Table":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Table.js","./Tooltip":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Tooltip.js","./Well":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Well.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/CustomPropTypes.js":[function(require,module,exports){
+},{"./Accordion":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Accordion.js","./Affix":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Affix.js","./AffixMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/AffixMixin.js","./Alert":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Alert.js","./Badge":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Badge.js","./BootstrapMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/BootstrapMixin.js","./Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","./ButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ButtonGroup.js","./ButtonToolbar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ButtonToolbar.js","./Carousel":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Carousel.js","./CarouselItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/CarouselItem.js","./Col":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Col.js","./CollapsableMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/CollapsableMixin.js","./DropdownButton":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownButton.js","./DropdownMenu":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownMenu.js","./DropdownStateMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/DropdownStateMixin.js","./FadeMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/FadeMixin.js","./Glyphicon":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Glyphicon.js","./Grid":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Grid.js","./Input":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Input.js","./Interpolate":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Interpolate.js","./Jumbotron":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Jumbotron.js","./Label":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Label.js","./ListGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ListGroup.js","./ListGroupItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ListGroupItem.js","./MenuItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/MenuItem.js","./Modal":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Modal.js","./ModalTrigger":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ModalTrigger.js","./Nav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Nav.js","./NavItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/NavItem.js","./Navbar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Navbar.js","./OverlayMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/OverlayMixin.js","./OverlayTrigger":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/OverlayTrigger.js","./PageHeader":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PageHeader.js","./PageItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PageItem.js","./Pager":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Pager.js","./Panel":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Panel.js","./PanelGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/PanelGroup.js","./Popover":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Popover.js","./ProgressBar":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/ProgressBar.js","./Row":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Row.js","./SplitButton":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/SplitButton.js","./SubNav":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/SubNav.js","./TabPane":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/TabPane.js","./TabbedArea":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/TabbedArea.js","./Table":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Table.js","./Tooltip":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Tooltip.js","./Well":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Well.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/CustomPropTypes.js":[function(require,module,exports){
 var React = require('react');
 
 var ANONYMOUS = '<<anonymous>>';
@@ -18615,7 +19080,7 @@ function createMountableChecker() {
 }
 
 module.exports = CustomPropTypes;
-},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/EventListener.js":[function(require,module,exports){
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/EventListener.js":[function(require,module,exports){
 /**
  * Copyright 2013-2014 Facebook, Inc.
  *
@@ -18671,7 +19136,7 @@ var EventListener = {
 
 module.exports = EventListener;
 
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/Object.assign.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/Object.assign.js":[function(require,module,exports){
 /**
  * Copyright 2014, Facebook, Inc.
  * All rights reserved.
@@ -18720,7 +19185,7 @@ function assign(target, sources) {
 
 module.exports = assign;
 
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/TransitionEvents.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/TransitionEvents.js":[function(require,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -18835,7 +19300,7 @@ var ReactTransitionEvents = {
 
 module.exports = ReactTransitionEvents;
 
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/ValidComponentChildren.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/ValidComponentChildren.js":[function(require,module,exports){
 var React = require('react');
 
 /**
@@ -18926,7 +19391,7 @@ module.exports = {
   numberOf: numberOfValidComponents,
   hasValidComponent: hasValidComponent
 };
-},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/classSet.js":[function(require,module,exports){
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/classSet.js":[function(require,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -18966,7 +19431,7 @@ function cx(classNames) {
 }
 
 module.exports = cx;
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/cloneWithProps.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/cloneWithProps.js":[function(require,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -19110,7 +19575,7 @@ function cloneWithProps(child, props) {
 }
 
 module.exports = cloneWithProps;
-},{"./Object.assign":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/Object.assign.js","./joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/createChainedFunction.js":[function(require,module,exports){
+},{"./Object.assign":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/Object.assign.js","./joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/createChainedFunction.js":[function(require,module,exports){
 /**
  * Safe chained function
  *
@@ -19136,7 +19601,7 @@ function createChainedFunction(one, two) {
 }
 
 module.exports = createChainedFunction;
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/domUtils.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/domUtils.js":[function(require,module,exports){
 
 /**
  * Shortcut to compute element style
@@ -19246,7 +19711,7 @@ module.exports = {
   getPosition: getPosition,
   offsetParent: offsetParent
 };
-},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js":[function(require,module,exports){
+},{}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js":[function(require,module,exports){
 /**
  * Copyright 2013-2014, Facebook, Inc.
  * All rights reserved.
@@ -20049,7 +20514,105 @@ var Schema = makePropType(function Schema(props, name, component) {
 
 module.exports = {Value:Value, Schema:Schema};
 
-},{"./Value":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/Value.js","./schema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/schema.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RepeatingFieldset.js":[function(require,module,exports){
+},{"./Value":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/Value.js","./schema":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/schema.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js":[function(require,module,exports){
+/**
+ * @flow
+ * @copyright Prometheus Research, LLC 2014
+ */
+'use strict';
+
+var React         = require('react');
+var PropTypes     = React.PropTypes;
+var emptyFunction = require('./emptyFunction');
+
+function renderEmptyOption(props, onChange) {
+  return (
+    React.createElement("div", {
+        className: "rf-RadioButtonGroup__button", 
+        key: ""}, 
+      React.createElement("label", {
+        className: "rf-RadioButtonGroup__label"}, 
+        React.createElement("input", {
+          checked: props.checked, 
+          className: "rf-RadioButtonGroup__radio", 
+          type: "radio", 
+          name: props.name, 
+          onChange: onChange.bind(null, null), 
+          value: ""}), 
+        React.createElement("span", {className: "rf-RadioButtonGroup__caption"}, 
+          "none"
+        )
+      )
+    )
+  );
+}
+
+                                             
+
+var RadioButtonGroup = React.createClass({displayName: "RadioButtonGroup",
+
+    propTypes: {
+      options: PropTypes.array.isRequired,
+      allowEmpty: PropTypes.bool,
+      value: PropTypes.string,
+      onChange: PropTypes.func
+    },
+
+    render:function()                {
+      var options = this.props.options.map(this.renderOption);
+
+      if (this.props.allowEmpty) {
+        options.unshift(renderEmptyOption({
+            name: this._rootNodeID,
+            checked: !this.props.value
+        }, this.onChange));
+      }
+
+      return (
+        React.createElement("div", {className: "rf-RadioButtonGroup"}, 
+          options
+        )
+      );
+    },
+
+    renderOption:function(option        )                {
+      var name = this._rootNodeID;
+      var checked = this.props.value ?
+          this.props.value === option.value :
+          false;
+      return (
+        React.createElement("div", {
+          className: "rf-RadioButtonGroup__button", 
+          key: option.value}, 
+          React.createElement("label", {
+            className: "rf-RadioButtonGroup__label"}, 
+            React.createElement("input", {
+              checked: checked, 
+              className: "rf-RadioButtonGroup__radio", 
+              type: "radio", 
+              name: name, 
+              onChange: this.onChange.bind(null, option.value), 
+              value: option.value}), 
+            React.createElement("span", {className: "rf-RadioButtonGroup__caption"}, 
+              option.name
+            )
+          )
+        )
+      );
+    },
+
+    getDefaultProps:function() {
+      return {onChange: emptyFunction};
+    },
+
+    onChange:function(value         ) {
+      this.props.onChange(value);
+    }
+});
+
+module.exports = RadioButtonGroup;
+
+},{"./emptyFunction":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/emptyFunction.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RepeatingFieldset.js":[function(require,module,exports){
 /**
  * @copyright Prometheus Research, LLC 2014
  */
@@ -21151,7 +21714,7 @@ module.exports = {
 },{"./Checkbox":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/Checkbox.js","./ValidationResult":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/ValidationResult.js","./invariant":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/invariant.js","./messages":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/messages.js","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/ButtonLink.js":[function(require,module,exports){
 var React = require('react');
 
-var Button = require('react-bootstrap/Button');
+var Button = require('react-bootstrap/lib/Button');
 var $__0=     require('react-router'),Navigation=$__0.Navigation,State=$__0.State;
 var LinkMixin = require('./LinkMixin');
 
@@ -21188,7 +21751,7 @@ var ButtonLink = React.createClass({displayName: "ButtonLink",
 
 module.exports = ButtonLink;
 
-},{"./LinkMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap/Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/Button.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js":[function(require,module,exports){
+},{"./LinkMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap/lib/Button":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/Button.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js":[function(require,module,exports){
 var React = require('react');
 var classSet = require('react/lib/cx');
 var assign = require('react/lib/Object.assign');
@@ -21269,11 +21832,11 @@ module.exports = {
 var React = require('react');
 var classSet = require('react/lib/cx');
 
-var MenuItem = require('react-bootstrap/MenuItem');
+var MenuItem = require('react-bootstrap/lib/MenuItem');
 var $__0=     require('react-router'),Navigation=$__0.Navigation,State=$__0.State;
 var LinkMixin = require('./LinkMixin');
 
-var joinClasses = require('react-bootstrap/utils/joinClasses');
+var joinClasses = require('react-bootstrap/lib/utils/joinClasses');
 
 var MenuItemLink = React.createClass({displayName: "MenuItemLink",
   mixins: [
@@ -21310,10 +21873,10 @@ var MenuItemLink = React.createClass({displayName: "MenuItemLink",
 
 module.exports = MenuItemLink;
 
-},{"./LinkMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap/MenuItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/MenuItem.js","react-bootstrap/utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/utils/joinClasses.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/lib/cx":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/lib/cx.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/NavItemLink.js":[function(require,module,exports){
+},{"./LinkMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap/lib/MenuItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/MenuItem.js","react-bootstrap/lib/utils/joinClasses":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/utils/joinClasses.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js","react/lib/cx":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/lib/cx.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/NavItemLink.js":[function(require,module,exports){
 var React = require('react');
 
-var NavItem = require('react-bootstrap/NavItem');
+var NavItem = require('react-bootstrap/lib/NavItem');
 var $__0=     require('react-router'),Navigation=$__0.Navigation,State=$__0.State;
 var LinkMixin = require('./LinkMixin');
 
@@ -21350,7 +21913,7 @@ var NavItemLink = React.createClass({displayName: "NavItemLink",
 
 module.exports = NavItemLink;
 
-},{"./LinkMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap/NavItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/NavItem.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js":[function(require,module,exports){
+},{"./LinkMixin":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/LinkMixin.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-bootstrap/lib/NavItem":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/NavItem.js","react-router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router/modules/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-router-bootstrap/lib/index.js":[function(require,module,exports){
 var ButtonLink = require('./ButtonLink');
 var MenuItemLink = require('./MenuItemLink');
 var NavItemLink = require('./NavItemLink');

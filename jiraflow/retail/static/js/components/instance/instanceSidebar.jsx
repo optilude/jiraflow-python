@@ -5,8 +5,8 @@ var React = require('react/addons');
 var BS = require('react-bootstrap');
 var RBS = require('react-router-bootstrap');
 
-var { Button, Nav } = BS;
-var { NavItemLink } = RBS;
+var { Nav } = BS;
+var { NavItemLink, ButtonLink } = RBS;
 
 /**
  * Sidebar listing the analyses under an instance.
@@ -19,8 +19,6 @@ var InstanceSidebar = React.createClass({
         analyses: React.PropTypes.instanceOf(Immutable.Iterable).isRequired
     },
 
-    // TODO: Implement new analysis button
-
     render: function () {
 
         var instanceId = this.props.instance.get('id');
@@ -31,7 +29,7 @@ var InstanceSidebar = React.createClass({
                     <NavItemLink className="currentInstance" to="instance" params={{instanceId: instanceId}}>{this.props.instance.get('title')}</NavItemLink>
                     {this.props.analyses.map((a, idx) => <NavItemLink key={idx} to="analysis" params={{instanceId: instanceId, analysisId: a.get('id')}}>{a.get('title')}</NavItemLink>).toArray()}
                 </Nav>
-                <Button className="new-analysis-button" bsStyle="success">Configure new analysis</Button>
+                <ButtonLink to="newAnalysis" params={{instanceId: instanceId}} className="new-analysis-button" bsStyle="success">Configure new analysis</ButtonLink>
             </div>
         );
     }

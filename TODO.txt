@@ -1,6 +1,11 @@
 JIRAFlow To-Do
 ==============
 
+TODO: Generic loading indicator for server actions
+
+    - https://github.com/KyleAMathews/react-spinkit
+    - https://github.com/quickleft/react-loader
+
 TODO: Build analysis model
 
     - Server
