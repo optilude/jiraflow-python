@@ -6,6 +6,7 @@ var React = require('react');
 var Marty = require('marty');
 
 var Exception = require('./exception');
+var ErrorView = require('./components/error/error');
 var Router = require('./router');
 
 var NavigationActionCreators = require('./navigation/navigationActionCreators');
@@ -47,7 +48,9 @@ Router.run(function(Handler, state) {
                 Router.transitionTo("error");
             }
         } else if(lastRouteName !== "error") {
-            Router.transitionTo("error");
+            // Wipe all state and show an error.
+            document.body.innerHTML = '';
+            React.render(<ErrorView />, document.body);
         }
     }
 

@@ -5,7 +5,7 @@ var BS = require('react-bootstrap');
 
 var { Grid, Row, Col, Alert } = BS;
 
-var NotFound = React.createClass({
+var ErrorView = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
     render: function() {
@@ -15,7 +15,7 @@ var NotFound = React.createClass({
                 <Row>
                     <Col sm={6} smOffset={3} md={8} mdOffset={2}>
                         <h1>Error</h1>
-                        <Alert bsStyle="danger">An unexpected error occurred.</Alert>
+                        <Alert bsStyle="danger">An unexpected error occurred. Go back, reload the page and hope for the best.</Alert>
                     </Col>
                 </Row>
           </Grid>
@@ -24,4 +24,4 @@ var NotFound = React.createClass({
     }
 });
 
-module.exports = NotFound;
+module.exports = ErrorView;
