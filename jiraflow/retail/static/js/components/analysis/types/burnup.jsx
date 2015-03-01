@@ -1,6 +1,5 @@
 "use strict";
 
-var React = require('react'); // jshint unused:false
 var ReactForms = require('react-forms');
 
 var Common = require('./common');

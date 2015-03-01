@@ -626,7 +626,6 @@ module.exports = AnalysisView;
 },{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/burnup.jsx":[function(require,module,exports){
 "use strict";
 
-var React = require('react'); // jshint unused:false
 var ReactForms = require('react-forms');
 
 var Common = require('./common');
@@ -664,7 +663,7 @@ for(var Common____Key in Common){if(Common.hasOwnProperty(Common____Key)){Burnup
 
 
 module.exports = Burnup;
-},{"./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx":[function(require,module,exports){
+},{"./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -752,15 +751,13 @@ module.exports = Common;
 },{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-forms/lib/RadioButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx":[function(require,module,exports){
 "use strict";
 
-var React = require('react'); // jshint unused:false
-
 var types = {
     burnup: new (require('./burnup'))()
 };
 
 types[null] = new (require('./common'))();
 module.exports = types;
-},{"./burnup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/burnup.jsx","./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx":[function(require,module,exports){
+},{"./burnup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/burnup.jsx","./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
