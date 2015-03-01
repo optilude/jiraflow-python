@@ -48,8 +48,6 @@ var InstanceContainer = React.createClass({
         var analysis = this.state.selectedAnalysis;
         var analyses = this.state.analyses;
 
-        var instanceId = instance.get('id');
-
         return (
             <Grid fluid={true}>
                 <Row>

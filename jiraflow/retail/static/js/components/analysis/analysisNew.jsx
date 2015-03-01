@@ -1,9 +1,14 @@
 "use strict";
 
+var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
+var AnalysisActionCreators = require('../../analysis/analysisActionCreators');
+var NavigationActionCreators = require('../../navigation/navigationActionCreators');
+
 var AnalysisForm = require('./analysisForm');
+var Types = require('./types/registry');
 
 var { Button, Alert } = BS;
 
@@ -12,6 +17,10 @@ var { Button, Alert } = BS;
  */
 var AnalysisNew = React.createClass({
     mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        instance: React.PropTypes.instanceOf(Immutable.Map)
+    },
 
     getInitialState: function() {
         return {
@@ -53,22 +62,32 @@ var AnalysisNew = React.createClass({
             this.setState({invalid: false, exists: false, error: false});
         }
 
+        // TODO: Test/fix
+
         var value = this.refs.form.getValue();
+        var type = value.get('type');
+        var analysisType = Types[type];
 
-        // TODO: Handle conversion to params and submission
+        if(!analysisType) {
+            this.setState({invalid: true, exists: false, error: false});
+            return;
+        }
 
-        // InstanceActionCreators.createInstance(value)
-        // .then(instance => {
-        //     NavigationActionCreators.navigateToInstance(instance.get('id'));
-        // })
-        // .catch(error => {
-        //     if(error.status === 409) {
-        //         this.setState({invalid: false, exists: true, error: false});
-        //     } else {
-        //         console.error(error);
-        //         this.setState({invalid: false, exists: false, error: true});
-        //     }
-        // });
+        var analysis = analysisType.serialize(value);
+        var instanceId = this.props.instance.get('id');
+
+        AnalysisActionCreators.createAnalysis(instanceId, analysis)
+        .then(analysis => {
+            NavigationActionCreators.navigateToAnalysis(instanceId, analysis.get('id'));
+        })
+        .catch(error => {
+            if(error.status === 409) {
+                this.setState({invalid: false, exists: true, error: false});
+            } else {
+                console.error(error);
+                this.setState({invalid: false, exists: false, error: true});
+            }
+        });
     }
 });
 

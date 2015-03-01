@@ -14,11 +14,22 @@ var { NavItemLink } = RBS;
  * Renders the tabs above the analysis
  */
 var AnalysisContainer = React.createClass({
-    mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
         instance: React.PropTypes.instanceOf(Immutable.Map),
         analysis: React.PropTypes.instanceOf(Immutable.Map)
+    },
+
+    shouldComponentUpdate: function(nextProps, nextState) {
+        // XXX: Can happen briefly during navigation
+        if(!nextProps.instance || !nextProps.analysis) {
+            return false;
+        }
+
+        return (
+            !Immutable.is(this.props.instance, nextProps.instance) ||
+            !Immutable.is(this.props.analysis, nextProps.analysis)
+        );
     },
 
     render: function () {
@@ -32,7 +43,7 @@ var AnalysisContainer = React.createClass({
                     <NavItemLink to="viewAnalysis" params={{instanceId: instanceId, analysisId: analysisId}}>View</NavItemLink>
                     <NavItemLink to="editAnalysis" params={{instanceId: instanceId, analysisId: analysisId}}>Manage</NavItemLink>
                 </Nav>
-                <RouteHandler analysis={this.props.analysis} />
+                <RouteHandler instance={this.props.instance} analysis={this.props.analysis} />
             </div>
         );
 

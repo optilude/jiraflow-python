@@ -1,5 +1,6 @@
 "use strict";
 
+var Immutable = require('immutable');
 var ReactForms = require('react-forms');
 
 var Common = require('./common');
@@ -27,11 +28,15 @@ class Burnup extends Common {
     }
 
     serialize(value) {
-
+        return super.serialize(value).set('parameters', Immutable.fromJS([
+            {key: 'scopeLine', value: value.get('scopeLine')}
+        ]));
     }
 
     deserialize(value) {
-
+        return super.deserialize(value).merge({
+            scopeLine: this.extractParameter(value, 'scopeLine')
+        });
     }
 
 }

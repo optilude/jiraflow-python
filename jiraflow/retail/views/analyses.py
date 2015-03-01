@@ -25,7 +25,7 @@ class AnalysesViews(object):
             title=analysis.title,
             description=analysis.description,
             type=analysis.type,
-            refresh_interval=analysis.refreshInterval,
+            refresh_interval=analysis.refresh_interval,
             query=analysis.query,
             parameters=analysis.parameters
         )

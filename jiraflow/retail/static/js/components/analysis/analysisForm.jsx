@@ -30,7 +30,15 @@ var AnalysisForm = React.createClass({
         var analysisType = Types[type];
         var schema = analysisType.schema;
 
-        return <Form schema={schema} component="div" onUpdate={this.onChangeForm} />;
+        return <Form ref="form" schema={schema} component="div" onUpdate={this.onChangeForm} {...this.props} />;
+    },
+
+    isValid: function() {
+        return this.refs.form.isValid();
+    },
+
+    getValue: function() {
+        return this.refs.form.getValue();
     },
 
     onChangeForm: function(value, validation, keyPath) {

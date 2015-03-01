@@ -409,11 +409,22 @@ var $__2=    RBS,NavItemLink=$__2.NavItemLink;
  * Renders the tabs above the analysis
  */
 var AnalysisContainer = React.createClass({displayName: "AnalysisContainer",
-    mixins: [React.addons.PureRenderMixin],
 
     propTypes: {
         instance: React.PropTypes.instanceOf(Immutable.Map),
         analysis: React.PropTypes.instanceOf(Immutable.Map)
+    },
+
+    shouldComponentUpdate: function(nextProps, nextState) {
+        // XXX: Can happen briefly during navigation
+        if(!nextProps.instance || !nextProps.analysis) {
+            return false;
+        }
+
+        return (
+            !Immutable.is(this.props.instance, nextProps.instance) ||
+            !Immutable.is(this.props.analysis, nextProps.analysis)
+        );
     },
 
     render: function () {
@@ -427,7 +438,7 @@ var AnalysisContainer = React.createClass({displayName: "AnalysisContainer",
                     React.createElement(NavItemLink, {to: "viewAnalysis", params: {instanceId: instanceId, analysisId: analysisId}}, "View"), 
                     React.createElement(NavItemLink, {to: "editAnalysis", params: {instanceId: instanceId, analysisId: analysisId}}, "Manage")
                 ), 
-                React.createElement(RouteHandler, {analysis: this.props.analysis})
+                React.createElement(RouteHandler, {instance: this.props.instance, analysis: this.props.analysis})
             )
         );
 
@@ -500,7 +511,15 @@ var AnalysisForm = React.createClass({displayName: "AnalysisForm",
         var analysisType = Types[type];
         var schema = analysisType.schema;
 
-        return React.createElement(Form, {schema: schema, component: "div", onUpdate: this.onChangeForm});
+        return React.createElement(Form, React.__spread({ref: "form", schema: schema, component: "div", onUpdate: this.onChangeForm},  this.props));
+    },
+
+    isValid: function() {
+        return this.refs.form.isValid();
+    },
+
+    getValue: function() {
+        return this.refs.form.getValue();
     },
 
     onChangeForm: function(value, validation, keyPath) {
@@ -518,10 +537,15 @@ module.exports = AnalysisForm;
 },{"./types/registry":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNew.jsx":[function(require,module,exports){
 "use strict";
 
+var Immutable = require('immutable');
 var React = require('react/addons');
 var BS = require('react-bootstrap');
 
+var AnalysisActionCreators = require('../../analysis/analysisActionCreators');
+var NavigationActionCreators = require('../../navigation/navigationActionCreators');
+
 var AnalysisForm = require('./analysisForm');
+var Types = require('./types/registry');
 
 var $__0=     BS,Button=$__0.Button,Alert=$__0.Alert;
 
@@ -530,6 +554,10 @@ var $__0=     BS,Button=$__0.Button,Alert=$__0.Alert;
  */
 var AnalysisNew = React.createClass({displayName: "AnalysisNew",
     mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        instance: React.PropTypes.instanceOf(Immutable.Map)
+    },
 
     getInitialState: function() {
         return {
@@ -571,27 +599,37 @@ var AnalysisNew = React.createClass({displayName: "AnalysisNew",
             this.setState({invalid: false, exists: false, error: false});
         }
 
+        // TODO: Test/fix
+
         var value = this.refs.form.getValue();
+        var type = value.get('type');
+        var analysisType = Types[type];
 
-        // TODO: Handle conversion to params and submission
+        if(!analysisType) {
+            this.setState({invalid: true, exists: false, error: false});
+            return;
+        }
 
-        // InstanceActionCreators.createInstance(value)
-        // .then(instance => {
-        //     NavigationActionCreators.navigateToInstance(instance.get('id'));
-        // })
-        // .catch(error => {
-        //     if(error.status === 409) {
-        //         this.setState({invalid: false, exists: true, error: false});
-        //     } else {
-        //         console.error(error);
-        //         this.setState({invalid: false, exists: false, error: true});
-        //     }
-        // });
+        var analysis = analysisType.serialize(value);
+        var instanceId = this.props.instance.get('id');
+
+        AnalysisActionCreators.createAnalysis(instanceId, analysis)
+        .then(function(analysis)  {
+            NavigationActionCreators.navigateToAnalysis(instanceId, analysis.get('id'));
+        })
+        .catch(function(error)  {
+            if(error.status === 409) {
+                this.setState({invalid: false, exists: true, error: false});
+            } else {
+                console.error(error);
+                this.setState({invalid: false, exists: false, error: true});
+            }
+        }.bind(this));
     }
 });
 
 module.exports = AnalysisNew;
-},{"./analysisForm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisForm.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx":[function(require,module,exports){
+},{"../../analysis/analysisActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisActionCreators.jsx","../../navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./analysisForm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisForm.jsx","./types/registry":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
@@ -626,6 +664,7 @@ module.exports = AnalysisView;
 },{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/burnup.jsx":[function(require,module,exports){
 "use strict";
 
+var Immutable = require('immutable');
 var ReactForms = require('react-forms');
 
 var Common = require('./common');
@@ -653,19 +692,24 @@ for(var Common____Key in Common){if(Common.hasOwnProperty(Common____Key)){Burnup
     }
 
     Burnup.prototype.serialize=function(value) {
-
+        return ____SuperProtoOfCommon.serialize.call(this,value).set('parameters', Immutable.fromJS([
+            {key: 'scopeLine', value: value.get('scopeLine')}
+        ]));
     };
 
     Burnup.prototype.deserialize=function(value) {
-
+        return ____SuperProtoOfCommon.deserialize.call(this,value).merge({
+            scopeLine: this.extractParameter(value, 'scopeLine')
+        });
     };
 
 
 
 module.exports = Burnup;
-},{"./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx":[function(require,module,exports){
+},{"./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx":[function(require,module,exports){
 "use strict";
 
+var Immutable = require('immutable');
 var React = require('react');
 var ReactForms = require('react-forms');
 var RadioButtonGroup  = require('react-forms/lib/RadioButtonGroup');
@@ -689,7 +733,7 @@ var CommonSchema = Mapping({
     description: Scalar({
         label: "Description",
         hint: "Enter a longer description for this analysis",
-        required: true,
+        required: false,
         input: React.createElement("textarea", {rows: "4"})
     }),
 
@@ -699,7 +743,7 @@ var CommonSchema = Mapping({
         required: false
     }),
 
-    refresh_interval: Scalar({
+    refreshInterval: Scalar({
         type: "number",
         label: "Refresh interval (seconds)",
         hint: "How frequently should raw data be fetched from the JIRA instance?",
@@ -719,7 +763,7 @@ var CommonSchema = Mapping({
 /**
  * Base class for analysis types. The propery `schema` returns a ReactForms
  * schema. `type` returns the type string. `serialize()` and `deserialize()`
- * can turn a form value into a json mapping (and vice-versa) suitable for
+ * can turn a form value into a mapping (and vice-versa) suitable for
  * passing to the server representation, where non-common fields are stored
  * in a `parameters` key/value pairs.
  */
@@ -737,18 +781,44 @@ var CommonSchema = Mapping({
         );
     };
 
-    Common.prototype.serialize=function(value) {
+    Common.prototype.extractParameter=function(value, key) {
+        var parameters = value.get('parameters');
+        if(parameters === undefined) {
+            return undefined;
+        }
 
+        var item = parameters.find(function(i)  {return i.get('key') === key;});
+        if(item === undefined) {
+            return undefined;
+        }
+
+        return item.get('value');
     };
 
-    Common.prototype.deserialize=function(json) {
+    Common.prototype.serialize=function(value) {
+        return Immutable.Map({
+            title: value.get('title'),
+            description: value.get('description'),
+            query: value.get('query'),
+            refresh_interval: value.get('refreshInterval'), // change case
+            type: value.get('type')
+        });
+    };
 
+    Common.prototype.deserialize=function(value) {
+        return Immutable.Map({
+            title: value.get('title'),
+            description: value.get('description'),
+            query: value.get('query'),
+            refreshInterval: value.get('refresh_interval'), // change case
+            type: value.get('type')
+        });
     };
 
 
 
 module.exports = Common;
-},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-forms/lib/RadioButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx":[function(require,module,exports){
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-forms/lib/RadioButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx":[function(require,module,exports){
 "use strict";
 
 var types = {
@@ -974,8 +1044,6 @@ var InstanceContainer = React.createClass({displayName: "InstanceContainer",
         var instance = this.state.selectedInstance;
         var analysis = this.state.selectedAnalysis;
         var analyses = this.state.analyses;
-
-        var instanceId = instance.get('id');
 
         return (
             React.createElement(Grid, {fluid: true}, 

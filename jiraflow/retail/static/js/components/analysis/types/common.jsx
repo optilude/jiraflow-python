@@ -1,5 +1,6 @@
 "use strict";
 
+var Immutable = require('immutable');
 var React = require('react');
 var ReactForms = require('react-forms');
 var RadioButtonGroup  = require('react-forms/lib/RadioButtonGroup');
@@ -23,7 +24,7 @@ var CommonSchema = Mapping({
     description: Scalar({
         label: "Description",
         hint: "Enter a longer description for this analysis",
-        required: true,
+        required: false,
         input: <textarea rows="4" />
     }),
 
@@ -33,7 +34,7 @@ var CommonSchema = Mapping({
         required: false
     }),
 
-    refresh_interval: Scalar({
+    refreshInterval: Scalar({
         type: "number",
         label: "Refresh interval (seconds)",
         hint: "How frequently should raw data be fetched from the JIRA instance?",
@@ -53,7 +54,7 @@ var CommonSchema = Mapping({
 /**
  * Base class for analysis types. The propery `schema` returns a ReactForms
  * schema. `type` returns the type string. `serialize()` and `deserialize()`
- * can turn a form value into a json mapping (and vice-versa) suitable for
+ * can turn a form value into a mapping (and vice-versa) suitable for
  * passing to the server representation, where non-common fields are stored
  * in a `parameters` key/value pairs.
  */
@@ -71,12 +72,38 @@ class Common {
         );
     }
 
-    serialize(value) {
+    extractParameter(value, key) {
+        var parameters = value.get('parameters');
+        if(parameters === undefined) {
+            return undefined;
+        }
 
+        var item = parameters.find(i => i.get('key') === key);
+        if(item === undefined) {
+            return undefined;
+        }
+
+        return item.get('value');
     }
 
-    deserialize(json) {
+    serialize(value) {
+        return Immutable.Map({
+            title: value.get('title'),
+            description: value.get('description'),
+            query: value.get('query'),
+            refresh_interval: value.get('refreshInterval'), // change case
+            type: value.get('type')
+        });
+    }
 
+    deserialize(value) {
+        return Immutable.Map({
+            title: value.get('title'),
+            description: value.get('description'),
+            query: value.get('query'),
+            refreshInterval: value.get('refresh_interval'), // change case
+            type: value.get('type')
+        });
     }
 
 }
