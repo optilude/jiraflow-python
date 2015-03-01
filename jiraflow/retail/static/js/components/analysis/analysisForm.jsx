@@ -5,7 +5,7 @@ var ReactForms = require('react-forms');
 
 var { Form } = ReactForms;
 
-var Schemata = require('./analysisSchemata');
+var Types = require('./types/registry');
 
 /**
  * Dynamic form that renders the correct analysis schema based on the selected
@@ -20,7 +20,6 @@ var AnalysisForm = React.createClass({
     },
 
     render: function () {
-
         var type = this.state.type;
         var defaultValue = this.props.defaultValue;
 
@@ -28,8 +27,10 @@ var AnalysisForm = React.createClass({
             type = defaultValue.get('type');
         }
 
-        var schema = Schemata.getSchema(type);
-        return <Form schema={schema} component="div" onUpdate={this.onChangeForm} {...this.props} />;
+        var analysisType = Types[type];
+        var schema = analysisType.schema;
+
+        return <Form schema={schema} component="div" onUpdate={this.onChangeForm} />;
     },
 
     onChangeForm: function(value, validation, keyPath) {

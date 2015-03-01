@@ -7,6 +7,7 @@ var React = require('react');
 var Marty = require('marty');
 
 var Exception = require('./exception');
+var ErrorView = require('./components/error/error');
 var Router = require('./router');
 
 var NavigationActionCreators = require('./navigation/navigationActionCreators');
@@ -48,12 +49,14 @@ Router.run(function(Handler, state) {
                 Router.transitionTo("error");
             }
         } else if(lastRouteName !== "error") {
-            Router.transitionTo("error");
+            // Wipe all state and show an error.
+            document.body.innerHTML = '';
+            React.render(React.createElement(ErrorView, null), document.body);
         }
     }
 
 });
-},{"./exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
+},{"./components/error/error":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/error.jsx","./exception":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/exception.jsx","./instance/instanceActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/instance/instanceActionCreators.jsx","./navigation/navigationActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/navigation/navigationActionCreators.jsx","./router":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/router.jsx","./user/userActionCreators":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/user/userActionCreators.jsx","immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","marty":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/marty/index.js","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/analysis/analysisAPI.jsx":[function(require,module,exports){
 "use strict";
 
 var Immutable = require('immutable');
@@ -472,7 +475,7 @@ var ReactForms = require('react-forms');
 
 var $__0=    ReactForms,Form=$__0.Form;
 
-var Schemata = require('./analysisSchemata');
+var Types = require('./types/registry');
 
 /**
  * Dynamic form that renders the correct analysis schema based on the selected
@@ -487,7 +490,6 @@ var AnalysisForm = React.createClass({displayName: "AnalysisForm",
     },
 
     render: function () {
-
         var type = this.state.type;
         var defaultValue = this.props.defaultValue;
 
@@ -495,8 +497,10 @@ var AnalysisForm = React.createClass({displayName: "AnalysisForm",
             type = defaultValue.get('type');
         }
 
-        var schema = Schemata.getSchema(type);
-        return React.createElement(Form, React.__spread({schema: schema, component: "div", onUpdate: this.onChangeForm},  this.props));
+        var analysisType = Types[type];
+        var schema = analysisType.schema;
+
+        return React.createElement(Form, {schema: schema, component: "div", onUpdate: this.onChangeForm});
     },
 
     onChangeForm: function(value, validation, keyPath) {
@@ -511,7 +515,7 @@ var AnalysisForm = React.createClass({displayName: "AnalysisForm",
 });
 
 module.exports = AnalysisForm;
-},{"./analysisSchemata":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisSchemata.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNew.jsx":[function(require,module,exports){
+},{"./types/registry":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisNew.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react/addons');
@@ -587,7 +591,80 @@ var AnalysisNew = React.createClass({displayName: "AnalysisNew",
 });
 
 module.exports = AnalysisNew;
-},{"./analysisForm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisForm.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisSchemata.jsx":[function(require,module,exports){
+},{"./analysisForm":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisForm.jsx","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx":[function(require,module,exports){
+"use strict";
+
+var Immutable = require('immutable');
+var React = require('react/addons');
+var BS = require('react-bootstrap');
+
+/**
+ * Renders a single analysis
+ */
+var AnalysisView = React.createClass({displayName: "AnalysisView",
+    mixins: [React.addons.PureRenderMixin],
+
+    propTypes: {
+        analysis: React.PropTypes.instanceOf(Immutable.Map)
+    },
+
+    // TODO: Complete
+
+    render: function () {
+
+        return (
+            React.createElement("div", null, 
+                React.createElement("h1", null, "Analysis — ", this.props.analysis.get('title')), 
+                React.createElement("p", null, "Lorem ipsum")
+            )
+        );
+
+    }
+});
+
+module.exports = AnalysisView;
+},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/burnup.jsx":[function(require,module,exports){
+"use strict";
+
+var React = require('react'); // jshint unused:false
+var ReactForms = require('react-forms');
+
+var Common = require('./common');
+
+var $__0=     ReactForms.schema,Mapping=$__0.Mapping,Scalar=$__0.Scalar;
+
+var BurnupSchema = Mapping({
+
+    scopeLine: Scalar({
+        label: "Scope line",
+        hint: "",
+        required: true
+    })
+
+});
+
+/**
+ * Advanced burn-up chart
+ */
+for(var Common____Key in Common){if(Common.hasOwnProperty(Common____Key)){Burnup[Common____Key]=Common[Common____Key];}}var ____SuperProtoOfCommon=Common===null?null:Common.prototype;Burnup.prototype=Object.create(____SuperProtoOfCommon);Burnup.prototype.constructor=Burnup;Burnup.__superConstructor__=Common;
+
+    function Burnup() {
+        this.type = "burnup";
+        this.schema = this.mergeSchema(BurnupSchema);
+    }
+
+    Burnup.prototype.serialize=function(value) {
+
+    };
+
+    Burnup.prototype.deserialize=function(value) {
+
+    };
+
+
+
+module.exports = Burnup;
+},{"./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -640,71 +717,50 @@ var CommonSchema = Mapping({
 
 });
 
-var BurnupSchema = Mapping({
+/**
+ * Base class for analysis types. The propery `schema` returns a ReactForms
+ * schema. `type` returns the type string. `serialize()` and `deserialize()`
+ * can turn a form value into a json mapping (and vice-versa) suitable for
+ * passing to the server representation, where non-common fields are stored
+ * in a `parameters` key/value pairs.
+ */
 
-    scopeLine: Scalar({
-        label: "Scope line",
-        hint: "",
-        required: true
-    })
 
-});
-
-var Schemata = {
-    common: CommonSchema,
-    burnup: BurnupSchema
-};
-
-var getSchema = function(type) {
-    var nodes = Schemata.common.props.get('children');
-
-    if(type) {
-        var typeSpecificSchema = Schemata[type];
-        if(typeSpecificSchema !== undefined) {
-            nodes = nodes.merge(typeSpecificSchema.props.get('children'));
-        }
+    function Common() {
+        this.type = null;
+        this.schema = CommonSchema;
     }
 
-    return Mapping(nodes);
-};
+    Common.prototype.mergeSchema=function(schema) {
+        return new Mapping(
+            schema.props.delete('children'),
+            CommonSchema.props.get('children').merge(schema.props.get('children'))
+        );
+    };
 
-module.exports = {
-    schemata: Schemata,
-    getSchema:getSchema
-};
-},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-forms/lib/RadioButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/analysisView.jsx":[function(require,module,exports){
+    Common.prototype.serialize=function(value) {
+
+    };
+
+    Common.prototype.deserialize=function(json) {
+
+    };
+
+
+
+module.exports = Common;
+},{"react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js","react-forms":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/index.js","react-forms/lib/RadioButtonGroup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-forms/lib/RadioButtonGroup.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/registry.jsx":[function(require,module,exports){
 "use strict";
 
-var Immutable = require('immutable');
-var React = require('react/addons');
-var BS = require('react-bootstrap');
+var React = require('react'); // jshint unused:false
 
-/**
- * Renders a single analysis
- */
-var AnalysisView = React.createClass({displayName: "AnalysisView",
-    mixins: [React.addons.PureRenderMixin],
+var types = {
+    burnup: new (require('./burnup'))()
+};
 
-    propTypes: {
-        analysis: React.PropTypes.instanceOf(Immutable.Map)
-    },
-
-    // TODO: Complete
-
-    render: function () {
-
-        return (
-            React.createElement("div", null, 
-                React.createElement("h1", null, "Analysis — ", this.props.analysis.get('title')), 
-                React.createElement("p", null, "Lorem ipsum")
-            )
-        );
-
-    }
-});
-
-module.exports = AnalysisView;
-},{"immutable":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/immutable/dist/immutable.js","react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx":[function(require,module,exports){
+types[null] = new (require('./common'))();
+module.exports = types;
+},{"./burnup":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/burnup.jsx","./common":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/analysis/types/common.jsx","react":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/react.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/app.jsx":[function(require,module,exports){
 "use strict";
 
 var React = require('react');
@@ -749,7 +805,7 @@ var BS = require('react-bootstrap');
 
 var $__0=       BS,Grid=$__0.Grid,Row=$__0.Row,Col=$__0.Col,Alert=$__0.Alert;
 
-var NotFound = React.createClass({displayName: "NotFound",
+var ErrorView = React.createClass({displayName: "ErrorView",
     mixins: [React.addons.PureRenderMixin],
 
     render: function() {
@@ -759,7 +815,7 @@ var NotFound = React.createClass({displayName: "NotFound",
                 React.createElement(Row, null, 
                     React.createElement(Col, {sm: 6, smOffset: 3, md: 8, mdOffset: 2}, 
                         React.createElement("h1", null, "Error"), 
-                        React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred.")
+                        React.createElement(Alert, {bsStyle: "danger"}, "An unexpected error occurred. Go back, reload the page and hope for the best.")
                     )
                 )
           )
@@ -768,7 +824,7 @@ var NotFound = React.createClass({displayName: "NotFound",
     }
 });
 
-module.exports = NotFound;
+module.exports = ErrorView;
 },{"react-bootstrap":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react-bootstrap/lib/main.js","react/addons":"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/node_modules/react/addons.js"}],"/Users/maraspeli/Dropbox/Development/Python/jiraflow/src/jiraflow/jiraflow/retail/static/js/components/error/notFound.jsx":[function(require,module,exports){
 "use strict";
 

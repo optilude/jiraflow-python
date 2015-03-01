@@ -50,35 +50,35 @@ var CommonSchema = Mapping({
 
 });
 
-var BurnupSchema = Mapping({
+/**
+ * Base class for analysis types. The propery `schema` returns a ReactForms
+ * schema. `type` returns the type string. `serialize()` and `deserialize()`
+ * can turn a form value into a json mapping (and vice-versa) suitable for
+ * passing to the server representation, where non-common fields are stored
+ * in a `parameters` key/value pairs.
+ */
+class Common {
 
-    scopeLine: Scalar({
-        label: "Scope line",
-        hint: "",
-        required: true
-    })
-
-});
-
-var Schemata = {
-    common: CommonSchema,
-    burnup: BurnupSchema
-};
-
-var getSchema = function(type) {
-    var nodes = Schemata.common.props.get('children');
-
-    if(type) {
-        var typeSpecificSchema = Schemata[type];
-        if(typeSpecificSchema !== undefined) {
-            nodes = nodes.merge(typeSpecificSchema.props.get('children'));
-        }
+    constructor() {
+        this.type = null;
+        this.schema = CommonSchema;
     }
 
-    return Mapping(nodes);
-};
+    mergeSchema(schema) {
+        return new Mapping(
+            schema.props.delete('children'),
+            CommonSchema.props.get('children').merge(schema.props.get('children'))
+        );
+    }
 
-module.exports = {
-    schemata: Schemata,
-    getSchema
-};
+    serialize(value) {
+
+    }
+
+    deserialize(json) {
+
+    }
+
+}
+
+module.exports = Common;
